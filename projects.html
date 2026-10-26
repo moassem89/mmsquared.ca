@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Projects · Mohammad Mahmoud</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Interactive lessons in logic, machine learning, running time and Turing machines, and the tools Mohammad Mahmoud's student teams built: Varphi, Tiny Proof, the Transformer Visualizer and more.">
+<link rel="canonical" href="https://www.mmsquared.ca/projects.html">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Projects · Mohammad Mahmoud">
+<meta property="og:description" content="Interactive lessons, and tools built by supervised student teams.">
+<meta property="og:url" content="https://www.mmsquared.ca/projects.html">
+<meta property="og:image" content="https://www.mmsquared.ca/img/headshot.jpg">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@500;700;800&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@500&family=STIX+Two+Text:ital,wght@0,400;1,400&display=swap">
+<link rel="stylesheet" href="site.css">
+</head>
+<body>
+
+<header class="site-head"><div class="wrap">
+  <a class="mark" href="index.html">Mohammad Mahmoud <small>Computer Science · UTM</small></a>
+  <nav class="site-nav" aria-label="Site">
+    <a href="teaching.html">Teaching</a>
+    <a href="research.html">Research</a>
+    <a href="projects.html" aria-current="page">Projects</a>
+    <a href="students.html">Students</a>
+  </nav>
+</div></header>
+
+<main class="wrap">
+
+<header class="page-head">
+  <h1>Projects</h1>
+  <p class="lede">Two kinds of work live here: lessons I built that you can try right now, and tools my student teams built under my supervision. On the second kind, the label on each card says who did what.</p>
+</header>
+
+<section class="section" id="lessons" aria-labelledby="lessonsH">
+  <h2 id="lessonsH">Interactive lessons</h2>
+  <div class="prose"><p>Every exercise asks for your answer before it shows you anything, and a wrong answer gets feedback on the mistake it most likely came from. Plain pages, no accounts; progress stays in your browser. <a href="lessons/index.html">All four lessons</a>.</p></div>
+  <div class="cards">
+    <a class="card" href="lessons/logic.html"><div class="tags"><span class="tag">Logic</span></div><h3>Quantifier Gym</h3><p>“For all” and “there exists”: why swapping their order changes the meaning. Play the ε–δ definition of a limit as a two-player game, then write the proof and let the page attack it.</p></a>
+    <a class="card" href="lessons/ml.html"><div class="tags"><span class="tag">Machine learning</span></div><h3>Nearest Neighbours</h3><p>Drag a point, change <i>k</i>, and watch the decision boundary redraw. Then step inside a cube and see why “nearest” stops meaning much in high dimensions.</p></a>
+    <a class="card" href="lessons/running-time.html"><div class="tags"><span class="tag">Algorithms</span></div><h3>Counting Steps</h3><p>A run costs a number; a program costs a function. Count steps, plot the worst case, and play big-O as a game against a challenger. Built from my data-structures lecture.</p></a>
+    <a class="card" href="lessons/turing.html"><div class="tags"><span class="tag">Computability</span></div><h3>Mechanical Moves</h3><p>Turing machines in the notation my computability students use, stepped one move at a time. Write the shortest program for <i>n</i> + 1, then make one that never halts.</p></a>
+  </div>
+</section>
+
+<section class="section" aria-labelledby="teamsH">
+  <h2 id="teamsH">Built by student teams I supervised</h2>
+  <div class="cards">
+    <article class="card">
+      <div class="tags"><span class="tag">Computing education</span><span class="tag amber">2 papers</span></div>
+      <h3>Varphi</h3>
+      <p class="who"><b>Built by Hassan El-Sheikha</b>, undergraduate, under my supervision</p>
+      <p>A description language and debugger for Turing machines. My CSC363 students use it to write and step through their machines. Published at WCCCE ’25 and ’26.</p>
+      <p class="links"><a href="https://docs.varphi-lang.com">Documentation</a></p>
+    </article>
+    <article class="card">
+      <div class="tags"><span class="tag">Quantum computing</span><span class="tag amber">QCE ’26</span></div>
+      <h3>Graph isomorphism on a quantum annealer</h3>
+      <p class="who"><b>M. Akhtar, D. Wrona, R. Chowdhury</b>, one undergraduate and two graduate students; I derived the formulations and directed the project</p>
+      <p>Three graph-isomorphism formulations, each refining the last, run on D-Wave’s Advantage2. The paper measures how much of the work classical pruning does before the annealer starts.</p>
+    </article>
+    <article class="card">
+      <div class="tags"><span class="tag">Theorem proving</span></div>
+      <h3>Tiny Proof</h3>
+      <p class="who"><b>Seven-student team</b>, January–April 2025; I defined the problem and what counted as a working result</p>
+      <p>An AI-assisted prover for Lean 4 that extends DeepSeek-Prover-V1.5 with a tree search over swappable heuristics.</p>
+      <p class="links"><a href="https://github.com/gdgutm/TinyProof">Repository</a></p>
+    </article>
+    <article class="card">
+      <div class="tags"><span class="tag">Interpretability</span></div>
+      <h3>Transformer Visualizer</h3>
+      <p class="who"><b>Five-student team</b>, under my mentorship</p>
+      <p>A teaching tool for looking inside a language model, stage by stage, across the layers and attention heads of GPT-2 and BLOOM-560M.</p>
+      <!-- Link withheld until the team confirms they are happy for it to be shared here: https://transformer-visualizer-eight.vercel.app/ -->
+    </article>
+    <article class="card">
+      <div class="tags"><span class="tag">Databases</span></div>
+      <h3>Querying graph databases</h3>
+      <p class="who"><b>Four-student team</b>, CSC492, Winter 2026</p>
+      <p>A survey of how graph database systems answer multi-hop queries, with reproducible benchmarks of two published techniques and their limitations written down.</p>
+    </article>
+    <article class="card">
+      <div class="tags"><span class="tag">Model theory</span><span class="tag amber">NSERC USRA</span></div>
+      <h3>Vaught’s conjecture</h3>
+      <p class="who"><b>Summer research student</b>, NSERC Undergraduate Student Research Award, 2026</p>
+      <p>Organizing and streamlining the recent results on a classic open problem in model theory, which also has a computability-theoretic equivalent.</p>
+    </article>
+  </div>
+</section>
+
+</main>
+
+<footer class="site-foot"><div class="wrap">
+  <span class="email" data-u="mo.mahmoud" data-d="utoronto.ca">mo.mahmoud [at] utoronto.ca</span>
+  <a href="https://github.com/moassem89">GitHub</a>
+  <a href="https://ca.linkedin.com/in/mohammad-mahmoud-phd-8002724b">LinkedIn</a>
+  <a href="https://www.utm.utoronto.ca/math-cs-stats/people/mohammad-mahmoud">UTM profile</a>
+  <span class="stamp">Updated October 2026</span>
+</div></footer>
+
+<script>
+/* The address is assembled here so it never sits whole in the page source; without scripts it reads "mo.mahmoud [at] utoronto.ca". */
+document.querySelectorAll('.email[data-u]').forEach(function(el){var a=el.dataset.u+'@'+el.dataset.d,l=document.createElement('a');l.href='mailto:'+a;l.textContent=a;l.className=el.className;el.replaceWith(l);});
+</script>
+</body>
+</html>

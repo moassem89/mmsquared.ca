@@ -1,0 +1,690 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Counting Steps · Running time</title>
+<meta name="description" content="A run costs a number; a program costs a function; big-O is what we say about the function. The Week 5 lecture of a data-structures course, rebuilt as eleven exercises you count, plot, or play against an opponent.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@500;700;800&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@500;700&family=STIX+Two+Text:ital,wght@0,400;0,600;1,400&display=swap">
+<style>
+/* Lesson 3 of the collection. Accent: magenta. ∀ stays tangerine and ∃ stays jade, exactly as in the Quantifier Gym. */
+:root{
+  --bg:#FFFDF6; --surface:#FFFFFF; --surface-2:#F5F3EB; --ink:#1F2340; --muted:#646A86; --line:#E4E1D4;
+  --ok:#2E9E6B; --ok-soft:#DFF3E8; --bad:#D9534F; --bad-soft:#FBE3E2;
+  --sand:#F0A24B; --sand-soft:#FDEBD2; --sea:#1FA7C4; --sea-soft:#D7F0F6;
+  --logic:#3A86FF; --turing:#B8700A; --time:#D8367A; --ml:#6A5AE0;
+  --accent:var(--time); --accent-soft:#FBDDEB; --accent-ink:#FFFFFF;
+  --forall:#FF7A1A; --forall-soft:#FFE9D6; --forall-ink:#8A3A00; --exists:#00B894; --exists-soft:#D6F5EC; --exists-ink:#005F4B;
+  --display:'Rubik',system-ui,-apple-system,sans-serif; --body:'Source Serif 4',Georgia,'Times New Roman',serif; --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace; --math:'STIX Two Text','Cambria Math','Times New Roman',serif;
+  --radius:14px; --shadow:0 1px 2px rgba(31,35,64,.06),0 8px 24px -12px rgba(31,35,64,.18);
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#15182B; --surface:#1D2138; --surface-2:#252A48; --ink:#F1F1F8; --muted:#A6AAC6; --line:#30355A;
+  --ok:#4CC38A; --ok-soft:#1E3A2E; --bad:#F07178; --bad-soft:#4A2630; --sand:#F5B261; --sand-soft:#4A3522; --sea:#45C3DE; --sea-soft:#1E3E4A;
+  --logic:#6AA3FF; --turing:#F2B544; --time:#FF6FB5; --ml:#9C8EFF; --accent-soft:#4A1A33; --accent-ink:#15182B;
+  --forall:#FF9450; --forall-soft:#4A2A12; --forall-ink:#FFD9BD; --exists:#2BD9AC; --exists-soft:#0F3F33; --exists-ink:#B9F5E4;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px -12px rgba(0,0,0,.5); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#15182B; --surface:#1D2138; --surface-2:#252A48; --ink:#F1F1F8; --muted:#A6AAC6; --line:#30355A;
+  --ok:#4CC38A; --ok-soft:#1E3A2E; --bad:#F07178; --bad-soft:#4A2630; --sand:#F5B261; --sand-soft:#4A3522; --sea:#45C3DE; --sea-soft:#1E3E4A;
+  --logic:#6AA3FF; --turing:#F2B544; --time:#FF6FB5; --ml:#9C8EFF; --accent-soft:#4A1A33; --accent-ink:#15182B;
+  --forall:#FF9450; --forall-soft:#4A2A12; --forall-ink:#FFD9BD; --exists:#2BD9AC; --exists-soft:#0F3F33; --exists-ink:#B9F5E4;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px -12px rgba(0,0,0,.5); color-scheme:dark}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{scroll-padding-top:76px}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.6;-webkit-font-smoothing:antialiased}
+a{color:var(--accent)}
+h1,h2,h3,h4{font-family:var(--display);line-height:1.15;margin:0;text-wrap:balance;letter-spacing:-.01em}
+p{margin:0}
+button{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:6px}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.fm{font-family:var(--math);font-size:1.08em}
+.fm i{font-style:italic}
+.fm sup{font-size:.7em;line-height:0}
+.fm sub{font-size:.7em;line-height:0}
+.q{display:inline-grid;place-items:center;width:1.3em;height:1.3em;border-radius:.35em;color:#fff;font-weight:600;font-style:normal;margin:0 .1em;vertical-align:-.2em;font-size:.9em;line-height:1;font-family:var(--math)}
+.q.qfa{background:var(--forall)} .q.qex{background:var(--exists)}
+
+/* Collection bar — identical on every page */
+.cbar{position:sticky;top:0;z-index:20;background:var(--bg);border-bottom:1px solid var(--line)}
+.cbar .in{max-width:1120px;margin:0 auto;padding:10px max(16px,env(safe-area-inset-left,0px)) 10px max(16px,env(safe-area-inset-right,0px));display:flex;align-items:center;justify-content:space-between;gap:16px}
+.cbar .mark{display:flex;align-items:center;gap:10px;text-decoration:none;font-family:var(--display);font-weight:800;font-size:1rem;white-space:nowrap;color:var(--ink)}
+.cbar .mark .dots{display:inline-grid;grid-template-columns:repeat(4,7px);gap:3px}
+.cbar .mark .dots i{width:7px;height:7px;border-radius:50%;display:block}
+.cbar .mark .dots i:nth-child(1){background:var(--logic)}.cbar .mark .dots i:nth-child(2){background:var(--ml)}.cbar .mark .dots i:nth-child(3){background:var(--time)}.cbar .mark .dots i:nth-child(4){background:var(--turing)}
+.cbar .mark small{font-weight:500;color:var(--muted);font-size:.9rem}
+.cbar nav{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;min-width:0}
+.cbar nav::-webkit-scrollbar{display:none}
+.cbar nav a{display:flex;align-items:center;gap:7px;padding:6px 11px;border-radius:999px;text-decoration:none;color:var(--muted);font-family:var(--display);font-weight:500;font-size:.88rem;white-space:nowrap}
+.cbar nav a i{width:8px;height:8px;border-radius:50%;flex:0 0 auto}
+.cbar nav a:hover{color:var(--ink);background:var(--surface-2)}
+.cbar nav a[aria-current]{background:var(--accent-soft);color:var(--ink)}
+@media (max-width:720px){.cbar .mark span.name{display:none}.cbar .mark small{display:none}}
+
+.shell{max-width:1120px;margin:0 auto;padding:28px max(16px,env(safe-area-inset-left,0px)) 80px max(16px,env(safe-area-inset-right,0px))}
+main{min-width:0;max-width:60rem}
+.lesson-head .kicker{font-family:var(--display);font-weight:500;color:var(--accent);font-size:.95rem}
+.lesson-head h1{font-size:clamp(2.1rem,6vw,3.4rem);font-weight:800;margin-top:6px}
+.lede{font-size:1.15rem;max-width:62ch;margin-top:14px}
+.lesson-head .meta{margin-top:10px;font-family:var(--display);font-weight:500;color:var(--muted);font-size:.95rem}
+.prose{max-width:65ch;margin-top:40px}
+.prose h2{font-size:1.55rem;font-weight:700;margin-bottom:12px}
+.prose p{margin:0 0 14px}
+.prose p:last-child{margin-bottom:0}
+.k{font-family:var(--mono);font-size:.86em;background:var(--surface-2);padding:1px 6px;border-radius:6px;font-variant-numeric:tabular-nums}
+.defn{margin:14px 0;padding:12px 16px;border-radius:14px;background:var(--surface);border:1px solid var(--line);font-family:var(--math);font-size:1.08rem;line-height:1.8}
+.defn b{font-family:var(--display);font-size:.8rem;color:var(--muted);display:block;line-height:1.3;margin-bottom:4px}
+.defn .fm{font-size:1em}
+.pointer{margin:14px 0;padding:12px 16px 12px 18px;border-radius:0 14px 14px 0;border-left:4px solid var(--turing);background:var(--surface-2);font-size:.98rem;line-height:1.55}
+.pointer b{font-family:var(--display)}
+.pointer a{color:var(--turing);font-weight:600}
+
+/* Bench */
+.bench{margin-top:28px;background:var(--surface);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);overflow:hidden}
+.bench-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 16px;padding:14px 18px;border-bottom:1px solid var(--line);background:var(--surface-2)}
+.bench-head h2{font-size:1rem;font-weight:700}
+.bench-head .hint{font-family:var(--display);font-size:.85rem;color:var(--muted)}
+.bench-body{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;padding:16px}
+@media (min-width:860px){.bench-body{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;padding:20px}}
+.seg{display:flex;background:var(--surface-2);border-radius:10px;padding:3px;gap:3px;flex-wrap:wrap}
+.seg button{flex:1;border:0;background:transparent;border-radius:8px;padding:7px 8px;font-family:var(--display);font-weight:500;font-size:.85rem;cursor:pointer;color:var(--muted);min-width:0;white-space:nowrap}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+pre.code{margin:0;font-family:var(--mono);font-size:.92rem;line-height:1.75;background:var(--surface-2);border-radius:12px;padding:12px 14px;overflow-x:auto;white-space:pre}
+pre.code .ln{display:inline-block;width:1.7em;color:var(--muted);font-size:.85em;user-select:none}
+pre.code .l{display:inline-block;min-width:100%;border-radius:6px;padding:0 6px;margin:0 -6px}
+pre.code .l.cur{background:var(--accent-soft)}
+.ctl{display:grid;gap:8px}
+.ctl .lbl{font-family:var(--display);font-weight:700;font-size:.78rem;color:var(--muted);display:flex;justify-content:space-between;align-items:baseline}
+.inrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.inrow input{font:inherit;font-family:var(--mono);font-size:1rem;padding:8px 10px;border:1.5px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink)}
+.inrow input.wide{width:12ch} .inrow input.narrow{width:6ch}
+.inrow input:focus{border-color:var(--accent);outline:none}
+.inrow label{font-family:var(--display);font-weight:700;font-size:.85rem;color:var(--muted)}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:9px 14px;font-family:var(--display);font-weight:700;font-size:.9rem;cursor:pointer;display:inline-flex;align-items:center;gap:8px;color:var(--ink);text-decoration:none}
+.btn:hover:not([disabled]){background:var(--surface-2)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:transparent}
+.btn.primary:hover:not([disabled]){filter:brightness(1.06);background:var(--accent)}
+.btn[disabled]{opacity:.5;cursor:default}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.trace{display:grid;gap:10px;min-width:0;align-content:start}
+.what{font-family:var(--display);font-size:.92rem;min-height:2.6em;padding:8px 12px;border-radius:10px;background:var(--surface-2);border-left:3px solid var(--line);line-height:1.45}
+.what.on{border-left-color:var(--accent)} .what.done{border-left-color:var(--ok);background:var(--ok-soft)}
+.what .mono{font-size:.92em}
+table.counts{border-collapse:collapse;width:100%;font-family:var(--display);font-size:.9rem}
+table.counts th{text-align:left;font-size:.75rem;color:var(--muted);padding:4px 8px;border-bottom:1px solid var(--line);font-weight:700}
+table.counts td{padding:5px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+table.counts td.n{font-family:var(--mono);text-align:right;font-variant-numeric:tabular-nums;width:4ch}
+table.counts td.ln{font-family:var(--mono);color:var(--muted);width:3ch}
+table.counts tr.cur td{background:var(--accent-soft)}
+table.counts tr.tot td{font-weight:700;border-bottom:0;background:var(--surface-2)}
+table.counts tr.tot td.n{font-size:1.05rem}
+table.counts .note{color:var(--muted);font-weight:500}
+.stack{display:flex;flex-wrap:wrap;gap:6px;min-height:34px;align-items:center;font-family:var(--display);font-size:.85rem;color:var(--muted)}
+.stack span{font-family:var(--mono);font-size:.85rem;padding:5px 9px;border-radius:8px;background:var(--surface-2);border:1.5px solid var(--line)}
+.stack span.top{border-color:var(--accent);background:var(--accent-soft);color:var(--ink)}
+.stack span.lab{font-family:var(--display);border:0;background:none;padding:0;color:var(--muted)}
+
+/* Exercise bank */
+.bank-head{margin-top:44px;display:flex;flex-wrap:wrap;align-items:end;justify-content:space-between;gap:12px 24px}
+.bank-head h2{font-size:1.55rem}
+.bank-head p{margin:6px 0 0;color:var(--muted);max-width:52ch}
+.progress{min-width:min(100%,260px)}
+.progress .lbl{font-family:var(--display);font-weight:700;font-size:.82rem;color:var(--muted);display:flex;justify-content:space-between}
+.progress .lbl output{font-family:var(--mono);color:var(--ink);font-variant-numeric:tabular-nums}
+.progress .bar{height:8px;border-radius:999px;background:var(--surface-2);margin-top:6px;overflow:hidden}
+.progress .bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--sand),var(--accent),var(--sea));border-radius:999px;transition:width .4s ease}
+.types{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.chip{font-family:var(--display);font-weight:700;font-size:.74rem;letter-spacing:.02em;padding:3px 9px;border-radius:999px;background:var(--surface-2);color:var(--ink);white-space:nowrap}
+.chip.predict{background:var(--sand-soft)}.chip.play{background:var(--sea-soft)}.chip.break{background:var(--bad-soft)}.chip.quiz{background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--line)}
+.exlist{display:flex;flex-direction:column;gap:16px;margin-top:18px}
+.xc{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:var(--shadow);scroll-margin-top:84px}
+@media (min-width:760px){.xc{padding:22px 24px}}
+.ex-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.ex-meta{display:inline-flex;align-items:center;gap:10px;margin-left:auto}
+.ex-head .n{font-family:var(--mono);font-size:.8rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.ex-head h3{font-size:1.15rem;font-weight:700;flex:1 1 auto;min-width:0}
+.status{width:12px;height:12px;border-radius:50%;background:var(--surface-2);box-shadow:inset 0 0 0 2px var(--line);flex:0 0 auto}
+.xc[data-state="ok"] .status{background:var(--ok);box-shadow:none}
+.xc[data-state="retry"] .status{background:var(--bad-soft);box-shadow:inset 0 0 0 2px var(--bad)}
+.xc[data-state="ok"]{border-color:color-mix(in srgb,var(--ok) 45%,var(--line))}
+.xc .prompt{margin:10px 0 0;max-width:62ch}
+.ex-body{margin-top:14px;display:grid;gap:12px}
+.xc .two{display:grid;grid-template-columns:minmax(0,1fr);gap:14px}
+@media (min-width:700px){.xc .two{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
+.ask{font-family:var(--display);font-weight:700;font-size:1rem;padding:10px 14px;border-radius:12px;background:var(--accent-soft);line-height:1.45}
+.ask small{display:block;font-weight:500;color:var(--muted);font-size:.88rem;margin-top:2px}
+.opts{display:grid;gap:8px;grid-template-columns:1fr}
+@media (min-width:560px){.opts.two{grid-template-columns:1fr 1fr}}
+.opt{display:flex;align-items:flex-start;gap:10px;text-align:left;border:1.5px solid var(--line);background:var(--surface);border-radius:12px;padding:10px 12px;cursor:pointer;font-family:var(--body);font-size:1rem;line-height:1.4;color:var(--ink)}
+.opt:hover:not(:disabled){background:var(--surface-2)}
+.opt .key{font-family:var(--display);font-weight:700;font-size:.78rem;background:var(--surface-2);border-radius:6px;padding:3px 7px;flex:0 0 auto;margin-top:2px}
+.opt.correct{border-color:var(--ok);background:var(--ok-soft)} .opt.correct .key{background:var(--ok);color:#fff}
+.opt.wrong{border-color:var(--bad);background:var(--bad-soft)} .opt.wrong .key{background:var(--bad);color:#fff}
+.opt:disabled{cursor:default}
+.numin{display:flex;align-items:center;gap:8px;font-family:var(--display);font-weight:500;flex-wrap:wrap}
+.numin input{font:inherit;font-family:var(--mono);font-size:1.05rem;width:9ch;padding:8px 10px;border:1.5px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink)}
+.numin input:focus{border-color:var(--accent);outline:none}
+.ex-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;align-items:center}
+.feedback{margin-top:14px;padding:12px 14px;border-radius:12px;background:var(--surface-2);font-size:.98rem;line-height:1.5;border-left:3px solid var(--line)}
+.feedback.ok{border-left-color:var(--ok);background:var(--ok-soft)}
+.feedback.bad{border-left-color:var(--bad);background:var(--bad-soft)}
+.feedback b{font-family:var(--display)}
+.feedback .mono{font-size:.92em}
+svg.plot{display:block;width:100%;max-width:640px;height:auto;border-radius:12px;background:var(--surface-2)}
+.plot .ax{stroke:var(--line);stroke-width:1.5}
+.plot .gl{stroke:var(--line);stroke-width:1;stroke-dasharray:2 5}
+.plot .lbl{font-family:var(--display);font-size:10px;fill:var(--muted);font-weight:500}
+.plot .f{fill:none;stroke:var(--sand);stroke-width:2.5;stroke-linejoin:round}
+.plot .g{fill:none;stroke:var(--sea);stroke-width:2.5;stroke-linejoin:round}
+.plot .zone{fill:var(--exists);opacity:.08}
+.plot .n0{stroke:var(--exists);stroke-width:1.5;stroke-dasharray:5 4}
+.plot .viol{fill:var(--bad);stroke:var(--surface);stroke-width:2}
+.plot .dot{fill:var(--ink);stroke:var(--surface);stroke-width:1.5}
+.plot .dot.dim{opacity:.35}
+.plot .dot.top{fill:var(--accent)}
+.plot .col{fill:var(--accent);opacity:.1}
+.plot .sky{fill:none;stroke:var(--accent);stroke-width:2.5}
+.plot .floor{stroke:var(--muted);stroke-width:1.5;stroke-dasharray:4 4}
+.plot .cap{fill:var(--bad)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-family:var(--display);font-size:.85rem;color:var(--muted)}
+.legend b{display:inline-flex;align-items:center;gap:6px;color:var(--ink);font-weight:500}
+.legend i.sw{width:16px;height:3px;border-radius:2px;display:inline-block}
+.legend i.sw.f{background:var(--sand)}.legend i.sw.g{background:var(--sea)}.legend i.sw.a{background:var(--accent)}
+.range{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;font-family:var(--display);font-weight:500;font-size:.92rem}
+.range input[type=range]{width:100%;margin:0;accent-color:var(--accent)}
+.range output{font-family:var(--mono);font-variant-numeric:tabular-nums;min-width:4ch;text-align:right}
+.readout{font-family:var(--display);font-size:.95rem;display:flex;gap:16px;flex-wrap:wrap}
+.readout b{font-family:var(--mono);font-weight:500;font-variant-numeric:tabular-nums}
+.players{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:520px){.players{grid-template-columns:1fr}}
+.player{padding:10px 12px;border-radius:12px;display:grid;gap:2px;border:2px solid transparent;min-width:0;font-family:var(--display)}
+.player b{font-size:1rem}
+.player small{font-size:.85rem;line-height:1.35}
+.player.pfa{background:var(--forall-soft);color:var(--forall-ink)}
+.player.pex{background:var(--exists-soft);color:var(--exists-ink)}
+.player.turn.pfa{border-color:var(--forall)} .player.turn.pex{border-color:var(--exists)}
+.formula{font-family:var(--math);font-size:clamp(17px,4vw,22px);line-height:1.7;overflow-x:auto;white-space:nowrap;padding:8px 4px}
+/* A long definition wraps at the commas between its quantifier blocks instead of scrolling; continuation lines hang 2em in, as in a textbook. Each block stays on one line. */
+.formula.wrap{white-space:normal;overflow-x:visible;padding-left:calc(2em + 4px);text-indent:-2em}
+.formula.wrap .nb{white-space:nowrap}
+.formula.wrap .q{text-indent:0} /* the hanging indent is inherited; the chip's own glyph must not hang */
+.stepper{display:flex;align-items:center;gap:6px}
+.stepper button{width:40px;height:40px;border:1.5px solid var(--line);background:var(--surface);border-radius:10px;font-family:var(--display);font-weight:700;font-size:1.2rem;cursor:pointer;line-height:1}
+.stepper button:hover{background:var(--surface-2)}
+.stepper label{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;font-family:var(--mono);font-size:1rem;color:var(--ink)}
+.stepper input{font:inherit;font-family:var(--mono);font-size:1.1rem;width:5ch;text-align:center;padding:6px 4px;border:1.5px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);font-variant-numeric:tabular-nums}
+.stepper input:focus{border-color:var(--accent);outline:none}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chipbtn{border:1.5px solid var(--line);background:var(--surface);color:var(--ink);border-radius:12px;padding:9px 12px;font-family:var(--body);font-size:1rem;cursor:pointer;display:inline-flex;align-items:center;gap:8px;min-width:0;text-align:left;line-height:1.35}
+.chipbtn:hover:not(:disabled){border-color:var(--accent)}
+.chipbtn[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.chipbtn:disabled{cursor:default}
+.chipbtn.good{border-color:var(--ok);background:var(--ok-soft)}
+.chipbtn.badc{border-color:var(--bad);background:var(--bad-soft)}
+.tbl{border-collapse:collapse;font-family:var(--mono);font-size:.9rem;font-variant-numeric:tabular-nums}
+.tbl th{font-family:var(--display);font-weight:700;font-size:.78rem;color:var(--muted);text-align:left;padding:5px 12px;border-bottom:1px solid var(--line)}
+.tbl td{text-align:left;padding:5px 12px;border-bottom:1px solid var(--line)}
+.tbl td.r,.tbl th.r{text-align:right}
+.tbl tr.hi td{background:var(--bad-soft)}
+.unwind{font-family:var(--math);font-size:1.15rem;line-height:1.9;background:var(--surface-2);border-radius:12px;padding:10px 16px;min-height:3em}
+.unwind div{opacity:0;transform:translateY(4px);transition:opacity .3s,transform .3s}
+.unwind div.show{opacity:1;transform:none}
+.unwind .last{font-weight:600;color:var(--accent)}
+.bits{display:grid;gap:8px}
+.bits .bar{height:14px;border-radius:7px;background:var(--sand);transition:width .3s}
+.bits .lab{font-family:var(--display);font-size:.9rem;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.bits .lab b{font-family:var(--mono);font-weight:500}
+.next{margin-top:48px;border:1px dashed var(--line);border-radius:18px;padding:18px 20px;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px}
+.next h2{font-size:1.1rem}
+.next p{margin:4px 0 0;color:var(--muted);font-size:.95rem}
+footer.colophon{margin-top:28px;color:var(--muted);font-size:.85rem;font-family:var(--display);display:flex;flex-wrap:wrap;gap:8px 18px}
+footer.colophon a{color:var(--ink);text-decoration:none}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<div class="cbar"><div class="in">
+  <a class="mark" href="index.html"><span class="dots" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span class="name">Mohammad Mahmoud</span> <small>Interactive lessons</small></a>
+  <nav aria-label="Lessons">
+    <a href="logic.html"><i style="background:var(--logic)"></i>Logic</a>
+    <a href="ml.html"><i style="background:var(--ml)"></i>Machine learning</a>
+    <a href="running-time.html" aria-current="page"><i style="background:var(--time)"></i>Running time</a>
+    <a href="turing.html"><i style="background:var(--turing)"></i>Turing machines</a>
+  </nav>
+</div></div>
+
+<div class="shell"><main>
+<header class="lesson-head">
+  <p class="kicker">Lesson 3 of 4 — Running time</p>
+  <h1>Counting Steps</h1>
+  <p class="lede">A run of a program costs a number of steps. A program costs a <em>function</em>: the worst case at every input size. Big-O is what we say about that function, and nothing else. This is the fifth week of my data-structures course, rebuilt so that every claim in it is something you count, plot, or play against an opponent.</p>
+  <p class="meta">Eleven exercises, about fifteen minutes. Progress is saved in this browser.</p>
+</header>
+
+<section class="bench" id="playground" aria-label="Trace one run">
+  <div class="bench-head"><h2>Trace one run</h2><span class="hint">Pick a program and an input, then step or run. Each elementary step lights its line and adds one to that line's count.</span></div>
+  <div class="bench-body">
+    <div class="ctl" style="gap:12px">
+      <div class="seg" role="group" aria-label="Program" id="progSeg"><button type="button" data-prog="search" aria-pressed="true">search(A, t)</button><button type="button" data-prog="fact" aria-pressed="false">fact(n)</button></div>
+      <pre class="code" id="benchCode"></pre>
+      <div class="inrow" id="inSearch"><label for="inA">A =</label><input type="text" id="inA" class="wide" value="4, 7, 1" aria-label="the list A"><label for="inT">t =</label><input type="number" id="inT" class="narrow" value="1" aria-label="the target t"></div>
+      <div class="inrow" id="inFact" hidden><label for="inN">n =</label><input type="number" id="inN" class="narrow" value="4" min="0" max="8" aria-label="n"></div>
+      <div class="btn-row"><button type="button" class="btn primary" id="stepBtn">Step</button><button type="button" class="btn primary" id="runBtn">Run</button><button type="button" class="btn" id="resetBtn">Reset</button></div>
+    </div>
+    <div class="trace">
+      <div class="what" id="what">Press Step or Run.</div>
+      <div class="stack" id="stack" hidden></div>
+      <table class="counts" id="counts"></table>
+    </div>
+  </div>
+</section>
+
+<section class="prose" id="one-run">
+  <h2>One run</h2>
+  <p>Fix a program <span class="fm"><i>P</i></span> and an input <span class="fm"><i>x</i></span>. The running time of that one run, <span class="fm"><i>T</i>(<i>P</i>, <i>x</i>)</span>, is the number of mechanical moves the machine needs to finish. Nobody counts mechanical moves for a real program, so we count <em>elementary steps</em> instead: one assignment, one comparison, one arithmetic operation, one array access, one return. Each takes a fixed amount of time on a given machine, regardless of the input, which is what makes the shortcut honest: changing what counts as one step (is <span class="k">i = i + 1</span> one step or two?) changes the count by at most a constant factor, and the descriptions we care about cannot see constant factors. Changing the machine itself can cost more: a Turing machine with a single tape needs about <span class="fm"><i>n</i><sup>2</sup></span> moves to check that a word of length <span class="fm"><i>n</i></span> is a palindrome, a job a program does in about <span class="fm"><i>n</i></span> steps. So a running time is always a running time on some model, and this lesson’s model is elementary steps.</p>
+  <p>The bench above does this for a search: given a list <span class="k">A</span> and a target <span class="k">t</span>, it walks the list and returns whether <span class="k">t</span> is there. The table under it is the count of one run, line by line.</p>
+  <div class="pointer"><b>Want to see a mechanical move?</b> Lesson 4, <a href="turing.html">Mechanical Moves</a>, runs Turing programs one move at a time with the count on screen: the three-line machine there makes exactly <span class="fm"><i>n</i> + 3</span> moves on input <span class="fm"><i>n</i></span>, and you can write and break programs of your own. Open it whenever “the number of moves” needs a picture; this lesson only needs the number.</div>
+</section>
+
+<div class="bank-head" id="exercises">
+  <div><h2>Exercise bank</h2><p>Four kinds of exercise, checked on the spot. A solved card stays solved but keeps working.</p>
+    <div class="types"><span class="chip predict">Predict</span><span class="chip play">Parameter play</span><span class="chip break">Break it</span><span class="chip quiz">Quiz</span></div></div>
+  <div class="progress"><div class="lbl">Progress <output id="progOut">0 of 11</output></div><div class="bar"><i id="progBar"></i></div></div>
+</div>
+<div class="exlist" id="listA"></div>
+
+<section class="prose" id="program-prose">
+  <h2>From one run to the program</h2>
+  <p>The running time of a <em>computation</em> is a number. The running time of a <em>program</em> is a function, built from those numbers one input size at a time:</p>
+  <div class="defn"><b>running time of the program P</b><span class="fm"><i>T</i><sub><i>P</i></sub>(<i>n</i>) = max{ <i>T</i>(<i>P</i>, <i>x</i>) : <i>x</i> has size <i>n</i> }</span></div>
+  <p>One dot per input of size <span class="fm"><i>n</i></span>; the function is the top of each column. “Running time” with no adjective always means this worst case. The function is usually ugly except for toy examples, which is why it is described with big-O, Θ, or Ω — and those three are statements about <em>functions</em>, not about programs, and certainly not about cases.</p>
+</section>
+<div class="exlist" id="listB"></div>
+
+<section class="prose" id="size-prose">
+  <h2>Size, not value</h2>
+  <p>“<span class="fm"><i>x</i></span> has size <span class="fm"><i>n</i></span>” means <span class="fm"><i>x</i></span> occupies <span class="fm"><i>n</i></span> memory locations. For a list or a string, size is its length. For a single number <span class="fm"><i>v</i></span>, size is the number of bits needed to store it, <span class="fm">⌊log<sub>2</sub> <i>v</i>⌋ + 1</span>. Why the different treatment? Think of school addition as a program and yourself as the machine: you memorised the one-digit sums, those are your elementary steps, and adding an <span class="fm"><i>s</i></span>-digit number to a <span class="fm"><i>t</i></span>-digit number costs about max{<i>s</i>, <i>t</i>} of them. Linear in the <em>sizes</em>.</p>
+  <p>Now suppose your teacher promised you would never add more than five digits to five digits. The work is bounded by a constant, whatever the numbers are. Computers live under that promise: values fit in a 64-bit word, so <span class="k">+</span>, <span class="k">×</span> and comparisons cost a fixed amount each — the <em>word-size convenience</em>. The same convenience says <span class="k">[1, 2, 3]</span> and <span class="k">[888, 99, 100000]</span> have the same size: three words, two commas, two brackets.</p>
+</section>
+<div class="exlist" id="listC"></div>
+
+<section class="prose" id="bound-prose">
+  <h2>The definition is a game</h2>
+  <p>Here is the definition this lesson has been circling. Let <span class="fm">𝓕</span> be the functions from ℕ to ℝ. For <span class="fm"><i>g</i> ∈ 𝓕</span>,</p>
+  <div class="formula wrap"><span class="nb"><i>O</i>(<i>g</i>) = { <i>f</i> ∈ 𝓕 :</span> <span class="nb"><b class="q qex">∃</b><i>c</i> ∈ ℕ,</span> <span class="nb"><b class="q qex">∃</b><i>n</i><sub>0</sub> ∈ ℕ,</span> <span class="nb"><b class="q qfa">∀</b><i>n</i> ≥ <i>n</i><sub>0</sub>,</span> <span class="nb">|<i>f</i>(<i>n</i>)| ≤ <i>c</i> · |<i>g</i>(<i>n</i>)| }</span></div>
+  <p>and for nonnegative <span class="fm"><i>f</i>, <i>g</i></span>: <span class="fm"><i>f</i> ∈ Ω(<i>g</i>)</span> iff <span class="fm"><i>g</i> ∈ <i>O</i>(<i>f</i>)</span>, and <span class="fm"><i>f</i> ∈ Θ(<i>g</i>)</span> iff both. If you have played the <a href="logic.html#game">Quantifier Gym</a>, you know what to do with a sentence like this. It is a game: <strong>∃loïse</strong> defends the claim by choosing <span class="fm"><i>c</i></span> and <span class="fm"><i>n</i><sub>0</sub></span>; <strong>∀bélard</strong> attacks by choosing an <span class="fm"><i>n</i></span> beyond <span class="fm"><i>n</i><sub>0</sub></span> where the inequality fails. The claim is true exactly when ∃loïse has a move that ∀bélard cannot answer.</p>
+</section>
+<div class="exlist" id="listD"></div>
+
+<section class="prose" id="rec-prose">
+  <h2>Recursive programs</h2>
+  <p>For a recursive program the running-time function satisfies a recurrence with the shape of the code. Factorial checks <span class="k">n == 0</span>, multiplies, and calls itself on <span class="k">n − 1</span>: <span class="fm"><i>T</i>(<i>n</i>) = 2 + <i>T</i>(<i>n</i> − 1)</span>, with <span class="fm"><i>T</i>(0) = 2</span> for the check and the return. Unwind it a few times, guess the pattern, prove it by induction. Then look again at what <span class="fm"><i>n</i></span> was measuring.</p>
+</section>
+<div class="exlist" id="listE"></div>
+
+<aside class="next">
+  <div><h2>Next: Mechanical Moves</h2><p>The moves themselves: Turing programs stepped one move at a time, with the count this lesson took as given — and programs of your own to write, test and break.</p></div>
+  <a class="btn primary" href="turing.html">Open lesson 4</a>
+</aside>
+<footer class="colophon"><span>Counting Steps · lesson 3 of 4</span><a href="index.html">All lessons</a><a href="../index.html">mmsquared.ca</a></footer>
+</main></div>
+
+<script>
+(function(){
+'use strict';
+const $=(s,r)=>(r||document).querySelector(s);
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const fmt=n=>Number(n).toLocaleString('en-US');
+const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const wait=ms=>new Promise(r=>setTimeout(r,reduced?0:ms));
+
+/* ───────── the two programs and their traces ─────────
+   A trace is the list of elementary steps a run performs, each tagged with the line it comes from.
+   For fact, calls are shown but not counted: their work is counted inside the call. */
+const PROGS={
+  search:{ code:['def search(A, t):','    i = 0','    while i < len(A):','        if A[i] == t:','            return True','        i = i + 1','    return False'],
+    rows:[{key:'2',line:2,note:'assignment'},{key:'3',line:3,note:'loop check'},{key:'4',line:4,note:'== check'},{key:'5',line:5,note:'return True'},{key:'6',line:6,note:'elementary addition'},{key:'7',line:7,note:'return False'}],
+    trace(A,t){ const ev=[]; ev.push({row:'2',line:2,what:'<span class="mono">i = 0</span>'}); let i=0; for(;;){ ev.push({row:'3',line:3,what:'loop check: <span class="mono">'+i+' &lt; '+A.length+'</span> is '+(i<A.length)}); if(!(i<A.length)) break; ev.push({row:'4',line:4,what:'== check: <span class="mono">A['+i+'] = '+A[i]+'</span>, target '+t+' — '+(A[i]===t?'match':'no')}); if(A[i]===t){ ev.push({row:'5',line:5,what:'<span class="mono">return True</span> — found at index '+i}); return ev; } ev.push({row:'6',line:6,what:'<span class="mono">i = i + 1</span> → '+(i+1)}); i++; } ev.push({row:'7',line:7,what:'<span class="mono">return False</span> — not in A'}); return ev; } },
+  fact:{ code:['def fact(n):','    if n == 0: return 1','    return n * fact(n - 1)'],
+    rows:[{key:'chk',line:2,note:'n == 0 check'},{key:'ret',line:2,note:'return 1'},{key:'mul',line:3,note:'multiplication'}],
+    trace(n){ const ev=[]; for(let v=n;v>=1;v--){ ev.push({row:'chk',line:2,what:'fact('+v+'): check <span class="mono">'+v+' == 0</span> — no',stack:stackAt(n,v)}); ev.push({row:null,line:3,what:'fact('+v+'): call <span class="mono">fact('+(v-1)+')</span> — not a step; its work is counted inside',stack:stackAt(n,v-1)}); } ev.push({row:'chk',line:2,what:'fact(0): check <span class="mono">0 == 0</span> — yes',stack:stackAt(n,0)}); ev.push({row:'ret',line:2,what:'fact(0): <span class="mono">return 1</span>',stack:stackAt(n,0)}); for(let v=1;v<=n;v++){ ev.push({row:'mul',line:3,what:'fact('+v+'): multiply <span class="mono">'+v+' × fact('+(v-1)+')</span> = '+factorial(v),stack:stackAt(n,v)}); } return ev; } }
+};
+function stackAt(n,v){ const s=[]; for(let k=n;k>=v;k--) s.push('fact('+k+')'); return s; }
+function factorial(v){ let r=1; for(let k=2;k<=v;k++) r*=k; return r; }
+
+/* ───────── a trace player: code with the live line, per-line counts, optional call stack ───────── */
+function tracePlayer(els, prog){
+  let ev=[], pos=0, counts={}, timer=null;
+  function drawCode(cur){ if(!els.code) return; els.code.innerHTML=prog.code.map((l,i)=>'<span class="l'+(cur===i+1?' cur':'')+'"><span class="ln">'+(i+1)+'</span>'+esc(l)+'</span>').join('\n'); }
+  function drawCounts(curRow, done){ let total=0; let h='<tr><th>line</th><th>what</th><th style="text-align:right">count</th></tr>'; prog.rows.forEach(r=>{ const c=counts[r.key]||0; total+=c; h+='<tr'+(curRow===r.key?' class="cur"':'')+'><td class="ln">'+r.line+'</td><td><span class="note">'+r.note+'</span></td><td class="n">'+c+'</td></tr>'; }); h+='<tr class="tot"><td></td><td>'+(done?'<i>T</i>(run) — finished':'steps so far')+'</td><td class="n">'+total+'</td></tr>'; els.counts.innerHTML=h; return total; }
+  function drawStack(st){ if(!els.stack) return; if(!st){ els.stack.hidden=true; return; } els.stack.hidden=false; els.stack.innerHTML='<span class="lab">calls:</span>'+st.map((s,i)=>'<span'+(i===st.length-1?' class="top"':'')+'>'+s+'</span>').join(''); }
+  function load(events){ stop(); ev=events; pos=0; counts={}; drawCode(0); drawCounts(null,false); drawStack(prog.rows[0].key==='chk'?[]:null); els.what.className='what'; els.what.innerHTML='Press Step or Run.'; }
+  function step(){ if(pos>=ev.length) return false; const e=ev[pos++]; if(e.row) counts[e.row]=(counts[e.row]||0)+1; drawCode(e.line); const total=drawCounts(e.row,pos>=ev.length); drawStack(e.stack); els.what.className='what'+(pos>=ev.length?' done':' on'); els.what.innerHTML=(e.row?'<b>step '+total+'</b> · ':'')+e.what+(pos>=ev.length?' — <b>done, '+total+' steps.</b>':''); return pos<ev.length; }
+  function run(ms){ stop(); const tick=()=>{ if(step()) timer=setTimeout(tick,reduced?0:(ms||330)); else timer=null; }; tick(); }
+  function stop(){ if(timer){ clearTimeout(timer); timer=null; } }
+  return {load,step,run,stop,total:()=>Object.values(counts).reduce((a,b)=>a+b,0)};
+}
+
+/* ───────── bench ───────── */
+let benchProg='search';
+const player={search:null,fact:null};
+const bEls={code:$('#benchCode'),what:$('#what'),counts:$('#counts'),stack:$('#stack')};
+function benchLoad(){ const prog=PROGS[benchProg]; if(!player[benchProg]) player[benchProg]=tracePlayer(bEls,prog); const pl=player[benchProg];
+  if(benchProg==='search'){ const A=$('#inA').value.split(/[,\s]+/).filter(Boolean).map(x=>parseInt(x,10)).filter(x=>Number.isFinite(x)).slice(0,12); const t=parseInt($('#inT').value,10); if(!A.length||!Number.isFinite(t)){ $('#what').textContent='A needs at least one whole number, and t a whole number.'; return null; } pl.load(prog.trace(A,t)); }
+  else { let n=parseInt($('#inN').value,10); if(!Number.isFinite(n)) n=4; n=Math.max(0,Math.min(8,n)); $('#inN').value=n; pl.load(prog.trace(n)); }
+  return pl; }
+let current=null;
+$('#progSeg').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; if(current) current.stop(); benchProg=b.dataset.prog; document.querySelectorAll('#progSeg button').forEach(x=>x.setAttribute('aria-pressed',String(x===b))); $('#inSearch').hidden=benchProg!=='search'; $('#inFact').hidden=benchProg!=='fact'; current=benchLoad(); });
+$('#stepBtn').addEventListener('click',()=>{ if(!current) current=benchLoad(); if(current) current.step(); });
+$('#runBtn').addEventListener('click',()=>{ current=benchLoad(); if(current) current.run(330); });
+$('#resetBtn').addEventListener('click',()=>{ current=benchLoad(); });
+['#inA','#inT','#inN'].forEach(s=>$(s).addEventListener('change',()=>{ current=benchLoad(); }));
+current=benchLoad();
+
+/* ───────── progress ───────── */
+const STORE='counting-steps-v2'; let progress={};
+try{ progress=JSON.parse(localStorage.getItem(STORE)||'{}')||{}; }catch(e){ progress={}; }
+const save=()=>{ try{ localStorage.setItem(STORE,JSON.stringify(progress)); }catch(e){} };
+const TOTAL=11;
+function updateProgress(){ const n=Object.values(progress).filter(Boolean).length; $('#progOut').textContent=n+' of '+TOTAL; $('#progBar').style.width=(100*n/TOTAL)+'%'; }
+
+/* ───────── card scaffolding ───────── */
+const KINDS={predict:'Predict',play:'Parameter play',break:'Break it',quiz:'Quiz'};
+let counter=0;
+function card(ex, list){
+  const el=document.createElement('article'); el.className='xc'; el.id=ex.id; el.dataset.state=progress[ex.id]?'ok':'';
+  const n=++counter;
+  el.innerHTML='<div class="ex-head"><span class="n">'+String(n).padStart(2,'0')+'</span><h3>'+ex.title+'</h3><span class="ex-meta"><span class="chip '+ex.kind+'">'+KINDS[ex.kind]+'</span><span class="status" aria-hidden="true"></span></span></div><p class="prompt">'+ex.prompt+'</p><div class="ex-body"></div><div class="feedback" hidden></div>';
+  const body=$('.ex-body',el), fb=$('.feedback',el);
+  const api={ el, body,
+    ok(html){ fb.hidden=false; fb.className='feedback ok'; fb.innerHTML=html; el.dataset.state='ok'; if(!progress[ex.id]){ progress[ex.id]=true; save(); updateProgress(); } },
+    no(html){ fb.hidden=false; fb.className='feedback bad'; fb.innerHTML=html; if(el.dataset.state!=='ok') el.dataset.state='retry'; },
+    info(html){ fb.hidden=false; fb.className='feedback'; fb.innerHTML=html; } };
+  ex.build(body, api); list.appendChild(el);
+}
+function ask(body, html){ const d=document.createElement('div'); d.className='ask'; d.innerHTML=html; body.appendChild(d); return d; }
+function numin(body, label, after){ const w=document.createElement('div'); w.className='numin'; w.innerHTML='<label>'+label+' <input type="number" inputmode="numeric" step="1" placeholder="?"></label>'+(after?'<span>'+after+'</span>':''); body.appendChild(w); return $('input',w); }
+function actions(body, ...btns){ const row=document.createElement('div'); row.className='ex-actions'; btns.forEach(b=>row.appendChild(b)); body.appendChild(row); return row; }
+function button(label, cls){ const b=document.createElement('button'); b.type='button'; b.className='btn'+(cls?' '+cls:''); b.textContent=label; return b; }
+function options(body, opts, onPick, two){ const w=document.createElement('div'); w.className='opts'+(two?' two':''); opts.forEach((o,i)=>{ const b=document.createElement('button'); b.type='button'; b.className='opt'; b.innerHTML='<span class="key">'+'ABCD'[i]+'</span><span>'+o+'</span>'; b.addEventListener('click',()=>onPick(i,b,w)); w.appendChild(b); }); body.appendChild(w); return w; }
+function settle(w, right, picked){ w.querySelectorAll('.opt').forEach((b,i)=>{ b.disabled=true; if(i===right) b.classList.add('correct'); else if(i===picked) b.classList.add('wrong'); }); }
+function readInt(inp){ const v=parseInt(inp.value,10); return Number.isFinite(v)?v:null; }
+function onEnter(inp, fn){ inp.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); fn(); } }); }
+function codeBlock(body, lines){ const pre=document.createElement('pre'); pre.className='code'; pre.innerHTML=lines.map((l,i)=>'<span class="l"><span class="ln">'+(i+1)+'</span>'+esc(l)+'</span>').join('\n'); body.appendChild(pre); return pre; }
+function miniTrace(body, prog){ const wrap=document.createElement('div'); wrap.className='trace'; wrap.innerHTML='<div class="what">—</div><div class="stack" hidden></div><table class="counts"></table>'; body.appendChild(wrap); return tracePlayer({what:$('.what',wrap),counts:$('.counts',wrap),stack:$('.stack',wrap),code:null},prog); }
+
+/* ───────── SVG plot helper ───────── */
+const NS='http://www.w3.org/2000/svg';
+function svgEl(tag, attrs, parent){ const e=document.createElementNS(NS,tag); for(const k in attrs) e.setAttribute(k,attrs[k]); if(parent) parent.appendChild(e); return e; }
+function plot(body, {w,h,xmax,ymax,xlab='n',xticks,yticks}){
+  // On a phone the chart is drawn in a smaller coordinate space so labels and dots keep their size when the SVG scales down.
+  const narrow=window.matchMedia&&window.matchMedia('(max-width:600px)').matches;
+  w=w||(narrow?340:560); h=h||(narrow?250:300);
+  const svg=svgEl('svg',{class:'plot',viewBox:'0 0 '+w+' '+h,role:'img'}); body.appendChild(svg);
+  const L=46,R=14,T=14,B=30; const X=x=>L+(w-L-R)*x/xmax, Y=y=>T+(h-T-B)*(1-y/ymax);
+  const g=svgEl('g',{},svg);
+  (yticks||[1,2,3,4].map(i=>ymax*i/4)).forEach(v=>{ const yy=Y(v); svgEl('line',{class:'gl',x1:L,x2:w-R,y1:yy,y2:yy},g); svgEl('text',{class:'lbl',x:L-6,y:yy+4,'text-anchor':'end'},g).textContent=fmt(Math.round(v)); });
+  svgEl('line',{class:'ax',x1:L,x2:w-R,y1:Y(0),y2:Y(0)},g); svgEl('line',{class:'ax',x1:L,x2:L,y1:T,y2:Y(0)},g);
+  (xticks||[0,1,2,3,4].map(i=>xmax*i/4)).forEach(v=>{ svgEl('text',{class:'lbl',x:X(v),y:h-10,'text-anchor':'middle'},g).textContent=fmt(Math.round(v)); });
+  svgEl('text',{class:'lbl',x:w-R,y:Y(0)-6,'text-anchor':'end'},g).textContent=xlab;
+  const layer=svgEl('g',{},svg);
+  function curve(fn, cls, steps){ steps=steps||200; let d=''; for(let i=0;i<=steps;i++){ const x=xmax*i/steps; const y=fn(x); if(!Number.isFinite(y)) continue; const yy=Math.max(T-4,Y(Math.min(y,ymax*1.04))); d+=(d?'L':'M')+X(x).toFixed(1)+' '+yy.toFixed(1); } return svgEl('path',{class:cls,d},layer); }
+  return {svg,layer,X,Y,curve,w,h,L,R,T,B};
+}
+
+const EX=[];
+
+// 1 — count one run (two rounds)
+EX.push({id:'ex-run', kind:'predict', title:'Count one run', list:'A',
+ prompt:'<span class="k">A = [5, 2, 8, 6]</span>, <span class="k">t = 8</span>. Count the elementary steps of this one run — every assignment, comparison, addition and return — before the bench does it for you.',
+ build(body, api){
+  codeBlock(body, PROGS.search.code);
+  const prompt=ask(body,'<b>Round 1.</b> <span class="mono">search([5, 2, 8, 6], 8)</span> — how many steps?');
+  const inp=numin(body,'T(search, x) ='); const chk=button('Check','primary'); actions(body,chk);
+  let round=1, mini=null;
+  const go=()=>{ const v=readInt(inp); if(v==null) return api.info('Enter a number.');
+    if(round===1){
+      if(v===10){ round=2; mini=miniTrace(body,PROGS.search); mini.load(PROGS.search.trace([5,2,8,6],8)); mini.run(260); api.info('<b>10.</b> One assignment; then for each of the three visited cells a loop check and an == check; two increments; one return. 1 + 3·2 + 2 + 1 = 10 — in general 3<i>k</i> + 4 with the target at index <i>k</i>, here <i>k</i> = 2. <b>Round 2:</b> same list, <span class="mono">t = 9</span>, which is not there.'); prompt.innerHTML='<b>Round 2.</b> <span class="mono">search([5, 2, 8, 6], 9)</span> — how many steps now?'; inp.value=''; }
+      else if(v===3) api.no('<b>3 is the number of loop iterations.</b> Each one costs a loop check, an == check, and either a return or an increment — and the <span class="mono">i = 0</span> before the loop is a step too.');
+      else if(v===9) api.no('<b>9 is three steps per iteration and nothing else.</b> The assignment <span class="mono">i = 0</span> on line 2 runs once before any of it.');
+      else if(v===11) api.no('<b>11 counts line 7.</b> The run returns True on line 5 the moment it finds 8, so <span class="mono">return False</span> is never reached.');
+      else if(v===15) api.no('<b>15 is the count when <i>t</i> is absent</b> — the loop check fails at the end and line 7 runs. Here 8 is found at index 2 and the run stops early.');
+      else if(v===6||v===7) api.no('<b>Each visited cell costs two checks,</b> not one: the loop check on line 3 and the == check on line 4. Then an increment, except for the last cell, which returns instead.');
+      else api.no('<b>Not '+v+'.</b> Line 2 once; lines 3 and 4 once per visited cell; line 6 once per cell that is not the target; line 5 once. Run it in the bench with A = 5, 2, 8, 6 and t = 8.');
+    } else {
+      if(v===15){ mini.load(PROGS.search.trace([5,2,8,6],9)); mini.run(230); api.ok('<b>15 = 3<i>n</i> + 3.</b> The loop check runs <i>n</i> + 1 times — once more than the iterations, to discover that <i>i</i> = <i>n</i> — then line 7 runs. Same list size, different counts: 10 when the target sits at index 2, 15 when it is missing. The running time of a <em>run</em> is just a number, and it depends on more than the size.'); }
+      else if(v===12) api.no('<b>12 is three steps for each of the four cells.</b> Add the assignment before the loop, the final loop check that fails, and <span class="mono">return False</span>.');
+      else if(v===14) api.no('<b>One short.</b> The loop check on line 3 runs five times for four cells: the fifth is the one that fails, and it is a step like the others.');
+      else if(v===10) api.no('<b>10 was the found-at-index-2 run.</b> With 9 absent the loop visits all four cells and then has to fail the check and return False.');
+      else if(v===16) api.no('<b>One too many.</b> Four cells cost 4 loop checks + 4 == checks + 4 increments = 12; then the assignment, the failing fifth loop check, and the return: 15.');
+      else api.no('<b>Not '+v+'.</b> With the target absent: 1 (assignment) + 5 (loop checks) + 4 (== checks) + 4 (increments) + 1 (return False).');
+    } };
+  chk.addEventListener('click',go); onEnter(inp,go);
+ }});
+
+// 2 — the skyline
+EX.push({id:'ex-skyline', kind:'play', title:'The skyline', list:'B',
+ prompt:'One dot per input of size <span class="fm"><i>n</i></span>: the target at index 0, 1, …, <span class="fm"><i>n</i> − 1</span>, or absent. Slide <span class="fm"><i>n</i></span>, read the column, then commit.',
+ build(body, api){
+  const P=plot(body,{xmax:7,ymax:24,xticks:[1,2,3,4,5,6],yticks:[4,8,12,16,20]});
+  const dots=[]; for(let n=1;n<=6;n++){ for(let k=0;k<n;k++) dots.push({n,y:3*k+4,k}); dots.push({n,y:3*n+3,k:-1}); }
+  const colRect=svgEl('rect',{class:'col',x:0,y:P.T,width:0,height:P.Y(0)-P.T},P.layer);
+  const dotEls=dots.map(d=>svgEl('circle',{class:'dot',cx:P.X(d.n),cy:P.Y(d.y),r:4.5},P.layer));
+  const rg=document.createElement('div'); rg.className='range'; rg.innerHTML='<span><i class="fm">n</i></span><input type="range" min="1" max="6" value="3" aria-label="input size n"><output>3</output>'; body.appendChild(rg);
+  const ro=document.createElement('div'); ro.className='readout'; body.appendChild(ro);
+  const slider=$('input',rg), outp=$('output',rg);
+  function probe(){ const n=+slider.value; outp.textContent=n; colRect.setAttribute('x',P.X(n)-14); colRect.setAttribute('width',28); dots.forEach((d,i)=>{ dotEls[i].setAttribute('class','dot'+(d.n===n?'':' dim')+(d.k===-1&&solvedTop?' top':'')); }); let h=''; for(let k=0;k<n;k++) h+='<span>index '+k+': <b>'+(3*k+4)+'</b></span>'; h+='<span>absent: <b>'+(3*n+3)+'</b></span>'; ro.innerHTML=h; }
+  let solvedTop=false;
+  slider.addEventListener('input',probe); probe();
+  const prompt=ask(body,'<b>Round 1.</b> <i class="fm">T</i><sub>search</sub>(4) = ? <small>The running time of the <em>program</em> at size 4.</small>');
+  const inp=numin(body,'T(4) ='); const chk=button('Check','primary'); actions(body,chk);
+  let round=1;
+  const go=()=>{ const v=readInt(inp); if(v==null) return api.info('Enter a number.');
+    if(round===1){ if(v===15){ round=2; solvedTop=true; probe(); api.info('<b>15 — the top of the column.</b> The program\'s running time at size 4 is the worst input of size 4, and the worst input is the one that is not there. <b>Round 2:</b> and the best case at <i>n</i> = 4?'); prompt.innerHTML='<b>Round 2.</b> The best case at <i>n</i> = 4 — the <em>bottom</em> of the column. <small>Which input is it?</small>'; inp.value=''; }
+      else if(v===4) api.no('<b>4 is the bottom of the column</b> — the target at index 0. The running time of the program is a maximum: the top.');
+      else if(v===13||v===10||v===7) api.no('<b>'+v+' is one of the dots, but not the highest.</b> <i>T</i><sub><i>P</i></sub>(<i>n</i>) is the max over all inputs of size <i>n</i>. Slide to <i>n</i> = 4 and read the top.');
+      else api.no('<b>Not '+v+'.</b> Slide to <i>n</i> = 4: the dots are 4, 7, 10, 13 and 15. The program\'s running time is the largest.'); }
+    else { if(v===4){ P.curve(n=>3*n+3,'sky',60); svgEl('line',{class:'floor',x1:P.X(1),x2:P.X(6),y1:P.Y(4),y2:P.Y(4)},P.layer); api.ok('<b>4: the target sits at index 0,</b> at every size. The skyline 3<i>n</i> + 3 is now drawn through the tops, and the dashed floor at 4 through the bottoms. “Running time” with no adjective means the skyline. And <i>T</i><sub>search</sub> ∈ Θ(<i>n</i>) is a statement that survives changing how steps are counted; 3<i>n</i> + 3 is not.'); }
+      else if(v===15) api.no('<b>15 is the worst case again.</b> The best case is the bottom dot — the input that costs least.');
+      else api.no('<b>Not '+v+'.</b> The cheapest run finds the target immediately: assignment, loop check, == check, return. Count them.'); } };
+  chk.addEventListener('click',go); onEnter(inp,go);
+ }});
+
+// 3 — misconception
+EX.push({id:'ex-misconception', kind:'quiz', title:'A common misconception', list:'B',
+ prompt:'“Θ is for the average case and Ω is for the best case.” Is that right?',
+ build(body, api){
+  options(body,['Yes — that is what the three symbols are for','No — O, Ω and Θ describe functions; worst, best and average cases are three different functions, and each can be described with any of the three','Half right: Ω is for the best case, but Θ is for the worst case','It is right for programs and wrong for functions'],(i,b,w)=>{ settle(w,1,i);
+    if(i===1) api.ok('<b>They describe functions, full stop.</b> The worst-case running time is a function ℕ → ℕ; so is the best case; so is the average. Any of them can be in <i>O</i>(<i>n</i>), in Ω(<i>n</i>), in Θ(<i>n</i>). For search: the worst case 3<i>n</i> + 3 is Θ(<i>n</i>); the best case is the constant 4, which is Θ(1) — and also <i>O</i>(<i>n</i>), and Ω(1).');
+    else api.no('<b>The symbols know nothing about cases.</b> Ω(<i>g</i>) is the set of functions that eventually stay above some constant multiple of <i>g</i>; nothing in that sentence says “best”. The best-case running time of search is the constant function 4, and it is in Θ(1), in Ω(1) and in <i>O</i>(<i>n</i>) all at once.'); });
+ }});
+
+// 4 — when do values matter (multi-select)
+EX.push({id:'ex-values', kind:'quiz', title:'When do the values matter?', list:'C',
+ prompt:'Under the word-size convenience, the values inside the input usually do not change the count. Pick <em>every</em> case in which they do, then check.',
+ build(body, api){
+  const CASES=[{t:'They decide how many times a loop runs or a recursion recurses',ok:true},{t:'They are added, multiplied or compared, and they are bigger than a word',ok:true},{t:'They are stored in a list rather than in a single variable',ok:false},{t:'They are negative',ok:false}];
+  const wrap=document.createElement('div'); wrap.className='chips'; wrap.style.flexDirection='column'; body.appendChild(wrap);
+  const picked=new Set(); const btns=CASES.map((c,i)=>{ const b=document.createElement('button'); b.type='button'; b.className='chipbtn'; b.setAttribute('aria-pressed','false'); b.innerHTML=c.t; b.addEventListener('click',()=>{ if(b.disabled) return; if(picked.has(i)){ picked.delete(i); b.setAttribute('aria-pressed','false'); } else { picked.add(i); b.setAttribute('aria-pressed','true'); } }); wrap.appendChild(b); return b; });
+  const chk=button('Check','primary'); actions(body,chk);
+  chk.addEventListener('click',()=>{ const extra=[...picked].filter(i=>!CASES[i].ok), missing=CASES.map((c,i)=>i).filter(i=>CASES[i].ok&&!picked.has(i));
+    if(!extra.length&&!missing.length){ btns.forEach((b,i)=>{ b.disabled=true; if(CASES[i].ok) b.classList.add('good'); }); api.ok('<b>Exactly two.</b> A value that controls the number of iterations is really an input <em>size</em> in disguise — factorial\'s <i>n</i> is the standard trap, coming up below. And arithmetic on numbers larger than a word is no longer one step; it is a loop over words. Everything else is covered by the convenience: the list [888, 99, 100000] costs exactly what [1, 2, 3] costs.'); }
+    else if(extra.length){ const i=extra[0]; api.no(i===2?'<b>A list of three values has size three whatever the values are</b> — three words, two commas, two brackets. Storage is not the issue.':'<b>Sign costs nothing.</b> A negative number still fits in a word, and the comparison still takes one step.'); }
+    else { const i=missing[0]; api.no(i===0?'<b>You left out the loop case.</b> If a value decides how many times something runs, it is acting as a size — and the count depends on it.':'<b>You left out the big-number case.</b> Once a value no longer fits in a word, adding or multiplying it is a loop over words, not one step.'); } });
+ }});
+
+// 5 — size in bits (two rounds)
+EX.push({id:'ex-size', kind:'predict', title:'Size, by convention', list:'C',
+ prompt:'A program takes a single number <span class="fm"><i>v</i></span>. Under the bit convention, what is the size of <span class="fm"><i>v</i> = 1000</span>?',
+ build(body, api){
+  const inp=numin(body,'size ='); const chk=button('Check','primary'); actions(body,chk);
+  let done=false;
+  const go=()=>{ const v=readInt(inp); if(v==null) return api.info('Enter a number.');
+    if(v===10){ if(done) return; done=true; api.info('<b>10 bits:</b> ⌊log<sub>2</sub> 1000⌋ + 1 = 9 + 1, since 2<sup>9</sup> = 512 ≤ 1000 &lt; 1024 = 2<sup>10</sup>. The value is a hundred times its size, and the gap only widens: a number with <i>n</i> bits can be as large as 2<sup><i>n</i></sup> − 1. <b>Round 2:</b> the lists.'); round2(); }
+    else if(v===1000) api.no('<b>1000 is the value.</b> Size is how many memory locations it occupies: for a number, its bits.');
+    else if(v===4) api.no('<b>Four is the number of decimal digits.</b> The machine stores binary; the convention counts bits: ⌊log<sub>2</sub> <i>v</i>⌋ + 1.');
+    else if(v===9) api.no('<b>⌊log<sub>2</sub> 1000⌋ = 9, plus one for the leading bit.</b> Nine bits only reach 511.');
+    else if(v===1) api.no('<b>One word, yes — but the convention for a single number counts bits,</b> precisely so that “how big is the input” has an answer that grows with the number.');
+    else api.no('<b>Not '+v+'.</b> How many bits does 1000 need? 2<sup>9</sup> = 512 is not enough; 2<sup>10</sup> = 1024 is.'); };
+  chk.addEventListener('click',go); onEnter(inp,go);
+  function round2(){ ask(body,'<b>Round 2.</b> <span class="mono">[1, 2, 3]</span> and <span class="mono">[888, 99, 100000]</span> — do they have the same size?'); options(body,['Yes — three words, two commas, two brackets, whatever the values','No — the second needs more bits','Only if the machine is 64-bit','Lists have no size; only their elements do'],(i,b,w)=>{ settle(w,0,i);
+      if(i===0) api.ok('<b>The same.</b> 3 × word size + 2 × comma + 2 brackets, for both — and for a list of <i>n</i> words it is <i>Cn</i> + <i>D</i> for constants <i>C</i>, <i>D</i>. Those constants do not survive into the asymptotic description, which is the homework the lecture leaves: check that they cannot.');
+      else if(i===1) api.no('<b>Each value fits in a word,</b> and the word-size convenience charges one word per value regardless of what is in it. Bits only come into it for a single number given on its own.');
+      else if(i===2) api.no('<b>The word size is fixed by the machine, but “same size” holds for any word size</b> that fits the values: the count is words, not bits.');
+      else api.no('<b>Lists have a size — their length,</b> by the practical convention. That is what <i>n</i> means for search.'); }); }
+ }});
+
+// 6 — the quick test (three rounds)
+EX.push({id:'ex-quicktest', kind:'predict', title:'A program with ten inputs', list:'C',
+ prompt:'Program <span class="fm"><i>P</i></span> has exactly these inputs, and returns INVALID in one step on anything else. Read the table, then answer three questions.',
+ build(body, api){
+  const tbl=document.createElement('table'); tbl.className='tbl'; tbl.innerHTML='<tr><th>size</th><th>inputs</th><th class="r">steps</th></tr><tr><td>5</td><td>a, b, c</td><td class="r">1 000 · 2 000 · 3 000</td></tr><tr><td>10</td><td>d, e, f, g</td><td class="r">10 000 each</td></tr><tr><td>15</td><td>h, i, j</td><td class="r">30 000 · 40 000 · 50 000</td></tr><tr><td>other</td><td>anything</td><td class="r">1 (INVALID)</td></tr>'; body.appendChild(tbl);
+  const prompt=ask(body,'<b>Round 1.</b> <i class="fm">T</i>(<i>P</i>, <i>b</i>) = ?');
+  const inp=numin(body,'answer ='); const chk=button('Check','primary'); actions(body,chk);
+  let round=1;
+  const go=()=>{ const v=readInt(inp); if(v==null) return api.info('Enter a number.');
+    if(round===1){ if(v===2000){ round=2; api.info('<b>2 000 — one run, one number.</b> <b>Round 2:</b> <i>T</i><sub><i>P</i></sub>(15) = ?'); prompt.innerHTML='<b>Round 2.</b> <i class="fm">T</i><sub><i>P</i></sub>(15) = ? <small>The running time of the program at size 15.</small>'; inp.value=''; }
+      else if(v===3000) api.no('<b>3 000 is the worst input of size 5,</b> which would be <i>T</i><sub><i>P</i></sub>(5). The question asks about one specific run, <i>b</i>.');
+      else api.no('<b><i>T</i>(<i>P</i>, <i>b</i>) is the cost of one run on the input <i>b</i>.</b> Read it off the table.'); }
+    else if(round===2){ if(v===50000){ round=3; api.info('<b>50 000 — the maximum over the three inputs of size 15.</b> <b>Round 3:</b> <i>T</i><sub><i>P</i></sub>(7) = ?'); prompt.innerHTML='<b>Round 3.</b> <i class="fm">T</i><sub><i>P</i></sub>(7) = ? <small>There are no listed inputs of size 7.</small>'; inp.value=''; }
+      else if(v===40000) api.no('<b>40 000 is the middle one.</b> <i>T</i><sub><i>P</i></sub>(<i>n</i>) is the max over all inputs of size <i>n</i>.');
+      else if(v===120000) api.no('<b>Not the sum.</b> The running time of the program at a size is the single worst run at that size.');
+      else api.no('<b>Not '+v+'.</b> Three inputs have size 15; take the largest of their costs.'); }
+    else { if(v===1){ api.ok('<b>1.</b> An input of size 7 exists — any string of seven words — and <i>P</i> answers INVALID in one step. <i>T</i><sub><i>P</i></sub> is defined at every size, and at every size but 5, 10 and 15 it equals 1. Keep that in mind for the next card.'); }
+      else if(v===0) api.no('<b>Zero steps would mean the machine did nothing,</b> but it has to read the input and say INVALID. That is a fixed amount of work: one step.');
+      else api.no('<b>Not '+v+'.</b> No listed input has size 7, so every input of size 7 gets the one-step INVALID answer. The max of a column of ones is 1.'); } };
+  chk.addEventListener('click',go); onEnter(inp,go);
+ }});
+
+// 7 — O(1) with 50,000-step runs
+EX.push({id:'ex-witness', kind:'play', title:'Big-O with witnesses', list:'C',
+ prompt:'Same program. Claim: <span class="fm"><i>T</i><sub><i>P</i></sub> ∈ <i>O</i>(1)</span>, with <span class="fm"><i>q</i>(<i>n</i>) = 1</span>. You are ∃loïse: give witnesses <span class="fm"><i>c</i></span> and <span class="fm"><i>n</i><sub>0</sub></span> such that <span class="fm"><i>T</i><sub><i>P</i></sub>(<i>n</i>) ≤ <i>c</i> · 1</span> for all <span class="fm"><i>n</i> ≥ <i>n</i><sub>0</sub></span>. ∀bélard will look for an <span class="fm"><i>n</i></span> that breaks it.',
+ build(body, api){
+  const TP=n=>n===5?3000:n===10?10000:n===15?50000:1;
+  const row=document.createElement('div'); row.className='numin'; row.innerHTML='<label><i class="fm">c</i> = <input type="number" inputmode="numeric" step="1" placeholder="?"></label><label><i class="fm">n</i><sub>0</sub> = <input type="number" inputmode="numeric" step="1" placeholder="?"></label>'; body.appendChild(row);
+  const [cIn,nIn]=row.querySelectorAll('input'); const lock=button('Lock in','primary'); actions(body,lock);
+  let won=false;
+  lock.addEventListener('click',()=>{ const c=readInt(cIn), n0=readInt(nIn); if(c==null||n0==null) return api.info('Enter both numbers.'); if(c<1||n0<0) return api.no('<b>Witnesses are natural numbers,</b> and <i>c</i> has to be positive.');
+    const breaker=[5,10,15].filter(n=>n>=n0).find(n=>TP(n)>c);
+    if(breaker!=null){ api.no('<b>∀bélard plays <i>n</i> = '+breaker+':</b> <i>T</i><sub><i>P</i></sub>('+breaker+') = '+fmt(TP(breaker))+' &gt; '+fmt(c)+' · 1. Either raise <i>c</i> past every cost the sizes ≥ <i>n</i><sub>0</sub> can produce, or move <i>n</i><sub>0</sub> past 15 so those sizes no longer count.'); return; }
+    if(!won){ won=true; api.info('<b>Locked. ∀bélard has no move.</b> '+(n0>15?'With <i>n</i><sub>0</sub> = '+n0+' every size that counts costs 1, so even <i>c</i> = 1 works.':'With <i>c</i> = '+fmt(c)+' nothing beyond <i>n</i><sub>0</sub> = '+n0+' exceeds it.')+' A program with 50 000-step runs is <i>O</i>(1), because only finitely many sizes cost anything and the definition only cares about large <i>n</i>. The best description is <i>q</i>(<i>n</i>) = 1; there is no better one. <b>One more:</b>'); round2(); } });
+  function round2(){ ask(body,'<b>Round 2.</b> Suppose <i>P</i> also accepts every input of every size <i>n</i> ≥ 16, taking <i>n</i><sup>3</sup> steps on each. How would you describe <i>T</i><sub><i>P</i></sub> asymptotically?'); options(body,['<i>T</i><sub><i>P</i></sub> ∈ Θ(<i>n</i><sup>3</sup>)','Still <i>O</i>(1): the three expensive sizes are finite','Θ(<i>n</i><sup>3</sup>) only from 16 on, so no single description','<i>O</i>(<i>n</i><sup>2</sup>), since 50 000 &gt; 15<sup>3</sup>'],(i,b,w)=>{ settle(w,0,i);
+      if(i===0) api.ok('<b>Θ(<i>n</i><sup>3</sup>).</b> From <i>n</i> = 16 on, <i>T</i><sub><i>P</i></sub>(<i>n</i>) = <i>n</i><sup>3</sup> exactly; the sizes 5, 10 and 15 are absorbed by choosing <i>n</i><sub>0</sub> = 16. “From some point on” is written into the definition precisely so that finitely many exceptions never matter.');
+      else if(i===1) api.no('<b>Not any more:</b> for <i>n</i> ≥ 16 the cost is <i>n</i><sup>3</sup>, which no constant bounds. ∀bélard plays <i>n</i> = max(<i>n</i><sub>0</sub>, <i>c</i> + 16).');
+      else if(i===2) api.no('<b>“From 16 on” is all the definition asks.</b> Choose <i>n</i><sub>0</sub> = 16 and the three odd sizes are out of the picture. One description, Θ(<i>n</i><sup>3</sup>).');
+      else api.no('<b>A single value cannot beat a growth rate.</b> 50 000 is a bump at <i>n</i> = 15; past <i>n</i><sub>0</sub> = 16 the function is <i>n</i><sup>3</sup>, and <i>n</i><sup>3</sup> is not <i>O</i>(<i>n</i><sup>2</sup>).'); }); }
+ }});
+
+// 8 — big-O as a game (two rounds)
+EX.push({id:'ex-bigo', kind:'play', title:'Big-O is a game', list:'D',
+ prompt:'Round 1 — you are ∃loïse. Defend <span class="fm">3<i>n</i><sup>2</sup> + 10<i>n</i> ∈ <i>O</i>(<i>n</i><sup>2</sup>)</span>: choose <span class="fm"><i>c</i></span> and <span class="fm"><i>n</i><sub>0</sub></span>, then lock in. ∀bélard will hunt for an <span class="fm"><i>n</i> ≥ <i>n</i><sub>0</sub></span> with <span class="fm"><i>f</i>(<i>n</i>) &gt; <i>c</i> · <i>n</i><sup>2</sup></span>.',
+ build(body, api){
+  const f=n=>3*n*n+10*n;
+  const pl=document.createElement('div'); pl.className='players'; pl.innerHTML='<div class="player pex turn" data-p="ex"><b>∃loïse — defender (you)</b><small>Picks <i>c</i> and <i>n</i><sub>0</sub>. May pick them generously; the definition does not ask for the smallest ones.</small></div><div class="player pfa" data-p="fa"><b>∀bélard — challenger</b><small>Picks any <i>n</i> ≥ <i>n</i><sub>0</sub>. Wins if the inequality fails there.</small></div>'; body.appendChild(pl);
+  const pEx=pl.querySelector('[data-p="ex"]'), pFa=pl.querySelector('[data-p="fa"]');
+  const P=plot(body,{xmax:40,ymax:6000});
+  const leg=document.createElement('div'); leg.className='legend'; leg.innerHTML='<b><i class="sw f"></i><span><i>f</i>(<i>n</i>) = 3<i>n</i><sup>2</sup> + 10<i>n</i></span></b><b><i class="sw g"></i><span><i>c</i> · <i>n</i><sup>2</sup></span></b><span>shaded: <i>n</i> ≥ <i>n</i><sub>0</sub>, where the promise applies</span>'; body.appendChild(leg);
+  const ctl=document.createElement('div'); ctl.className='two'; ctl.innerHTML='<div class="ctl"><span class="lbl"><span>Constant <i class="fm">c</i></span></span><div class="stepper"><button type="button" aria-label="Decrease c">−</button><label><span><i class="fm">c</i> =</span><input type="number" min="1" max="12" value="2" inputmode="numeric"></label><button type="button" aria-label="Increase c">+</button></div></div><div class="ctl"><span class="lbl"><span>Threshold <i class="fm">n</i><sub>0</sub></span></span><div class="stepper"><button type="button" aria-label="Decrease n0">−</button><label><span><i class="fm">n</i><sub>0</sub> =</span><input type="number" min="0" max="100" value="5" inputmode="numeric"></label><button type="button" aria-label="Increase n0">+</button></div></div>'; body.appendChild(ctl);
+  const [cMinus,cPlus,nMinus,nPlus]=ctl.querySelectorAll('.stepper button'); const [cIn,nIn]=ctl.querySelectorAll('input');
+  let c=2, n0=5, r1=false, r2=false;
+  const zone=svgEl('rect',{class:'zone'},P.layer), n0line=svgEl('line',{class:'n0'},P.layer); let fcurve=null,gcurve=null; const viol=svgEl('g',{},P.layer);
+  function redraw(){ if(fcurve){fcurve.remove();gcurve.remove();} fcurve=P.curve(f,'f'); gcurve=P.curve(n=>c*n*n,'g'); const x=P.X(Math.min(n0,40)); zone.setAttribute('x',x); zone.setAttribute('y',P.T); zone.setAttribute('width',Math.max(0,P.X(40)-x)); zone.setAttribute('height',P.Y(0)-P.T); n0line.setAttribute('x1',x); n0line.setAttribute('x2',x); n0line.setAttribute('y1',P.T); n0line.setAttribute('y2',P.Y(0)); while(viol.firstChild) viol.removeChild(viol.firstChild); }
+  function setC(v){ c=Math.max(1,Math.min(12,Math.round(v)||1)); cIn.value=c; redraw(); } function setN0(v){ n0=Math.max(0,Math.min(100,Math.round(v)||0)); nIn.value=n0; redraw(); }
+  cMinus.addEventListener('click',()=>setC(c-1)); cPlus.addEventListener('click',()=>setC(c+1)); nMinus.addEventListener('click',()=>setN0(n0-1)); nPlus.addEventListener('click',()=>setN0(n0+1)); cIn.addEventListener('change',()=>setC(+cIn.value)); nIn.addEventListener('change',()=>setN0(+nIn.value));
+  const lock=button('Lock in c and n₀','primary'); const again=button('Change my pick'); again.hidden=true; actions(body,lock,again);
+  const round2=document.createElement('div'); round2.className='ex-body'; round2.hidden=true; body.appendChild(round2);
+  function finish(){ if(r1&&r2) api.ok('<b>Both rounds won.</b> As ∃loïse you showed 3<i>n</i><sup>2</sup> + 10<i>n</i> ∈ <i>O</i>(<i>n</i><sup>2</sup>) by producing a (<i>c</i>, <i>n</i><sub>0</sub>) that ∀bélard could not answer; as ∀bélard you showed <i>n</i><sup>2</sup> ∉ <i>O</i>(<i>n</i>) by answering every (<i>c</i>, <i>n</i><sub>0</sub>) with <i>n</i> = max(<i>n</i><sub>0</sub>, <i>c</i> + 1). Same game as the Quantifier Gym; different board.'); }
+  lock.addEventListener('click',()=>{
+    lock.disabled=true; again.hidden=false; cMinus.disabled=cPlus.disabled=nMinus.disabled=nPlus.disabled=cIn.disabled=nIn.disabled=true;
+    pEx.classList.remove('turn'); pFa.classList.add('turn');
+    // ∀bélard's exact move: f(n) > c n²  ⇔  n (c−3) < 10. For c ≤ 3 every n ≥ 1 breaks it; otherwise the breaking n are 1 ≤ n < 10/(c−3).
+    let hit=null;
+    if(c<=3) hit=Math.max(n0,1); else { const start=Math.max(n0,1); if(start*(c-3)<10) hit=start; }
+    if(hit!=null){
+      const need=c<=3?null:Math.ceil(10/(c-3));
+      for(let n=Math.max(n0,1);n<=40;n++){ if(f(n)>c*n*n) svgEl('circle',{class:'viol',cx:P.X(n),cy:P.Y(Math.min(f(n),6000)),r:4},viol); }
+      api.no('<b>∀bélard plays <i>n</i> = '+hit+':</b> <i>f</i>('+hit+') = '+fmt(f(hit))+' but <i>c</i> · <i>n</i><sup>2</sup> = '+fmt(c*hit*hit)+'. '+(c<=3?'With <i>c</i> ≤ 3 the 10<i>n</i> term is never covered — raise <i>c</i> above 3, and he loses his move for large <i>n</i>.':'With <i>c</i> = '+c+' the inequality holds from <i>n</i> = '+need+' on; your <i>n</i><sub>0</sub> = '+n0+' let him in below that. Any <i>n</i><sub>0</sub> ≥ '+need+' would have held.')+' Red dots mark every <i>n</i> ≥ <i>n</i><sub>0</sub> that beats you.');
+    }else{
+      r1=true; pFa.classList.remove('turn');
+      api.info('<b>Locked. ∀bélard has no move.</b> For <i>n</i> ≥ '+n0+', 10<i>n</i> ≤ ('+c+' − 3)<i>n</i><sup>2</sup>, so <i>f</i>(<i>n</i>) ≤ '+c+'<i>n</i><sup>2</sup>. Notice you did not need the smallest <i>c</i>: any <i>c</i> &gt; 3 works with a large enough <i>n</i><sub>0</sub>. That slack is the whole point of the definition.');
+      round2.hidden=false; round2.scrollIntoView({behavior:reduced?'auto':'smooth',block:'nearest'});
+    }
+  });
+  again.addEventListener('click',()=>{ lock.disabled=false; again.hidden=true; cMinus.disabled=cPlus.disabled=nMinus.disabled=nPlus.disabled=cIn.disabled=nIn.disabled=false; pEx.classList.add('turn'); pFa.classList.remove('turn'); redraw(); });
+  redraw();
+  round2.innerHTML='<p class="prompt" style="margin:0"><b style="font-family:var(--display)">Round 2 — you are ∀bélard.</b> ∃loïse claims <span class="fm"><i>n</i><sup>2</sup> ∈ <i>O</i>(<i>n</i>)</span> and locks in <span class="fm"><i>c</i> = 100</span>, <span class="fm"><i>n</i><sub>0</sub> = 50</span>. Pick an <span class="fm"><i>n</i></span> that breaks her promise.</p>';
+  const P2=plot(round2,{xmax:160,ymax:20000}); P2.curve(n=>n*n,'f'); P2.curve(n=>100*n,'g'); svgEl('rect',{class:'zone',x:P2.X(50),y:P2.T,width:P2.X(160)-P2.X(50),height:P2.Y(0)-P2.T},P2.layer); svgEl('line',{class:'n0',x1:P2.X(50),x2:P2.X(50),y1:P2.T,y2:P2.Y(0)},P2.layer);
+  const leg2=document.createElement('div'); leg2.className='legend'; leg2.innerHTML='<b><i class="sw f"></i><span><i>n</i><sup>2</sup></span></b><b><i class="sw g"></i><span>100 · <i>n</i></span></b>'; round2.appendChild(leg2);
+  const inp=numin(round2,'∀bélard plays <i class="fm">n</i> ='); const chk=button('Play it','primary'); actions(round2,chk);
+  const go=()=>{ const v=readInt(inp); if(v==null) return api.info('Enter a number.');
+    if(v<50) api.no('<b><i>n</i> must be at least her <i>n</i><sub>0</sub> = 50.</b> Below the threshold she has promised nothing, so nothing there counts against her.');
+    else if(v<=100) api.no('<b>At <i>n</i> = '+fmt(v)+': <i>n</i><sup>2</sup> = '+fmt(v*v)+' and 100<i>n</i> = '+fmt(100*v)+'.</b> Her <i>c</i> = 100 still covers you. The square only overtakes 100<i>n</i> once <i>n</i> itself passes 100.');
+    else { r2=true; svgEl('circle',{class:'cap',cx:P2.X(Math.min(v,160)),cy:P2.Y(Math.min(v*v,20000)),r:6},P2.layer); if(r1) finish(); else api.info('<b>Round 2 won: <i>n</i> = '+fmt(v)+' gives '+fmt(v*v)+' &gt; '+fmt(100*v)+'.</b> She loses — and she would lose with any <i>c</i>: <i>n</i> = max(<i>n</i><sub>0</sub>, <i>c</i> + 1) always breaks it. That is the proof that <i>n</i><sup>2</sup> ∉ <i>O</i>(<i>n</i>). Now win round 1 above to finish the card.'); } };
+  chk.addEventListener('click',go); onEnter(inp,go);
+ }});
+
+// 9 — unwind the recurrence
+EX.push({id:'ex-unwind', kind:'predict', title:'Unwind it', list:'E',
+ prompt:'<span class="fm"><i>T</i>(<i>n</i>) = 2 + <i>T</i>(<i>n</i> − 1)</span> and <span class="fm"><i>T</i>(0) = 2</span>. What is <span class="fm"><i>T</i>(5)</span>? Then the closed form.',
+ build(body, api){
+  codeBlock(body, PROGS.fact.code);
+  const inp=numin(body,'T(5) ='); const chk=button('Check, then unwind','primary'); actions(body,chk);
+  const un=document.createElement('div'); un.className='unwind'; body.appendChild(un); un.hidden=true;
+  let done=false;
+  const go=async()=>{ const v=readInt(inp); if(v==null) return api.info('Enter a number.');
+    if(v===12){ if(done) return; done=true; chk.disabled=true; un.hidden=false; const lines=[]; for(let k=1;k<=5;k++) lines.push('<i>T</i>(5) = '+(2*k)+' + <i>T</i>('+(5-k)+')'); lines.push('<i>T</i>(5) = 10 + 2 = <span class="last">12</span>'); un.innerHTML=lines.map(l=>'<div>'+l+'</div>').join(''); const ds=un.querySelectorAll('div'); for(const d of ds){ d.classList.add('show'); await wait(420); } api.info('<b>12.</b> Each unwinding peels off a 2: <i>T</i>(5) = 2<i>k</i> + <i>T</i>(5 − <i>k</i>), and at <i>k</i> = 5 the base case pays its own 2. In general <i>T</i>(<i>n</i>) = 2<i>n</i> + <i>T</i>(0). <b>Closed form?</b>'); round2(); }
+    else if(v===10) api.no('<b>10 is 2 × 5 — the five unwindings — without the base case.</b> <i>T</i>(0) is 2, not 0: the check and the return both cost.');
+    else if(v===11) api.no('<b>Close:</b> five unwindings give 10, and then <i>T</i>(0) = 2 — the check <span class="mono">n == 0</span> and <span class="mono">return 1</span> — not 1.');
+    else if(v===32) api.no('<b>Nothing doubles.</b> The recurrence adds 2 at each level; it does not multiply. Unwind: 2 + <i>T</i>(4) = 4 + <i>T</i>(3) = …');
+    else api.no('<b>Not '+v+'.</b> Unwind it: <i>T</i>(5) = 2 + <i>T</i>(4) = 4 + <i>T</i>(3) = 6 + <i>T</i>(2) = … until <i>T</i>(0).'); };
+  chk.addEventListener('click',go); onEnter(inp,go);
+  function round2(){ options(body,['<i>T</i>(<i>n</i>) = 2<i>n</i> + 2','<i>T</i>(<i>n</i>) = 2<i>n</i>','<i>T</i>(<i>n</i>) = <i>n</i> + 2','<i>T</i>(<i>n</i>) = 2<sup><i>n</i></sup>'],(i,b,w)=>{ settle(w,0,i);
+      if(i===0) api.ok('<b>2<i>n</i> + 2, so Θ(<i>n</i>) — in <i>n</i>.</b> Proved by induction once guessed: the recurrence is the induction step and <i>T</i>(0) = 2 the base case. Now the uncomfortable question the next card asks: <i>n</i> is the <em>value</em> of the input. What is its size?');
+      else if(i===1) api.no('<b>2<i>n</i> forgets the base case.</b> <i>T</i>(0) = 2, so the constant term is 2.');
+      else if(i===2) api.no('<b>Each level costs 2, not 1:</b> the check and the multiplication.');
+      else api.no('<b>The recurrence adds; it never multiplies.</b> 2<sup><i>n</i></sup> would need <i>T</i>(<i>n</i>) = 2 · <i>T</i>(<i>n</i> − 1).'); }); }
+ }});
+
+// 10 — value vs size
+EX.push({id:'ex-valuesize', kind:'break', title:'Value is not size', list:'E',
+ prompt:'<span class="fm"><i>T</i>(<i>v</i>) = 2<i>v</i> + 2</span> counts steps for the <em>value</em> <span class="fm"><i>v</i></span>. Time complexity is a function of the <em>size</em>: <span class="fm"><i>n</i></span> = the number of bits of <span class="fm"><i>v</i></span>. Slide <span class="fm"><i>n</i></span> and watch what the worst value of each size costs. Then describe <span class="fm"><i>T</i><sub>fact</sub>(<i>n</i>)</span>.',
+ build(body, api){
+  const rg=document.createElement('div'); rg.className='range'; rg.innerHTML='<span><i class="fm">n</i> bits</span><input type="range" min="1" max="10" value="4" aria-label="bits"><output>4</output>'; body.appendChild(rg);
+  const bits=document.createElement('div'); bits.className='bits'; bits.innerHTML='<div class="lab"><span>values with <i>n</i> bits</span><b data-k="vr"></b></div><div class="lab"><span>worst value <i>v</i> = 2<sup><i>n</i></sup> − 1, so <i>T</i>(<i>v</i>) = 2<i>v</i> + 2 =</span><b data-k="tr"></b></div><div class="bar" data-k="tbar"></div>'; body.appendChild(bits);
+  const vr=bits.querySelector('[data-k="vr"]'), tr=bits.querySelector('[data-k="tr"]'), tbar=bits.querySelector('[data-k="tbar"]');
+  const slider=$('input',rg), outp=$('output',rg);
+  function probe(){ const n=+slider.value; outp.textContent=n; const lo=2**(n-1), hi=2**n-1; vr.textContent=lo+' … '+hi; tr.textContent=fmt(2*hi+2); tbar.style.width=Math.max(2,100*(2*hi+2)/(2*1023+2))+'%'; }
+  slider.addEventListener('input',probe); probe();
+  options(body,['Θ(<i>n</i>) — it is linear, we just proved it','Θ(2<sup><i>n</i></sup>)','Θ(<i>n</i> log <i>n</i>)','Θ(<i>n</i><sup>2</sup>)'],(i,b,w)=>{ settle(w,1,i);
+    if(i===1) api.ok('<b>Θ(2<sup><i>n</i></sup>).</b> A value saved in <i>n</i> bits satisfies 2<sup><i>n</i>−1</sup> ≤ <i>v</i> &lt; 2<sup><i>n</i></sup>, so the worst value is <i>v</i> = 2<sup><i>n</i></sup> − 1 and <i>T</i><sub>fact</sub>(<i>n</i>) = 2(2<sup><i>n</i></sup> − 1) + 2 = 2<sup><i>n</i>+1</sup>. One more bit, twice the work: exponential in the size, linear in the value. Most textbooks quietly write <i>n</i> for both and never say which. Watch for it.');
+    else if(i===0) api.no('<b>Linear in the value, not in the size.</b> Add one bit to <i>v</i> and the worst value doubles — slide <i>n</i> from 9 to 10 and read the bar. A function that doubles per unit of input is exponential.');
+    else if(i===2) api.no('<b><i>n</i> log <i>n</i> is the number of bits in <i>n</i>!,</b> which is a different question (the next card). The step count itself doubles with every extra bit of input.');
+    else api.no('<b>Not polynomial.</b> Each extra bit doubles the worst value and therefore doubles 2<i>v</i> + 2; no power of <i>n</i> keeps up with doubling.'); });
+ }});
+
+// 11 — multiplication is not elementary
+EX.push({id:'ex-mult', kind:'quiz', title:'Is multiplication a step?', list:'E',
+ prompt:'The analysis charged one step for <span class="k">n * fact(n - 1)</span>. The word-size convenience allows that only while the numbers fit in a word. At which <span class="fm"><i>n</i></span> does <span class="fm"><i>n</i>!</span> stop fitting in 64 bits?',
+ build(body, api){
+  const tbl=document.createElement('table'); tbl.className='tbl'; tbl.innerHTML='<tr><th>n</th><th class="r">n!</th><th class="r">bits</th></tr>'+[10,13,20,21,25].map(n=>{ let f=1n; for(let k=2n;k<=BigInt(n);k++) f*=k; const bits=f.toString(2).length; return '<tr'+(bits>64?' class="hi"':'')+'><td>'+n+'</td><td class="r">'+f.toLocaleString('en-US')+'</td><td class="r">'+bits+'</td></tr>'; }).join('');
+  options(body,['13','21','64','Never — it is one multiplication, so one step'],(i,b,w)=>{ settle(w,1,i); body.appendChild(tbl);
+    if(i===1) api.ok('<b>21.</b> 20! has 62 bits and still fits; 21! needs 66. (13! is already past 32 bits.) From there on each multiplication is itself a loop over words, and <i>n</i>! has Θ(<i>n</i> log <i>n</i>) bits, so the “one step” was a convenience that quietly expired. Two lessons from one tiny program: measure the <em>size</em> of the input, and check that your elementary steps really are elementary.');
+    else if(i===0) api.no('<b>13 is where <i>n</i>! passes 32 bits</b> — 13! ≈ 6.2 billion. A 64-bit word holds on until 20!.');
+    else if(i===2) api.no('<b>64 is the word size in bits, not a value of <i>n</i>.</b> <i>n</i>! grows far faster than <i>n</i>: it needs about <i>n</i> log<sub>2</sub> <i>n</i> bits, and that passes 64 long before <i>n</i> does.');
+    else api.no('<b>One multiplication of two words is one step.</b> Once an operand is many words long, multiplying it is a loop over those words — the table shows exactly when that starts.'); });
+ }});
+
+EX.forEach(ex=>card(ex,$('#list'+ex.list)));
+updateProgress();
+if(location.hash){ const t=document.getElementById(location.hash.slice(1)); if(t) setTimeout(()=>t.scrollIntoView({block:'start'}),50); }
+})();
+</script>
+</body>
+</html>

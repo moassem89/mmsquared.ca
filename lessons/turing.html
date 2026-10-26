@@ -1,0 +1,523 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Mechanical Moves · Turing programs</title>
+<meta name="description" content="Turing programs written as lines of commands, stepped one mechanical move at a time. What does this machine compute? Write the shortest program for n + 1. Six exercises, checked by running the machine.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@500;700;800&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@500;700&family=STIX+Two+Text:ital,wght@0,400;0,600;1,400&display=swap">
+<style>
+/* Lesson 4 of the collection. Accent: amber. The tape, the head and the configuration log are the whole show. */
+:root{
+  --bg:#FFFDF6; --surface:#FFFFFF; --surface-2:#F5F3EB; --ink:#1F2340; --muted:#646A86; --line:#E4E1D4;
+  --ok:#2E9E6B; --ok-soft:#DFF3E8; --bad:#D9534F; --bad-soft:#FBE3E2;
+  --sand:#F0A24B; --sand-soft:#FDEBD2; --sea:#1FA7C4; --sea-soft:#D7F0F6;
+  --logic:#3A86FF; --turing:#B8700A; --time:#D8367A; --ml:#6A5AE0;
+  --accent:var(--turing); --accent-soft:#FBEBCF; --accent-ink:#FFFFFF;
+  --display:'Rubik',system-ui,-apple-system,sans-serif; --body:'Source Serif 4',Georgia,'Times New Roman',serif; --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace; --math:'STIX Two Text','Cambria Math','Times New Roman',serif;
+  --radius:14px; --shadow:0 1px 2px rgba(31,35,64,.06),0 8px 24px -12px rgba(31,35,64,.18);
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#15182B; --surface:#1D2138; --surface-2:#252A48; --ink:#F1F1F8; --muted:#A6AAC6; --line:#30355A;
+  --ok:#4CC38A; --ok-soft:#1E3A2E; --bad:#F07178; --bad-soft:#4A2630; --sand:#F5B261; --sand-soft:#4A3522; --sea:#45C3DE; --sea-soft:#1E3E4A;
+  --logic:#6AA3FF; --turing:#F2B544; --time:#FF6FB5; --ml:#9C8EFF; --accent-soft:#4A3410; --accent-ink:#15182B;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px -12px rgba(0,0,0,.5); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#15182B; --surface:#1D2138; --surface-2:#252A48; --ink:#F1F1F8; --muted:#A6AAC6; --line:#30355A;
+  --ok:#4CC38A; --ok-soft:#1E3A2E; --bad:#F07178; --bad-soft:#4A2630; --sand:#F5B261; --sand-soft:#4A3522; --sea:#45C3DE; --sea-soft:#1E3E4A;
+  --logic:#6AA3FF; --turing:#F2B544; --time:#FF6FB5; --ml:#9C8EFF; --accent-soft:#4A3410; --accent-ink:#15182B;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px -12px rgba(0,0,0,.5); color-scheme:dark}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{scroll-padding-top:76px}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.6;-webkit-font-smoothing:antialiased}
+a{color:var(--accent)}
+h1,h2,h3,h4{font-family:var(--display);line-height:1.15;margin:0;text-wrap:balance;letter-spacing:-.01em}
+p{margin:0}
+button{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:6px}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.fm{font-family:var(--math);font-size:1.08em}
+.fm i{font-style:italic}
+.fm sub{font-size:.7em;line-height:0}
+
+/* Collection bar — identical on every page */
+.cbar{position:sticky;top:0;z-index:20;background:var(--bg);border-bottom:1px solid var(--line)}
+.cbar .in{max-width:1120px;margin:0 auto;padding:10px max(16px,env(safe-area-inset-left,0px)) 10px max(16px,env(safe-area-inset-right,0px));display:flex;align-items:center;justify-content:space-between;gap:16px}
+.cbar .mark{display:flex;align-items:center;gap:10px;text-decoration:none;font-family:var(--display);font-weight:800;font-size:1rem;white-space:nowrap;color:var(--ink)}
+.cbar .mark .dots{display:inline-grid;grid-template-columns:repeat(4,7px);gap:3px}
+.cbar .mark .dots i{width:7px;height:7px;border-radius:50%;display:block}
+.cbar .mark .dots i:nth-child(1){background:var(--logic)}.cbar .mark .dots i:nth-child(2){background:var(--ml)}.cbar .mark .dots i:nth-child(3){background:var(--time)}.cbar .mark .dots i:nth-child(4){background:var(--turing)}
+.cbar .mark small{font-weight:500;color:var(--muted);font-size:.9rem}
+.cbar nav{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;min-width:0}
+.cbar nav::-webkit-scrollbar{display:none}
+.cbar nav a{display:flex;align-items:center;gap:7px;padding:6px 11px;border-radius:999px;text-decoration:none;color:var(--muted);font-family:var(--display);font-weight:500;font-size:.88rem;white-space:nowrap}
+.cbar nav a i{width:8px;height:8px;border-radius:50%;flex:0 0 auto}
+.cbar nav a:hover{color:var(--ink);background:var(--surface-2)}
+.cbar nav a[aria-current]{background:var(--accent-soft);color:var(--ink)}
+@media (max-width:720px){.cbar .mark span.name{display:none}.cbar .mark small{display:none}}
+
+.shell{max-width:1120px;margin:0 auto;padding:28px max(16px,env(safe-area-inset-left,0px)) 80px max(16px,env(safe-area-inset-right,0px))}
+main{min-width:0;max-width:60rem}
+.lesson-head .kicker{font-family:var(--display);font-weight:500;color:var(--accent);font-size:.95rem}
+.lesson-head h1{font-size:clamp(2.1rem,6vw,3.4rem);font-weight:800;margin-top:6px}
+.lede{font-size:1.15rem;max-width:62ch;margin-top:14px}
+.lesson-head .meta{margin-top:10px;font-family:var(--display);font-weight:500;color:var(--muted);font-size:.95rem}
+.credit{margin-top:18px;max-width:62ch;padding:12px 16px;border-radius:14px;background:var(--accent-soft);font-size:.98rem;line-height:1.55}
+.credit b{font-family:var(--display)}
+.prose{max-width:65ch;margin-top:40px}
+.prose h2{font-size:1.55rem;font-weight:700;margin-bottom:12px}
+.prose p{margin:0 0 14px}
+.prose p:last-child{margin-bottom:0}
+.k{font-family:var(--mono);font-size:.86em;background:var(--surface-2);padding:1px 6px;border-radius:6px;font-variant-numeric:tabular-nums}
+.conv{display:grid;gap:10px;margin-top:16px;max-width:62ch}
+.conv div{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;align-items:baseline;padding:10px 14px;border-radius:12px;background:var(--surface);border:1px solid var(--line)}
+.conv b{font-family:var(--display);font-size:.9rem;white-space:nowrap}
+.conv .mono{font-size:.95em}
+
+/* Bench */
+.bench{margin-top:28px;background:var(--surface);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);overflow:hidden}
+.bench-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 16px;padding:14px 18px;border-bottom:1px solid var(--line);background:var(--surface-2)}
+.bench-head h2{font-size:1rem;font-weight:700}
+.bench-head .hint{font-family:var(--display);font-size:.85rem;color:var(--muted)}
+.bench-body{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;padding:16px}
+@media (min-width:860px){.bench-body{grid-template-columns:320px minmax(0,1fr);gap:20px;padding:20px}}
+.seg{display:flex;background:var(--surface-2);border-radius:10px;padding:3px;gap:3px;flex-wrap:wrap}
+.seg button{flex:1;border:0;background:transparent;border-radius:8px;padding:7px 8px;font-family:var(--display);font-weight:500;font-size:.85rem;cursor:pointer;color:var(--muted);min-width:0;white-space:nowrap}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.ctl{display:grid;gap:8px}
+.ctl .lbl{font-family:var(--display);font-weight:700;font-size:.78rem;color:var(--muted);display:flex;justify-content:space-between;align-items:baseline}
+textarea.prog{font-family:var(--mono);font-size:.95rem;line-height:1.65;width:100%;min-height:8.5em;padding:10px 12px;border:1.5px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink);resize:vertical;tab-size:4}
+textarea.prog:focus{border-color:var(--accent);outline:none}
+.perr{font-family:var(--display);font-size:.85rem;color:var(--bad);min-height:1.2em}
+.inrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.inrow input{font:inherit;font-family:var(--mono);font-size:1.05rem;width:8ch;padding:8px 10px;border:1.5px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink)}
+.inrow input:focus{border-color:var(--accent);outline:none}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:9px 14px;font-family:var(--display);font-weight:700;font-size:.9rem;cursor:pointer;display:inline-flex;align-items:center;gap:8px;color:var(--ink);text-decoration:none}
+.btn:hover:not([disabled]){background:var(--surface-2)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:transparent}
+.btn.primary:hover:not([disabled]){filter:brightness(1.06);background:var(--accent)}
+.btn[disabled]{opacity:.5;cursor:default}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+
+/* Machine view: tape, state, moves, configuration log */
+.mv{display:grid;gap:12px;min-width:0}
+.mstate{display:flex;gap:16px;align-items:center;flex-wrap:wrap;font-family:var(--display);font-size:.9rem;color:var(--muted)}
+.mstate .st{font-family:var(--mono);font-size:1.15rem;font-weight:700;background:var(--accent);color:var(--accent-ink);padding:4px 10px;border-radius:8px}
+.mstate .st.halt{background:var(--ok);color:#fff} .mstate .st.jam{background:var(--bad);color:#fff}
+.mstate .mv-n{font-family:var(--mono);font-size:1.5rem;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
+.tape{display:flex;gap:4px;overflow-x:auto;padding:12px 8px 26px;background:var(--surface-2);border-radius:12px;scrollbar-width:thin}
+.tape .cell{flex:0 0 40px;height:46px;border:1.5px solid var(--line);border-radius:8px;display:grid;place-items:center;font-family:var(--mono);font-size:1.15rem;font-weight:700;background:var(--surface);position:relative;transition:border-color .15s,box-shadow .15s}
+.tape .cell.blank{color:transparent;border-style:dashed;background:transparent}
+.tape .cell.head{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.tape .cell.head::after{content:"";position:absolute;left:50%;bottom:-16px;transform:translateX(-50%);border:7px solid transparent;border-bottom:9px solid var(--accent)}
+.tape .cell.wrote{animation:pop .3s}
+@keyframes pop{0%{transform:scale(1)}50%{transform:scale(1.15)}100%{transform:scale(1)}}
+.clog{font-family:var(--mono);font-size:.9rem;line-height:1.75;background:var(--surface-2);border-radius:12px;padding:8px 12px;max-height:200px;overflow:auto;display:grid;gap:1px}
+.clog div{padding:0 6px;border-radius:6px;white-space:nowrap}
+.clog .rd{color:var(--bad);font-weight:700;text-decoration:underline;text-underline-offset:3px}
+.clog .now{background:var(--accent-soft)}
+.clog .note{font-family:var(--display);color:var(--muted);font-size:.85rem}
+.out{border-radius:12px;padding:10px 14px;background:var(--surface-2);font-family:var(--display);font-size:.95rem;line-height:1.5;border-left:3px solid var(--line);min-height:3em}
+.out.halt{border-left-color:var(--ok);background:var(--ok-soft)} .out.jam{border-left-color:var(--bad);background:var(--bad-soft)} .out.run{border-left-color:var(--accent)}
+.out b{font-weight:700}
+pre.code{margin:0;font-family:var(--mono);font-size:.95rem;line-height:1.7;background:var(--surface-2);border-radius:12px;padding:12px 14px;overflow-x:auto;white-space:pre}
+pre.code .ln{display:inline-block;width:1.6em;color:var(--muted);font-size:.85em;user-select:none}
+pre.code .hl{background:var(--accent-soft);border-radius:4px;padding:1px 4px;margin:0 -4px}
+pre.code .cm{color:var(--muted)}
+
+/* Exercise bank */
+.bank-head{margin-top:44px;display:flex;flex-wrap:wrap;align-items:end;justify-content:space-between;gap:12px 24px}
+.bank-head h2{font-size:1.55rem}
+.bank-head p{margin:6px 0 0;color:var(--muted);max-width:52ch}
+.progress{min-width:min(100%,260px)}
+.progress .lbl{font-family:var(--display);font-weight:700;font-size:.82rem;color:var(--muted);display:flex;justify-content:space-between}
+.progress .lbl output{font-family:var(--mono);color:var(--ink);font-variant-numeric:tabular-nums}
+.progress .bar{height:8px;border-radius:999px;background:var(--surface-2);margin-top:6px;overflow:hidden}
+.progress .bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--sand),var(--accent),var(--sea));border-radius:999px;transition:width .4s ease}
+.types{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.chip{font-family:var(--display);font-weight:700;font-size:.74rem;letter-spacing:.02em;padding:3px 9px;border-radius:999px;background:var(--surface-2);color:var(--ink);white-space:nowrap}
+.chip.predict{background:var(--sand-soft)}.chip.play{background:var(--sea-soft)}.chip.break{background:var(--bad-soft)}.chip.quiz{background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--line)}
+.exlist{display:flex;flex-direction:column;gap:16px;margin-top:18px}
+.xc{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:var(--shadow);scroll-margin-top:84px}
+@media (min-width:760px){.xc{padding:22px 24px}}
+.ex-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.ex-meta{display:inline-flex;align-items:center;gap:10px;margin-left:auto}
+.ex-head .n{font-family:var(--mono);font-size:.8rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.ex-head h3{font-size:1.15rem;font-weight:700;flex:1 1 auto;min-width:0}
+.dot{width:12px;height:12px;border-radius:50%;background:var(--surface-2);box-shadow:inset 0 0 0 2px var(--line);flex:0 0 auto}
+.xc[data-state="ok"] .dot{background:var(--ok);box-shadow:none}
+.xc[data-state="retry"] .dot{background:var(--bad-soft);box-shadow:inset 0 0 0 2px var(--bad)}
+.xc[data-state="ok"]{border-color:color-mix(in srgb,var(--ok) 45%,var(--line))}
+.xc .prompt{margin:10px 0 0;max-width:62ch}
+.ex-body{margin-top:14px;display:grid;gap:12px}
+.ask{font-family:var(--display);font-weight:700;font-size:1rem;padding:10px 14px;border-radius:12px;background:var(--accent-soft);line-height:1.45}
+.ask small{display:block;font-weight:500;color:var(--muted);font-size:.88rem;margin-top:2px}
+.opts{display:grid;gap:8px;grid-template-columns:1fr}
+@media (min-width:560px){.opts.two{grid-template-columns:1fr 1fr}}
+.opt{display:flex;align-items:flex-start;gap:10px;text-align:left;border:1.5px solid var(--line);background:var(--surface);border-radius:12px;padding:10px 12px;cursor:pointer;font-family:var(--body);font-size:1rem;line-height:1.4;color:var(--ink)}
+.opt:hover:not(:disabled){background:var(--surface-2)}
+.opt .key{font-family:var(--display);font-weight:700;font-size:.78rem;background:var(--surface-2);border-radius:6px;padding:3px 7px;flex:0 0 auto;margin-top:2px}
+.opt.correct{border-color:var(--ok);background:var(--ok-soft)} .opt.correct .key{background:var(--ok);color:#fff}
+.opt.wrong{border-color:var(--bad);background:var(--bad-soft)} .opt.wrong .key{background:var(--bad);color:#fff}
+.opt:disabled{cursor:default}
+.numin{display:flex;align-items:center;gap:8px;font-family:var(--display);font-weight:500;flex-wrap:wrap}
+.numin input{font:inherit;font-family:var(--mono);font-size:1.05rem;width:7ch;padding:8px 10px;border:1.5px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink)}
+.numin input:focus{border-color:var(--accent);outline:none}
+.ex-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;align-items:center}
+.feedback{margin-top:14px;padding:12px 14px;border-radius:12px;background:var(--surface-2);font-size:.98rem;line-height:1.5;border-left:3px solid var(--line)}
+.feedback.ok{border-left-color:var(--ok);background:var(--ok-soft)}
+.feedback.bad{border-left-color:var(--bad);background:var(--bad-soft)}
+.feedback b{font-family:var(--display)}
+.tests{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+.tests div{border-radius:10px;padding:8px 6px;text-align:center;font-family:var(--mono);font-size:.85rem;background:var(--surface-2);border:1.5px solid var(--line);line-height:1.4}
+.tests div b{display:block;font-family:var(--display);font-size:.72rem;color:var(--muted);font-weight:700}
+.tests div.pass{border-color:var(--ok);background:var(--ok-soft)} .tests div.fail{border-color:var(--bad);background:var(--bad-soft)}
+.next{margin-top:48px;border:1px dashed var(--line);border-radius:18px;padding:18px 20px;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px}
+.next h2{font-size:1.1rem}
+.next p{margin:4px 0 0;color:var(--muted);font-size:.95rem}
+footer.colophon{margin-top:28px;color:var(--muted);font-size:.85rem;font-family:var(--display);display:flex;flex-wrap:wrap;gap:8px 18px}
+footer.colophon a{color:var(--ink);text-decoration:none}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<div class="cbar"><div class="in">
+  <a class="mark" href="index.html"><span class="dots" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span class="name">Mohammad Mahmoud</span> <small>Interactive lessons</small></a>
+  <nav aria-label="Lessons">
+    <a href="logic.html"><i style="background:var(--logic)"></i>Logic</a>
+    <a href="ml.html"><i style="background:var(--ml)"></i>Machine learning</a>
+    <a href="running-time.html"><i style="background:var(--time)"></i>Running time</a>
+    <a href="turing.html" aria-current="page"><i style="background:var(--turing)"></i>Turing machines</a>
+  </nav>
+</div></div>
+
+<div class="shell"><main>
+<header class="lesson-head">
+  <p class="kicker">Lesson 4 of 4 — Turing machines</p>
+  <h1>Mechanical Moves</h1>
+  <p class="lede">Before a step is “elementary”, it is mechanical: read one symbol, write one symbol, move one cell, change state. The machine below runs <em>Turing programs</em> — lists of five-part commands, the notation my computability students write their first machines in — and every exercise asks what the machine will do before it does it. The <a href="running-time.html">running-time lesson</a> takes the number of these moves as its starting definition and then trades them for elementary steps; this is the lesson where you can watch them.</p>
+  <p class="meta">Six exercises, about ten minutes. Progress is saved in this browser.</p>
+  <div class="credit"><b>About the tool.</b> In my computability course the students use <b>Varphi</b>, a description language and debugger for Turing machines built by my student Hassan El-Sheikha under my supervision and described in two WCCCE papers (2025, 2026); its documentation is at <a href="https://docs.varphi-lang.com">docs.varphi-lang.com</a>. This page is a browser-sized cousin: the same conventions and the same habit of stepping a configuration at a time, with a fraction of the features.</div>
+</header>
+
+<section class="prose" id="conventions">
+  <h2>The conventions</h2>
+  <p>Numbers are unary. The input <span class="fm"><i>n</i></span> is written as <span class="fm"><i>n</i> + 1</span> ones (so that 0 has a shape), several inputs are separated by single blanks, and the head starts on the leftmost 1. The output is whatever number of 1s is left on the tape when the machine halts. A command is five parts:</p>
+  <div class="conv">
+    <div><b>command</b><span><span class="k">q1 1 q2 1 R</span> — in state <span class="k">q1</span> reading <span class="k">1</span>: go to <span class="k">q2</span>, write <span class="k">1</span>, move <span class="k">R</span>.</span></div>
+    <div><b>start</b><span>state <span class="k">q1</span>, head on the leftmost 1.</span></div>
+    <div><b>halt</b><span>entering <span class="k">q0</span>. If no command matches the current state and symbol, the machine <em>jams</em>: it stops with no output.</span></div>
+    <div><b>symbols</b><span><span class="k">1</span> and the blank <span class="k">b</span>. Nothing else.</span></div>
+  </div>
+</section>
+
+<section class="bench" id="playground" aria-label="The machine">
+  <div class="bench-head"><h2>The machine</h2><span class="hint">Edit the program, set the inputs, then step or run. The log shows each configuration the way the course writes them: state, then tape, with the symbol under the head marked.</span></div>
+  <div class="bench-body">
+    <div class="ctl" style="gap:12px">
+      <div class="seg" role="group" aria-label="Example programs" id="exSeg">
+        <button type="button" data-ex="plus3" aria-pressed="true">n + 3</button>
+        <button type="button" data-ex="plus1" aria-pressed="false">n + 1</button>
+        <button type="button" data-ex="ident" aria-pressed="false">n</button>
+        <button type="button" data-ex="add" aria-pressed="false">a + b</button>
+      </div>
+      <div class="ctl"><span class="lbl"><span>Program</span><span id="progCount"></span></span><textarea class="prog" id="prog" spellcheck="false" aria-label="Turing program"></textarea><div class="perr" id="perr"></div></div>
+      <div class="ctl"><span class="lbl"><span>Inputs (comma-separated)</span></span><div class="inrow"><input type="text" id="inputs" value="2" aria-label="inputs"><button type="button" class="btn" id="loadBtn">Load tape</button></div></div>
+      <div class="btn-row"><button type="button" class="btn primary" id="stepBtn">Step</button><button type="button" class="btn primary" id="runBtn">Run</button><button type="button" class="btn" id="resetBtn">Reset</button></div>
+    </div>
+    <div class="mv" id="benchMV"></div>
+  </div>
+</section>
+
+<section class="prose">
+  <h2>What a program is</h2>
+  <p>The machine has no arithmetic, no loops and no variables. It has a state, and a rule for every state-and-symbol pair it expects to meet. Everything it “knows” is which state it is in; everything it “sees” is one cell. That is enough to add, multiply, search, and run every program on this site — only slowly, and with every step out in the open where it can be counted.</p>
+  <p>That last part is why the running-time lesson points here. It defines the cost of a run as <em>the number of mechanical moves the machine needs</em> and then counts elementary steps instead, because nobody counts moves for a real program. Here the moves are the whole story: each one is on the screen, and the counter beside the state badge is <i>T</i>(<i>P</i>, <i>x</i>) itself.</p>
+</section>
+
+<div class="bank-head" id="exercises">
+  <div><h2>Exercise bank</h2><p>Four kinds of exercise, checked by actually running the machine. A solved card stays solved but keeps working.</p>
+    <div class="types"><span class="chip predict">Predict</span><span class="chip play">Parameter play</span><span class="chip break">Break it</span><span class="chip quiz">Quiz</span></div></div>
+  <div class="progress"><div class="lbl">Progress <output id="progOut">0 of 6</output></div><div class="bar"><i id="progBar"></i></div></div>
+</div>
+<div class="exlist" id="listA"></div>
+
+<aside class="next">
+  <div><h2>That is the last of the four</h2><p>Back to the collection, or start again from the beginning with the quantifier games in Logic.</p></div>
+  <div class="btn-row"><a class="btn primary" href="index.html">All lessons</a><a class="btn" href="logic.html">Back to lesson 1</a></div>
+</aside>
+<footer class="colophon"><span>Mechanical Moves · lesson 4 of 4</span><a href="index.html">All lessons</a><a href="../index.html">mmsquared.ca</a></footer>
+</main></div>
+
+<script>
+(function(){
+'use strict';
+const $=(s,r)=>(r||document).querySelector(s);
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const wait=ms=>new Promise(r=>setTimeout(r,reduced?0:ms));
+
+/* ───────── programs ───────── */
+const PROGRAMS={
+  plus3:'q1 1 q1 1 R\nq1 b q2 1 R\nq2 b q0 1 R',
+  plus1:'q1 1 q0 1 R',
+  ident:'q1 1 q0 b R',
+  add:'q1 1 q2 b R\nq2 1 q2 1 R\nq2 b q3 1 R\nq3 1 q3 1 R\nq3 b q4 b L\nq4 1 q5 b L\nq5 1 q0 b L'
+};
+
+/* ───────── parser: five parts per line, deterministic ───────── */
+function parse(text){
+  const rules=new Map(), errors=[]; let count=0;
+  text.split('\n').forEach((raw,li)=>{
+    const s=raw.trim(); if(!s||s.startsWith('#')) return;
+    const t=s.split(/\s+/);
+    if(t.length!==5){ errors.push('line '+(li+1)+': a command has five parts — state, read, next state, write, move'); return; }
+    const [st,rd,nx,wr,mv]=t;
+    if(!/^q\d+$/.test(st)||!/^q\d+$/.test(nx)){ errors.push('line '+(li+1)+': states are written q0, q1, q2 …'); return; }
+    if(!/^[1b]$/.test(rd)||!/^[1b]$/.test(wr)){ errors.push('line '+(li+1)+': symbols are 1 or b'); return; }
+    if(!/^[LR]$/.test(mv)){ errors.push('line '+(li+1)+': the move is L or R'); return; }
+    if(st==='q0'){ errors.push('line '+(li+1)+': q0 is the halting state — nothing runs from it'); return; }
+    const key=st+'|'+rd;
+    if(rules.has(key)){ errors.push('line '+(li+1)+': a second command for '+st+' reading '+rd+' — the machine must be deterministic'); return; }
+    rules.set(key,{next:nx,write:wr,move:mv,line:li+1,src:s}); count++;
+  });
+  return {rules,errors,count};
+}
+function makeTape(inputs){ const tape=new Map(); let p=0; inputs.forEach((n,k)=>{ for(let i=0;i<=n;i++) tape.set(p++,'1'); if(k<inputs.length-1) p++; }); return tape; }
+function parseInputs(str){ const xs=String(str).split(/[,\s]+/).filter(Boolean).map(x=>parseInt(x,10)); if(!xs.length||xs.some(x=>!Number.isFinite(x)||x<0||x>30)) return null; return xs; }
+
+/* ───────── the machine ───────── */
+class Machine{
+  constructor(rules, inputs){ this.rules=rules; this.inputs=inputs; this.tape=makeTape(inputs); this.head=0; this.state='q1'; this.moves=0; this.status='ready'; this.last=null; this.history=[this.config()]; }
+  read(){ return this.tape.get(this.head)||'b'; }
+  step(){
+    if(this.status==='halt'||this.status==='jam') return this.status;
+    const r=this.rules.get(this.state+'|'+this.read());
+    if(!r){ this.status='jam'; this.last=null; return 'jam'; }
+    if(r.write==='b') this.tape.delete(this.head); else this.tape.set(this.head,'1');
+    this.wrote=this.head; this.head+=r.move==='R'?1:-1; this.state=r.next; this.moves++; this.last=r;
+    this.status=this.state==='q0'?'halt':'running'; this.history.push(this.config()); return this.status;
+  }
+  ones(){ let c=0; for(const v of this.tape.values()) if(v==='1') c++; return c; }
+  bounds(){ let lo=Math.min(0,this.head), hi=Math.max(0,this.head); for(const k of this.tape.keys()){ if(k<lo) lo=k; if(k>hi) hi=k; } return [lo-1,hi+1]; }
+  config(){ const [lo,hi]=this.bounds(); let s=''; for(let p=lo;p<=hi;p++){ const c=this.tape.get(p)||'b'; s+=(p===this.head)?'['+c+']':c; } return this.state+' : '+s; }
+}
+function runTo(rules, inputs, limit){ const m=new Machine(rules,inputs); while(m.status!=='halt'&&m.status!=='jam'&&m.moves<limit) m.step(); return m; }
+
+/* ───────── machine view ───────── */
+function machineView(host, opts){
+  opts=opts||{}; host.classList.add('mv');
+  host.innerHTML='<div class="mstate"><span class="st">q1</span><span><span class="mv-n">0</span> moves</span><span class="rd"></span></div><div class="tape" aria-label="tape"></div>'+(opts.log===false?'':'<div class="clog" aria-label="configurations"></div>')+'<div class="out">Load a tape to begin.</div>';
+  const stEl=$('.st',host), nEl=$('.mv-n',host), rdEl=$('.rd',host), tapeEl=$('.tape',host), logEl=$('.clog',host), outEl=$('.out',host);
+  let m=null, timer=null;
+  function render(){
+    if(!m){ tapeEl.innerHTML=''; return; }
+    const [lo,hi]=m.bounds(); let h='';
+    for(let p=Math.min(lo,-1);p<=Math.max(hi,1);p++){ const c=m.tape.get(p)||'b'; h+='<div class="cell'+(c==='b'?' blank':'')+(p===m.head?' head':'')+(p===m.wrote&&m.last?' wrote':'')+'" data-p="'+p+'">'+c+'</div>'; }
+    tapeEl.innerHTML=h;
+    const headCell=tapeEl.querySelector('.cell.head'); if(headCell&&headCell.scrollIntoView){ const r=headCell.getBoundingClientRect(), t=tapeEl.getBoundingClientRect(); if(r.left<t.left||r.right>t.right) headCell.scrollIntoView({inline:'center',block:'nearest',behavior:reduced?'auto':'smooth'}); }
+    stEl.textContent=m.state; stEl.className='st'+(m.status==='halt'?' halt':m.status==='jam'?' jam':''); nEl.textContent=m.moves;
+    rdEl.textContent=m.status==='halt'?'halted':m.status==='jam'?'jammed':'reading '+m.read();
+    if(logEl){ logEl.innerHTML=m.history.map((c,i)=>'<div'+(i===m.history.length-1?' class="now"':'')+'>'+esc(c).replace(/\[(.)\]/,'<span class="rd">$1</span>')+'</div>').join('')+(m.status==='jam'?'<div class="note">no command for '+m.state+' reading '+m.read()+' — jam</div>':''); logEl.scrollTop=logEl.scrollHeight; }
+    if(m.status==='halt'){ outEl.className='out halt'; outEl.innerHTML='<b>Halted in q0 after '+m.moves+' move'+(m.moves===1?'':'s')+'.</b> Ones on the tape: '+m.ones()+' — output <b>'+m.ones()+'</b>.'; }
+    else if(m.status==='jam'){ outEl.className='out jam'; outEl.innerHTML='<b>Jammed after '+m.moves+' move'+(m.moves===1?'':'s')+':</b> no command for '+m.state+' reading '+m.read()+'. No output.'; }
+    else if(m.last){ outEl.className='out run'; outEl.innerHTML='Applied <span class="mono">'+esc(m.last.src)+'</span>: wrote '+m.last.write+', moved '+m.last.move+', now in '+m.state+'.'; }
+    else { outEl.className='out'; outEl.innerHTML='Input '+m.inputs.map(x=>x).join(', ')+' on the tape: '+m.inputs.map(x=>(x+1)+' one'+(x?'s':'')).join(', blank, ')+'. Head on the leftmost 1, state q1.'; }
+  }
+  return {
+    load(rules, inputs){ this.stop(); m=new Machine(rules,inputs); render(); return m; },
+    step(){ if(!m) return null; const s=m.step(); render(); return s; },
+    async run(limit, ms){ if(!m) return null; this.stop(); limit=limit||400; let stopped=false; const self=this; await new Promise(res=>{ const tick=()=>{ if(stopped||!m){ res(); return; } if(m.status==='halt'||m.status==='jam'){ res(); return; } if(m.moves>=limit){ outEl.className='out jam'; outEl.innerHTML='<b>Stopped after '+limit+' moves.</b> This machine may never halt.'; res(); return; } m.step(); render(); timer=setTimeout(tick, reduced?0:(ms||220)); }; tick(); }); return m; },
+    stop(){ if(timer){ clearTimeout(timer); timer=null; } },
+    get machine(){ return m; }, render
+  };
+}
+const parseWithSrc=parse;
+
+/* ───────── bench ───────── */
+const bench=machineView($('#benchMV'));
+const progEl=$('#prog'), perr=$('#perr');
+function benchParse(){ const p=parseWithSrc(progEl.value); perr.textContent=p.errors[0]||''; $('#progCount').textContent=p.count+' command'+(p.count===1?'':'s'); return p; }
+function benchLoad(){ const p=benchParse(); const xs=parseInputs($('#inputs').value); if(!xs){ perr.textContent='inputs are whole numbers from 0 to 30, separated by commas'; return null; } return bench.load(p.rules, xs); }
+$('#exSeg').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; document.querySelectorAll('#exSeg button').forEach(x=>x.setAttribute('aria-pressed',String(x===b))); progEl.value=PROGRAMS[b.dataset.ex]; $('#inputs').value=b.dataset.ex==='add'?'3, 2':'2'; benchLoad(); });
+progEl.addEventListener('input',()=>{ benchParse(); });
+$('#loadBtn').addEventListener('click',benchLoad);
+$('#resetBtn').addEventListener('click',benchLoad);
+$('#stepBtn').addEventListener('click',()=>{ if(!bench.machine) benchLoad(); bench.step(); });
+$('#runBtn').addEventListener('click',()=>{ if(!bench.machine||bench.machine.status==='halt'||bench.machine.status==='jam') benchLoad(); bench.run(400); });
+progEl.value=PROGRAMS.plus3; benchLoad();
+
+/* ───────── progress ───────── */
+const STORE='mechanical-moves-v1'; let progress={};
+try{ progress=JSON.parse(localStorage.getItem(STORE)||'{}')||{}; }catch(e){ progress={}; }
+const save=()=>{ try{ localStorage.setItem(STORE,JSON.stringify(progress)); }catch(e){} };
+const TOTAL=6;
+function updateProgress(){ const n=Object.values(progress).filter(Boolean).length; $('#progOut').textContent=n+' of '+TOTAL; $('#progBar').style.width=(100*n/TOTAL)+'%'; }
+
+/* ───────── card scaffolding ───────── */
+const KINDS={predict:'Predict',play:'Parameter play',break:'Break it',quiz:'Quiz'};
+let counter=0;
+function card(ex, list){
+  const el=document.createElement('article'); el.className='xc'; el.id=ex.id; el.dataset.state=progress[ex.id]?'ok':'';
+  const n=++counter;
+  el.innerHTML='<div class="ex-head"><span class="n">'+String(n).padStart(2,'0')+'</span><h3>'+ex.title+'</h3><span class="ex-meta"><span class="chip '+ex.kind+'">'+KINDS[ex.kind]+'</span><span class="dot" aria-hidden="true"></span></span></div><p class="prompt">'+ex.prompt+'</p><div class="ex-body"></div><div class="feedback" hidden></div>';
+  const body=$('.ex-body',el), fb=$('.feedback',el);
+  const api={ el, body,
+    ok(html){ fb.hidden=false; fb.className='feedback ok'; fb.innerHTML=html; el.dataset.state='ok'; if(!progress[ex.id]){ progress[ex.id]=true; save(); updateProgress(); } },
+    no(html){ fb.hidden=false; fb.className='feedback bad'; fb.innerHTML=html; if(el.dataset.state!=='ok') el.dataset.state='retry'; },
+    info(html){ fb.hidden=false; fb.className='feedback'; fb.innerHTML=html; } };
+  ex.build(body, api); list.appendChild(el);
+}
+function ask(body, html){ const d=document.createElement('div'); d.className='ask'; d.innerHTML=html; body.appendChild(d); return d; }
+function actions(body, ...btns){ const row=document.createElement('div'); row.className='ex-actions'; btns.forEach(b=>row.appendChild(b)); body.appendChild(row); return row; }
+function button(label, cls){ const b=document.createElement('button'); b.type='button'; b.className='btn'+(cls?' '+cls:''); b.textContent=label; return b; }
+function numin(body, label){ const w=document.createElement('div'); w.className='numin'; w.innerHTML='<label>'+label+' <input type="number" inputmode="numeric" step="1" placeholder="?"></label>'; body.appendChild(w); return $('input',w); }
+function options(body, opts, onPick){ const w=document.createElement('div'); w.className='opts'; opts.forEach((o,i)=>{ const b=document.createElement('button'); b.type='button'; b.className='opt'; b.innerHTML='<span class="key">'+'ABCD'[i]+'</span><span>'+o+'</span>'; b.addEventListener('click',()=>onPick(i,b,w)); w.appendChild(b); }); body.appendChild(w); return w; }
+function settle(w, right, picked){ w.querySelectorAll('.opt').forEach((b,i)=>{ b.disabled=true; if(i===right) b.classList.add('correct'); else if(i===picked) b.classList.add('wrong'); }); }
+function readInt(inp){ const v=parseInt(inp.value,10); return Number.isFinite(v)?v:null; }
+function onEnter(inp, fn){ inp.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); fn(); } }); }
+function codeBlock(body, text, hl){ const pre=document.createElement('pre'); pre.className='code'; pre.innerHTML=text.split('\n').map((l,i)=>'<span class="ln">'+(i+1)+'</span>'+(hl===i+1?'<span class="hl">':'')+esc(l)+(hl===i+1?'</span>':'')).join('\n'); body.appendChild(pre); return pre; }
+function editor(body, text){ const ta=document.createElement('textarea'); ta.className='prog'; ta.spellcheck=false; ta.value=text; body.appendChild(ta); const e=document.createElement('div'); e.className='perr'; body.appendChild(e); return {ta, err:e}; }
+function view(body, opts){ const h=document.createElement('div'); body.appendChild(h); return machineView(h, opts); }
+
+const EX=[];
+
+// 1 — what does it compute?
+EX.push({id:'ex-compute', kind:'predict', title:'What does it compute?', list:'A',
+ prompt:'The first machine my students meet. Read the three commands, think about the input convention, and say what function of <span class="fm"><i>n</i></span> comes out. Then run it.',
+ build(body, api){
+  codeBlock(body, PROGRAMS.plus3);
+  const mv=view(body,{}); const p=parse(PROGRAMS.plus3); mv.load(p.rules,[2]);
+  let answered=false;
+  const w=options(body,['<i>n</i> + 1','<i>n</i> + 2','<i>n</i> + 3','2<i>n</i> + 1'],(i,b,wrap)=>{
+    settle(wrap,2,i); answered=true;
+    if(i===2) api.ok('<b><i>n</i> + 3.</b> The machine walks over the <i>n</i> + 1 ones of the input, then writes one 1 at the first blank and one more at the next. Count of ones: (<i>n</i> + 1) + 2. Run it on 2 and watch five ones appear.');
+    else if(i===1) api.no('<b>Two 1s are written, yes — but the input <i>n</i> is already <i>n</i> + 1 ones,</b> and the output is the raw count of ones on the tape. (<i>n</i> + 1) + 2 = <i>n</i> + 3. Run it on 2: you will count five.');
+    else if(i===0) api.no('<b>Only one more than the input?</b> Two different commands write a 1 on a blank (lines 2 and 3), and the input already carries an extra 1. Run it and count.');
+    else api.no('<b>Nothing here doubles anything.</b> The machine never goes back; it reads each input cell once and adds two cells at the end. Run it on 2 and count the ones.');
+  });
+  const run=button('Run on n = 2','primary'); const again=button('Reset'); actions(body,run,again);
+  run.addEventListener('click',async()=>{ run.disabled=true; mv.load(p.rules,[2]); await mv.run(100,320); run.disabled=false; if(!answered) api.info('<b>Five ones, in five moves.</b> Now commit to a formula above.'); });
+  again.addEventListener('click',()=>mv.load(p.rules,[2]));
+ }});
+
+// 2 — count the moves
+EX.push({id:'ex-moves', kind:'predict', title:'Count the moves', list:'A',
+ prompt:'Same machine. On input <span class="fm"><i>n</i> = 4</span>, how many mechanical moves does it make before halting?',
+ build(body, api){
+  codeBlock(body, PROGRAMS.plus3);
+  const inp=numin(body,'moves ='); const chk=button('Check','primary'); actions(body,chk);
+  const p=parse(PROGRAMS.plus3); let r1=false;
+  const go=()=>{ const v=readInt(inp); if(v==null) return api.info('Enter a number.');
+    if(v===7){ r1=true; const mv=view(body,{log:false}); mv.load(p.rules,[4]); mv.run(100,180); api.info('<b>7: five moves over the five ones, then two writes.</b> In general <i>n</i> + 1 + 2 = <i>n</i> + 3 moves — and that count, <i>the number of mechanical moves the machine needs</i>, is exactly what the running-time lesson calls <i>T</i>(<i>P</i>, <i>x</i>), the running time of one run. Now the general formula:'); round2(); }
+    else if(v===4) api.no('<b>4 is the input, not the work.</b> The head has to pass over every 1 of the input — and there are <i>n</i> + 1 = 5 of them — before it writes anything.');
+    else if(v===5) api.no('<b>Five moves gets the head past the input.</b> Then line 2 fires once and line 3 fires once, and each is a move.');
+    else if(v===6) api.no('<b>One short.</b> Count the input cells again: <i>n</i> = 4 is written as five ones, so line 1 fires five times, then lines 2 and 3 once each.');
+    else if(v===2) api.no('<b>Two is the number of 1s written,</b> not the number of moves. Reading a cell and moving on is a move too, even when nothing changes.');
+    else api.no('<b>Not '+v+'.</b> Step it in the bench with input 4 and watch the counter: line 1 fires for every 1 of the input, then lines 2 and 3 once each.'); };
+  chk.addEventListener('click',go); onEnter(inp,go);
+  function round2(){ const w=options(body,['<i>n</i> + 3','<i>n</i> + 1','2<i>n</i> + 2','3 — the number of commands'],(i,b,wrap)=>{ settle(wrap,0,i);
+    if(i===0) api.ok('<b><i>n</i> + 3 moves on input <i>n</i>.</b> Linear in the input, with the constants out in the open: one move per input cell, plus two. The running-time lesson counts <em>elementary steps</em> instead, a coarser unit. Switching units can change more than the constants (a one-tape machine needs about <i>n</i><sup>2</sup> moves to check a palindrome that a program checks in about <i>n</i> steps), so a running time always comes with its model of computation.');
+    else if(i===1) api.no('<b><i>n</i> + 1 is how many ones the input has.</b> The two writes at the end are moves as well.');
+    else if(i===2) api.no('<b>Nothing is read twice.</b> The head only ever moves right, so each input cell costs one move; 2<i>n</i> + 2 would need a second pass.');
+    else api.no('<b>The number of commands is not the number of moves.</b> Line 1 fires once per input cell; a three-line program can run for a million moves.'); }); }
+ }});
+
+// 3 — the shortest program (two rounds)
+EX.push({id:'ex-shortest', kind:'break', title:'The shortest program', list:'A',
+ prompt:'Now write one. The checker runs your program on <span class="fm"><i>n</i> = 0, 1, 2, 3, 4</span> and compares the count of 1s left on the tape with the target.',
+ build(body, api){
+  const prompt=ask(body,'<b>Round 1 — compute <i>f</i>(<i>n</i>) = <i>n</i> + 1</b> in as few commands as you can. <small>Remember what the input convention already gives you.</small>');
+  const ed=editor(body,'q1 1 q1 1 R\nq1 b q2 1 R\nq2 b q0 1 R');
+  const tests=document.createElement('div'); tests.className='tests'; body.appendChild(tests);
+  const chk=button('Test on n = 0 … 4','primary'); actions(body,chk);
+  let round=1; const target=n=>round===1?n+1:n;
+  function test(){ const p=parse(ed.ta.value); ed.err.textContent=p.errors[0]||''; if(p.errors.length) return;
+    const res=[0,1,2,3,4].map(n=>{ const m=runTo(p.rules,[n],500); return {n, m, out:m.status==='halt'?m.ones():null, want:target(n)}; });
+    tests.innerHTML=res.map(r=>'<div class="'+(r.out===r.want?'pass':'fail')+'"><b>n = '+r.n+'</b>'+(r.m.status==='halt'?r.out:r.m.status==='jam'?'jam':'∞')+'</div>').join('');
+    const bad=res.find(r=>r.out!==r.want);
+    if(!bad){
+      if(round===1){ if(p.count===1){ round=2; api.info('<b>One command, correct on all five inputs.</b> The input convention already hands you <i>n</i> + 1 ones, so the shortest program for <i>n</i> + 1 does nothing but halt: <span class="mono">q1 1 q0 1 R</span> (or L). <b>Round 2:</b> now the identity, <i>f</i>(<i>n</i>) = <i>n</i> — also in one command.'); prompt.innerHTML='<b>Round 2 — compute <i>f</i>(<i>n</i>) = <i>n</i></b> in one command. <small>The tape has one 1 too many.</small>'; tests.innerHTML=''; }
+        else api.info('<b>Correct on all five inputs, in '+p.count+' commands.</b> It can be done in one. What does the input convention already give you?'); }
+      else { if(p.count===1) api.ok('<b>Both in one command, and one move each.</b> <i>n</i> + 1 is the machine that halts at once, writing back the 1 it starts on; <i>n</i> is the machine that erases that 1 and halts: <span class="mono">q1 1 q0 b R</span>. Under this convention the successor leaves the tape exactly as it found it, while the identity has to erase a cell — a first taste of how much the choice of representation decides.'); else api.info('<b>Correct, in '+p.count+' commands.</b> One is enough: erase the cell the head starts on and halt.'); }
+      return; }
+    if(bad.m.status==='jam') api.no('<b>On <i>n</i> = '+bad.n+' the machine jams:</b> no command for '+bad.m.state+' reading '+bad.m.read()+'. Every state-and-symbol pair the machine can reach needs a command — or needs to be q0.');
+    else if(bad.m.status!=='halt') api.no('<b>On <i>n</i> = '+bad.n+' the machine ran 500 moves without halting.</b> Something keeps it moving without reaching q0.');
+    else if(bad.out===bad.want+1) api.no('<b>On <i>n</i> = '+bad.n+' it leaves '+bad.out+' ones; the target is '+bad.want+'.</b> One too many: '+(round===1?'the input already carries the extra 1, so writing one more overshoots.':'the input has <i>n</i> + 1 ones and the identity needs <i>n</i> — one has to go.'));
+    else if(bad.out===bad.want+2) api.no('<b>On <i>n</i> = '+bad.n+' it leaves '+bad.out+' ones; the target is '+bad.want+'.</b> Two too many — this is still the <i>n</i> + 3 machine. Which of its writes does the target actually need?');
+    else if(bad.out===bad.want-1) api.no('<b>On <i>n</i> = '+bad.n+' it leaves '+bad.out+' ones; the target is '+bad.want+'.</b> One too few — you erased one more than the convention asks.');
+    else api.no('<b>On <i>n</i> = '+bad.n+' it leaves '+bad.out+' ones; the target is '+bad.want+'.</b> Count what each command writes and erases.');
+  }
+  chk.addEventListener('click',test);
+ }});
+
+// 4 — addition (two rounds)
+EX.push({id:'ex-add', kind:'play', title:'Addition, by hand', list:'A',
+ prompt:'Two inputs now: <span class="fm">(3, 2)</span> is written <span class="k">1111 b 111</span>. The program below adds them. Before running it, do the bookkeeping.',
+ build(body, api){
+  codeBlock(body, PROGRAMS.add);
+  const p=parseWithSrc(PROGRAMS.add); const mv=view(body,{}); mv.load(p.rules,[3,2]);
+  const prompt=ask(body,'<b>Round 1.</b> The tape holds seven 1s and the answer is five. <small>By how many must the count of 1s drop?</small>');
+  const inp=numin(body,'drop by'); const chk=button('Check, then run','primary'); actions(body,chk);
+  let round=1;
+  const go=async()=>{ const v=readInt(inp); if(v==null) return api.info('Enter a number.');
+    if(round===1){
+      if(v===2){ round=2; chk.disabled=true; mv.load(p.rules,[3,2]); await mv.run(100,260); chk.disabled=false; api.info('<b>By two.</b> Watch what the program actually did: erased the first 1, filled the separator blank with a 1, then erased two at the far end — three erased, one written, net −2. The inputs were <i>a</i> + 1 and <i>b</i> + 1 ones; the answer needs <i>a</i> + <i>b</i>. <b>Round 2:</b> how many moves did that take?'); prompt.innerHTML='<b>Round 2.</b> How many mechanical moves on (3, 2)? <small>The counter above knows; work it out from the commands first.</small>'; inp.value=''; chk.textContent='Check'; }
+      else if(v===3) api.no('<b>Three 1s are erased, but one is also written</b> (the separator). The question is the net drop in the count.');
+      else if(v===1) api.no('<b>Seven minus one is six, and 3 + 2 is five.</b> Each input carries an extra 1 under the convention, so two have to go.');
+      else api.no('<b>Seven 1s on the tape, five in the answer.</b> The difference is the drop.');
+    } else {
+      if(v===11){ const w=options(body,['<i>a</i> + <i>b</i> + 6','2(<i>a</i> + <i>b</i>)','<i>a</i> · <i>b</i> + 1','7 — one per command'],(i,b,wrap)=>{ settle(wrap,0,i);
+          if(i===0) api.ok('<b><i>a</i> + <i>b</i> + 6.</b> One move to erase the first 1, <i>a</i> to cross the rest of the first block, one to fill the separator, <i>b</i> + 1 to cross the second block, one to turn around, two to erase. Linear in the sizes of the inputs, and every constant visible. This is the shape the running-time lesson calls <i>T</i>(<i>P</i>, <i>x</i>) and then simplifies.');
+          else if(i===1) api.no('<b>Nothing is crossed twice.</b> The head goes right once and comes back exactly two cells. 2(<i>a</i> + <i>b</i>) would be a full second pass.');
+          else if(i===2) api.no('<b>Multiplying the inputs?</b> The head visits each input cell once; the cost adds, it does not multiply. Check against (3, 2): 3 · 2 + 1 = 7, but you counted 11.');
+          else api.no('<b>A command can fire many times.</b> Line 2 fires once per 1 in the first block, line 4 once per 1 in the second. The count depends on the input.'); });
+        api.info('<b>11.</b> Now the general formula for inputs (<i>a</i>, <i>b</i>):'); }
+      else if(v===7) api.no('<b>7 is the number of 1s on the tape, or the number of commands</b> — neither is the number of moves. Lines 2 and 4 fire once per 1 they cross.');
+      else if(v===5||v===12) api.no('<b>Not '+v+'.</b> Trace it: 1 (erase) + 3 (cross the first block) + 1 (fill the blank) + 3 (cross the second block) + 1 (turn) + 2 (erase twice).');
+      else api.no('<b>Not '+v+'.</b> Press Run again and watch the counter, then account for every move: one erase, a crossing, a fill, a crossing, a turn, two erases.');
+    } };
+  chk.addEventListener('click',go); onEnter(inp,go);
+ }});
+
+// 5 — jam or loop (quiz)
+EX.push({id:'ex-jam', kind:'quiz', title:'Delete a line', list:'A',
+ prompt:'Take the <span class="fm"><i>n</i> + 3</span> machine and delete its first command, <span class="k">q1 1 q1 1 R</span>. On input <span class="fm"><i>n</i> = 2</span>, what happens?',
+ build(body, api){
+  codeBlock(body, 'q1 b q2 1 R\nq2 b q0 1 R');
+  const w=options(body,['It runs forever','It jams at once: no command for q1 reading 1','It halts with output 5','It halts with output 2'],(i,b,wrap)=>{ settle(wrap,1,i);
+    if(i===1){ const p=parse('q1 b q2 1 R\nq2 b q0 1 R'); const mv=view(body,{}); mv.load(p.rules,[2]); mv.step(); api.ok('<b>A jam, before a single move.</b> The head starts on a 1 in state q1 and no command says what to do. Deleting commands can only ever jam a machine — to make one run forever you have to <em>add</em> or change a command so that it moves without making progress. That is the next exercise.'); }
+    else if(i===0) api.no('<b>Running forever needs a command to keep firing.</b> With line 1 gone there is no command at all for q1 reading 1, which is the very first thing the head sees.');
+    else api.no('<b>It never reaches the writes.</b> Lines 2 and 3 fire on blanks, and the head starts on a 1 with nothing to do. No command, no move, no output.'); });
+ }});
+
+// 6 — make it run forever
+EX.push({id:'ex-loop', kind:'break', title:'Make it run forever', list:'A',
+ prompt:'Start from the <span class="fm"><i>n</i> + 3</span> machine and change it so that it <em>never halts</em>, on any input — without jamming. The checker runs it on <span class="fm"><i>n</i> = 0, 1, 2</span> for 400 moves each.',
+ build(body, api){
+  const ed=editor(body,'q1 1 q1 1 R\nq1 b q2 1 R\nq2 b q0 1 R');
+  const tests=document.createElement('div'); tests.className='tests'; tests.style.gridTemplateColumns='repeat(3,minmax(0,1fr))'; body.appendChild(tests);
+  const chk=button('Test on n = 0, 1, 2','primary'); actions(body,chk);
+  chk.addEventListener('click',()=>{ const p=parse(ed.ta.value); ed.err.textContent=p.errors[0]||''; if(p.errors.length) return;
+    const res=[0,1,2].map(n=>{ const m=runTo(p.rules,[n],400); return {n,m}; });
+    tests.innerHTML=res.map(r=>'<div class="'+(r.m.status==='running'?'pass':'fail')+'"><b>n = '+r.n+'</b>'+(r.m.status==='halt'?'halts: '+r.m.ones():r.m.status==='jam'?'jam at '+r.m.moves:'400+ moves')+'</div>').join('');
+    const bad=res.find(r=>r.m.status!=='running');
+    if(!bad){ api.ok('<b>400 moves and counting, on all three inputs.</b> That is a test, not a proof: a machine could still halt at move 401. The usual trick is a command that fires on a blank and moves away from the ones — <span class="mono">q2 b q2 b R</span> in place of the last line, say — so the head walks off into blank tape forever with nothing left to see. Halting is a property of a program, not of its length: this one is still three or four lines. (Deciding, for an arbitrary program, whether it ever halts is the problem that has no mechanical solution at all.)'); }
+    else if(bad.m.status==='jam') api.no('<b>On <i>n</i> = '+bad.n+' it jams after '+bad.m.moves+' move'+(bad.m.moves===1?'':'s')+'</b> — no command for '+bad.m.state+' reading '+bad.m.read()+'. A jam is a stop, not a loop. Give that state-and-symbol pair a command that moves.');
+    else api.no('<b>On <i>n</i> = '+bad.n+' it still halts</b> with output '+bad.m.ones()+' after '+bad.m.moves+' moves. Some command still leads to q0; redirect it, or make a state keep moving over blanks.');
+  });
+ }});
+
+EX.forEach(ex=>card(ex,$('#list'+ex.list)));
+updateProgress();
+if(location.hash){ const t=document.getElementById(location.hash.slice(1)); if(t) setTimeout(()=>t.scrollIntoView({block:'start'}),50); }
+})();
+</script>
+</body>
+</html>

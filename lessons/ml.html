@@ -1,0 +1,875 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Nearest Neighbours · Machine learning</title>
+<meta name="description" content="Drag a query point, change k, and watch the boundary redraw; then step inside a cube and see it become a sheet. 11 exercises, checked on the spot.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@500;700;800&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@500&family=STIX+Two+Text:ital,wght@0,400;0,600;1,400;1,500&display=swap">
+<style>
+[hidden]:not([hidden=until-found i]){display:none!important}
+img{max-width:100%}
+</style>
+<style>
+/* Layout: a lesson rail beside a 65ch reading column; the playground, figures and exercise cards break a little wider than the text. */
+:root{
+  --bg:#FFFDF6; --surface:#FFFFFF; --surface-2:#F5F3EB; --ink:#1F2340; --muted:#646A86; --line:#E4E1D4;
+  --accent:#6A5AE0; --accent-ink:#FFFFFF; --accent-soft:#ECE9FB;
+  --sand:#F0A24B; --sand-soft:#FDEBD2; --sea:#1FA7C4; --sea-soft:#D7F0F6; --pink:#E8509A; --pink-soft:#FBDDEB;
+  --ok:#2E9E6B; --ok-soft:#DFF3E8; --bad:#D9534F; --bad-soft:#FBE3E2;
+  --logic:#3A86FF; --turing:#B8700A; --time:#D8367A; --ml:#6A5AE0; --cbar-cur:#ECE9FB;
+  --display:'Rubik',system-ui,-apple-system,sans-serif; --body:'Source Serif 4',Georgia,'Times New Roman',serif; --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+  --radius:14px; --shadow:0 1px 2px rgba(31,35,64,.06),0 8px 24px -12px rgba(31,35,64,.18);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#15182B; --surface:#1D2138; --surface-2:#252A48; --ink:#F1F1F8; --muted:#A6AAC6; --line:#30355A;
+  --accent:#9C8EFF; --accent-ink:#15182B; --accent-soft:#2B2A58;
+  --sand:#F5B261; --sand-soft:#4A3522; --sea:#45C3DE; --sea-soft:#1E3E4A; --pink:#FF7AB8; --pink-soft:#4A2538;
+  --ok:#4CC38A; --ok-soft:#1E3A2E; --bad:#F07178; --bad-soft:#4A2630;
+  --logic:#6AA3FF; --turing:#F2B544; --time:#FF6FB5; --ml:#9C8EFF; --cbar-cur:#2B2A58;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px -12px rgba(0,0,0,.5); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#15182B; --surface:#1D2138; --surface-2:#252A48; --ink:#F1F1F8; --muted:#A6AAC6; --line:#30355A;
+  --accent:#9C8EFF; --accent-ink:#15182B; --accent-soft:#2B2A58;
+  --sand:#F5B261; --sand-soft:#4A3522; --sea:#45C3DE; --sea-soft:#1E3E4A; --pink:#FF7AB8; --pink-soft:#4A2538;
+  --ok:#4CC38A; --ok-soft:#1E3A2E; --bad:#F07178; --bad-soft:#4A2630;
+  --logic:#6AA3FF; --turing:#F2B544; --time:#FF6FB5; --ml:#9C8EFF; --cbar-cur:#2B2A58;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px -12px rgba(0,0,0,.5); color-scheme:dark}
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.6;-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+a{color:var(--accent)}
+h1,h2,h3,h4{font-family:var(--display);line-height:1.15;margin:0;text-wrap:balance;letter-spacing:-.01em}
+button{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:6px}
+.mono{font-family:var(--mono);font-size:.9em;font-variant-numeric:tabular-nums}
+
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+.topbar .in{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-block:12px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));max-width:1180px;margin:0 auto}
+.wordmark{font-family:var(--display);font-weight:800;font-size:1.05rem;display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink)}
+.wordmark .dots{display:inline-grid;grid-template-columns:repeat(2,8px);gap:3px}
+.wordmark .dots i{width:8px;height:8px;border-radius:50%;display:block}
+.wordmark .dots i:nth-child(1){background:var(--sand)}.wordmark .dots i:nth-child(2){background:var(--sea)}.wordmark .dots i:nth-child(3){background:var(--accent)}.wordmark .dots i:nth-child(4){background:var(--pink)}
+.topbar .site{font-family:var(--display);font-weight:500;font-size:.9rem;color:var(--muted);text-decoration:none}
+.topbar .site:hover{color:var(--accent)}
+
+.shell{max-width:1180px;margin:0 auto;padding-block:20px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;grid-template-columns:minmax(0,1fr);gap:28px}
+@media (min-width:960px){.shell{grid-template-columns:230px minmax(0,1fr);gap:48px;padding-block:36px 96px}}
+
+/* Lesson rail */
+.rail{min-width:0}
+.rail h2{font-size:.75rem;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);font-weight:700;margin-bottom:10px}
+.rail ol{list-style:none;margin:0;padding:0;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding-bottom:4px}
+.rail ol::-webkit-scrollbar{display:none}
+.rail li{flex:0 0 auto}
+.rail a,.rail span.soon{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;text-decoration:none;color:var(--ink);font-family:var(--display);font-weight:500;font-size:.92rem;white-space:nowrap;border:1px solid var(--line);background:var(--surface)}
+.rail a[aria-current]{background:var(--accent-soft);border-color:transparent;color:var(--ink)}
+.rail span.soon{color:var(--muted);border-style:dashed;background:transparent}
+.rail .num{font-family:var(--mono);font-size:.75rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.rail .sw{width:10px;height:10px;border-radius:50%;flex:0 0 auto}
+.rail small{display:none;font-family:var(--body);color:var(--muted);font-size:.8rem;margin-left:auto}
+.rail .sub{display:none;list-style:none;margin:4px 0 8px 0;padding:0 0 0 34px;flex-direction:column;gap:2px}
+.rail .sub a{padding:4px 8px;font-size:.84rem;color:var(--muted);background:transparent;border:0}
+.rail .sub a:hover{color:var(--ink)}
+@media (min-width:960px){
+  .rail{position:sticky;top:calc(env(safe-area-inset-top,0px) + 76px);align-self:start}
+  .rail ol{flex-direction:column;overflow:visible;gap:6px}
+  .rail a,.rail span.soon{white-space:normal;border-color:transparent;background:transparent}
+  .rail a:hover{background:var(--surface-2)}
+  .rail a[aria-current]{background:var(--accent-soft)}
+  .rail small{display:inline}
+  .rail .sub{display:flex}
+}
+
+/* Lesson */
+main{min-width:0}
+.eyebrow{font-family:var(--display);font-weight:700;font-size:.78rem;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);display:flex;gap:10px;flex-wrap:wrap}
+.eyebrow span+span::before{content:"·";margin-right:10px;color:var(--muted)}
+.lesson-head h1{font-size:clamp(2.1rem,6vw,3.4rem);font-weight:800;margin-top:8px}
+.lede{font-size:1.15rem;max-width:62ch;margin:14px 0 0;color:var(--ink)}
+.lede em{font-style:italic}
+
+.prose{max-width:65ch;margin-top:40px}
+.prose h2{font-size:1.55rem;font-weight:700;margin-bottom:12px}
+.prose p{margin:0 0 14px}
+.prose p:last-child{margin-bottom:0}
+.k{font-family:var(--mono);font-size:.86em;background:var(--surface-2);padding:1px 6px;border-radius:6px;font-variant-numeric:tabular-nums}
+.pill{display:inline-flex;align-items:center;gap:6px;font-family:var(--display);font-weight:700;font-size:.82em;padding:1px 8px;border-radius:999px;vertical-align:1px}
+.pill.sand{background:var(--sand-soft);color:var(--ink)}.pill.sea{background:var(--sea-soft);color:var(--ink)}
+.pill i{width:8px;height:8px;border-radius:50%;display:inline-block}
+.pill.sand i{background:var(--sand)}.pill.sea i{background:var(--sea)}
+
+/* Playground and other panels */
+.bench{margin-top:28px;background:var(--surface);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);overflow:hidden}
+.bench-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 16px;padding:14px 18px;border-bottom:1px solid var(--line);background:var(--surface-2)}
+.bench-head h2{font-size:1rem;font-weight:700}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-family:var(--display);font-size:.82rem;color:var(--muted);font-weight:500}
+.legend b{display:inline-flex;align-items:center;gap:6px;color:var(--ink);font-weight:500}
+.legend i{width:10px;height:10px;border-radius:50%;display:inline-block}
+.legend i.sand{background:var(--sand)}.legend i.sea{background:var(--sea)}
+.legend i.pink{background:var(--pink);border-radius:2px;transform:rotate(45deg);outline:1.5px solid var(--ink);outline-offset:-1px}
+.legend i.string{width:16px;height:3px;border-radius:2px;background:var(--ink)}
+.bench-body{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;padding:16px}
+@media (min-width:760px){.bench-body{grid-template-columns:minmax(0,1fr) 250px;gap:20px;padding:20px}}
+.plot-host{min-width:0;position:relative}
+canvas.plot,canvas.plot3d{display:block;width:100%;border-radius:var(--radius);touch-action:none;background:var(--surface-2)}
+canvas.plot{cursor:grab}
+canvas.plot:active{cursor:grabbing}
+canvas.plot3d{cursor:grab}
+canvas.plot3d:active{cursor:grabbing}
+.plot-hint{position:absolute;left:12px;bottom:12px;font-family:var(--display);font-size:.75rem;color:var(--muted);background:var(--surface);padding:3px 8px;border-radius:999px;pointer-events:none;opacity:.95}
+
+.controls{display:flex;flex-direction:column;gap:14px;min-width:0}
+.ctl label,.ctl .lbl{font-family:var(--display);font-weight:700;font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);display:flex;justify-content:space-between;align-items:baseline}
+.stepper{display:flex;align-items:center;gap:6px;margin-top:8px}
+.stepper button{width:40px;height:40px;border:1.5px solid var(--line);background:var(--surface);border-radius:10px;font-family:var(--display);font-weight:700;font-size:1.2rem;cursor:pointer;line-height:1}
+.stepper button:hover{background:var(--surface-2)}
+.stepper label{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;font-family:var(--mono);font-size:1rem;text-transform:none;letter-spacing:0;color:var(--ink)}
+.stepper input{font:inherit;font-family:var(--mono);font-size:1.1rem;width:4.2ch;text-align:center;padding:6px 4px;border:1.5px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);font-variant-numeric:tabular-nums}
+.stepper input:focus{border-color:var(--accent);outline:none}
+.seg{display:flex;background:var(--surface-2);border-radius:10px;padding:3px;gap:3px;margin-top:8px}
+.seg button{flex:1;border:0;background:transparent;border-radius:8px;padding:7px 8px;font-family:var(--display);font-weight:500;font-size:.85rem;cursor:pointer;color:var(--muted);min-width:0}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.seg button.sand[aria-pressed="true"]{box-shadow:inset 0 -3px 0 var(--sand),0 1px 2px rgba(0,0,0,.08)}
+.seg button.sea[aria-pressed="true"]{box-shadow:inset 0 -3px 0 var(--sea),0 1px 2px rgba(0,0,0,.08)}
+.toggles{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+.toggle{display:flex;align-items:center;gap:10px;font-family:var(--display);font-size:.9rem;font-weight:500;cursor:pointer}
+.toggle input{accent-color:var(--accent);width:18px;height:18px;margin:0}
+.readout{background:var(--surface-2);border-radius:12px;padding:12px 14px;font-family:var(--display);font-size:.95rem;line-height:1.5}
+.readout .verdict{font-size:1.25rem;font-weight:800;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.readout .verdict .pill{font-size:.95rem;padding:2px 10px}
+.readout .sub{color:var(--muted);font-size:.85rem;margin-top:4px}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:9px 14px;font-family:var(--display);font-weight:700;font-size:.9rem;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+.btn:hover{background:var(--surface-2)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:transparent}
+.btn.primary:hover{filter:brightness(1.06);background:var(--accent)}
+.btn[disabled]{opacity:.5;cursor:default}
+.btn.sq{width:36px;height:36px;padding:0;justify-content:center;font-size:1.1rem}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap}
+.kpick{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.kpick button{min-width:42px;height:40px;padding:0 10px;border:1.5px solid var(--line);background:var(--surface);border-radius:10px;font-family:var(--mono);font-size:.95rem;cursor:pointer;font-variant-numeric:tabular-nums}
+.kpick button:hover{background:var(--surface-2)}
+.kpick button[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+
+/* Figures */
+.figure{margin-top:24px;max-width:56rem}
+.figure .cap{font-family:var(--display);font-size:.88rem;color:var(--muted);margin-top:10px;max-width:70ch}
+.fig3{display:grid;grid-template-columns:minmax(0,1fr);gap:14px}
+@media (min-width:700px){.fig3{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.panel{min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:10px;box-shadow:var(--shadow)}
+.panel .plot-host canvas.plot{cursor:default;border-radius:10px}
+.panel .ph{display:flex;align-items:baseline;justify-content:space-between;gap:8px;font-family:var(--display);padding:2px 4px 8px}
+.panel .ph b{font-size:1rem}
+.panel .ph .tag{font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:999px;background:var(--surface-2)}
+.panel .ph .tag.over{background:var(--bad-soft)}.panel .ph .tag.right{background:var(--ok-soft)}.panel .ph .tag.under{background:var(--sea-soft)}
+.panel .pf{font-family:var(--display);font-size:.82rem;color:var(--muted);padding:8px 4px 2px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.panel .pf b{color:var(--ink);font-weight:500;font-family:var(--mono);font-size:.82rem;font-variant-numeric:tabular-nums}
+.cubes{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;margin-top:14px}
+@media (min-width:700px){.cubes{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.cubebar{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;padding:14px 18px;border-bottom:1px solid var(--line);background:var(--surface-2)}
+.cubebar .ctl{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.cubebar .ctl .lbl{margin:0}
+.cubebar .seg,.cubebar .kpick,.cubebar .toggle,.cubebar .btn-row{margin-top:0}
+.cubebar .kpick button{height:34px;min-width:36px}
+.cubebar .seg button{padding:6px 10px}
+.cubebar .where{font-family:var(--display);font-size:.82rem;color:var(--muted);margin-left:auto}
+.cube-wrap{padding:16px}
+.cube-wrap .cap{margin-top:12px}
+.dims{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.dims .panel{padding:8px}
+.dims .ph{padding:2px 4px 6px}
+.dims canvas{display:block;width:100%;border-radius:10px;background:var(--surface-2)}
+.dims .pf{display:block;padding:8px 4px 2px}
+@media (max-width:520px){.dims{grid-template-columns:1fr}.dims .panel{display:grid;grid-template-columns:96px minmax(0,1fr);gap:8px 12px;align-items:center}.dims .ph{grid-column:1/-1}.dims .pf{grid-column:2}}
+.chart-host{margin-top:14px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px;box-shadow:var(--shadow)}
+.chart-host canvas{display:block;width:100%}
+.chart-legend{display:flex;gap:16px;flex-wrap:wrap;font-family:var(--display);font-size:.85rem;color:var(--muted);padding:6px 4px 0}
+.chart-legend b{display:inline-flex;align-items:center;gap:6px;color:var(--ink);font-weight:500}
+.chart-legend i{width:16px;height:3px;border-radius:2px;display:inline-block}
+.chart-legend i.sand{background:var(--sand)}.chart-legend i.sea{background:var(--sea)}
+
+/* Exercise bank */
+.bank-head{margin-top:44px;display:flex;flex-wrap:wrap;align-items:end;justify-content:space-between;gap:12px 24px;max-width:56rem}
+.bank-head h2{font-size:1.55rem}
+.bank-head p{margin:6px 0 0;color:var(--muted);max-width:52ch}
+.progress{min-width:min(100%,260px)}
+.progress .lbl{font-family:var(--display);font-weight:700;font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);display:flex;justify-content:space-between}
+.progress .lbl output{font-family:var(--mono);color:var(--ink);text-transform:none;letter-spacing:0;font-variant-numeric:tabular-nums}
+.progress .bar{height:8px;border-radius:999px;background:var(--surface-2);margin-top:6px;overflow:hidden}
+.progress .bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--sand),var(--pink),var(--sea));border-radius:999px;transition:width .4s ease}
+.types{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.chip{font-family:var(--display);font-weight:700;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;padding:3px 9px;border-radius:999px;background:var(--surface-2);color:var(--ink);white-space:nowrap}
+.chip.predict{background:var(--sand-soft)}.chip.play{background:var(--accent-soft)}.chip.break{background:var(--sea-soft)}.chip.quiz{background:var(--pink-soft)}
+
+.exlist{display:flex;flex-direction:column;gap:16px;max-width:56rem;margin-top:18px}
+.ex{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:var(--shadow)}
+@media (min-width:760px){.ex{padding:22px 24px}}
+.ex-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.ex-head .n{font-family:var(--mono);font-size:.8rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.ex-head h3{font-size:1.15rem;font-weight:700;flex:1 1 auto;min-width:0}
+.status{width:12px;height:12px;border-radius:50%;background:var(--surface-2);box-shadow:inset 0 0 0 2px var(--line);flex:0 0 auto}
+.ex[data-state="ok"] .status{background:var(--ok);box-shadow:none}
+.ex[data-state="retry"] .status{background:var(--bad-soft);box-shadow:inset 0 0 0 2px var(--bad)}
+.ex[data-state="ok"]{border-color:color-mix(in srgb,var(--ok) 45%,var(--line))}
+.ex .prompt{margin:10px 0 0;max-width:62ch}
+.ex-body{margin-top:14px;display:grid;gap:12px}
+.ex .plot-host canvas.plot{cursor:default}
+.ex .plot-host.live canvas.plot{cursor:grab}
+.ex .plot-host.live canvas.plot:active{cursor:grabbing}
+.opts{display:grid;gap:8px;grid-template-columns:1fr}
+@media (min-width:560px){.opts.two{grid-template-columns:1fr 1fr}}
+.opt{display:flex;align-items:center;gap:10px;text-align:left;border:1.5px solid var(--line);background:var(--surface);border-radius:12px;padding:10px 12px;cursor:pointer;font-family:var(--body);font-size:1rem;line-height:1.4}
+.opt:hover{background:var(--surface-2)}
+.opt[aria-checked="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.opt.correct{border-color:var(--ok);background:var(--ok-soft)}
+.opt.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.opt .dot{width:10px;height:10px;border-radius:50%;flex:0 0 auto;background:var(--line)}
+.opt .dot.sand{background:var(--sand)}.opt .dot.sea{background:var(--sea)}
+.numin{display:flex;align-items:center;gap:8px;font-family:var(--display);font-weight:500}
+.numin input{font:inherit;font-family:var(--mono);font-size:1.05rem;width:7ch;padding:8px 10px;border:1.5px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink)}
+.numin input:focus{border-color:var(--accent);outline:none}
+.ex-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;align-items:center}
+.ex-actions .live{font-family:var(--display);font-size:.9rem;color:var(--muted);margin-left:auto}
+.hintbox{margin-top:12px;padding:10px 14px;border-radius:12px;background:var(--accent-soft);font-size:.95rem;line-height:1.5}
+.hintbox b{font-family:var(--display)}
+.feedback{margin-top:14px;padding:12px 14px;border-radius:12px;background:var(--surface-2);font-size:.98rem;line-height:1.5;border-left:3px solid var(--line)}
+.feedback.ok{border-left-color:var(--ok);background:var(--ok-soft)}
+.feedback.bad{border-left-color:var(--bad);background:var(--bad-soft)}
+.feedback b{font-family:var(--display)}
+.feedback .again{display:block;margin-top:6px;font-family:var(--display);font-size:.85rem;color:var(--muted)}
+.loo{display:grid;gap:6px;margin-top:10px}
+.loo .bars{display:grid;grid-template-columns:repeat(11,minmax(0,1fr));gap:4px;align-items:end;height:110px;padding-top:20px}
+.loo .bar{background:var(--line);border-radius:4px 4px 0 0;position:relative;min-height:4px}
+.loo .bar.min{background:var(--ok)}
+.loo .bar.you{outline:3px solid var(--accent);outline-offset:1px}
+.loo .bar b{position:absolute;top:-20px;left:50%;transform:translateX(-50%);font-family:var(--mono);font-size:.72rem;font-weight:500;color:var(--muted)}
+.loo .axis{display:grid;grid-template-columns:repeat(11,minmax(0,1fr));gap:4px;font-family:var(--mono);font-size:.72rem;color:var(--muted);text-align:center}
+.loo .cap{font-family:var(--display);font-size:.82rem;color:var(--muted)}
+
+.next{margin-top:48px;max-width:56rem;border:1px dashed var(--line);border-radius:18px;padding:18px 20px;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px}
+.next h2{font-size:1.1rem}
+.next p{margin:4px 0 0;color:var(--muted);font-size:.95rem}
+footer.colophon{margin-top:28px;color:var(--muted);font-size:.85rem;font-family:var(--display)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+/* Collection bar — identical on every page of the collection */
+.cbar{position:sticky;top:0;z-index:30;background:var(--bg);border-bottom:1px solid var(--line)}
+.cbar .in{max-width:1120px;margin:0 auto;padding:10px max(16px,env(safe-area-inset-left,0px)) 10px max(16px,env(safe-area-inset-right,0px));display:flex;align-items:center;justify-content:space-between;gap:16px}
+.cbar .mark{display:flex;align-items:center;gap:10px;text-decoration:none;font-family:var(--display);font-weight:800;font-size:1rem;white-space:nowrap;color:var(--ink)}
+.cbar .mark .dots{display:inline-grid;grid-template-columns:repeat(4,7px);gap:3px}
+.cbar .mark .dots i{width:7px;height:7px;border-radius:50%;display:block}
+.cbar .mark .dots i:nth-child(1){background:var(--logic)}.cbar .mark .dots i:nth-child(2){background:var(--ml)}.cbar .mark .dots i:nth-child(3){background:var(--time)}.cbar .mark .dots i:nth-child(4){background:var(--turing)}
+.cbar .mark small{font-weight:500;color:var(--muted);font-size:.9rem}
+.cbar nav{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;min-width:0}
+.cbar nav::-webkit-scrollbar{display:none}
+.cbar nav a{display:flex;align-items:center;gap:7px;padding:6px 11px;border-radius:999px;text-decoration:none;color:var(--muted);font-family:var(--display);font-weight:500;font-size:.88rem;white-space:nowrap}
+.cbar nav a i{width:8px;height:8px;border-radius:50%;flex:0 0 auto}
+.cbar nav a:hover{color:var(--ink);background:var(--soft,var(--surface-2))}
+.cbar nav a[aria-current]{background:var(--cbar-cur);color:var(--ink)}
+@media (max-width:720px){.cbar .mark span.name{display:none}.cbar .mark small{display:none}}
+.nextl{margin-top:40px;border:1px dashed var(--line);border-radius:18px;padding:18px 20px;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px}
+.nextl h2{font-size:1.1rem;margin:0}
+.nextl p{margin:4px 0 0;color:var(--muted);font-size:.95rem}
+a.btn{text-decoration:none}
+
+html{scroll-padding-top:72px}
+</style>
+</head>
+<body>
+
+<div class="cbar"><div class="in">
+  <a class="mark" href="index.html"><span class="dots" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span class="name">Mohammad Mahmoud</span> <small>Interactive lessons</small></a>
+  <nav aria-label="Lessons">
+    <a href="logic.html"><i style="background:var(--logic)"></i>Logic</a>
+    <a href="ml.html" aria-current="page"><i style="background:var(--ml)"></i>Machine learning</a>
+    <a href="running-time.html"><i style="background:var(--time)"></i>Running time</a>
+    <a href="turing.html"><i style="background:var(--turing)"></i>Turing machines</a>
+  </nav>
+</div></div>
+
+<div class="shell" id="top">
+<nav class="rail" aria-label="On this page">
+  <h2>On this page</h2>
+  <ol>
+    <li><a href="#top" aria-current="page"><span class="sw" style="background:var(--sand)"></span>Nearest Neighbours <small>11 exercises</small></a>
+      <ol class="sub"><li><a href="#playground">Playground</a></li><li><a href="#idea">The idea</a></li><li><a href="#whyk">Why k matters</a></li><li><a href="#sheet">The boundary in 3D</a></li><li><a href="#break">Breaking it</a></li><li><a href="#curse">More dimensions</a></li></ol></li>
+  </ol>
+</nav>
+
+<main>
+<header class="lesson-head">
+  <p class="eyebrow"><span>Lesson 2 of 4</span><span>Supervised learning</span><span>11 exercises</span></p>
+  <h1>Nearest Neighbours</h1>
+  <p class="lede">A new point arrives with no label, and we want to classify it: Sand or Sea. The laziest sensible rule is to find the labelled point closest to it and copy that label. That rule is 1-NN. We could also ask a small crowd instead of a single point: take the <em>k</em> closest labelled points and copy the majority label. That is <em>k</em>-NN. In the playground below you can drag the ◆, change <em>k</em>, and watch the map redraw.</p>
+</header>
+
+<section class="bench" id="playground" aria-label="k-NN playground">
+  <div class="bench-head">
+    <h2>Playground</h2>
+    <div class="legend"><b><i class="sand"></i>Sand</b><b><i class="sea"></i>Sea</b><b><i class="pink"></i>Unlabelled query</b><b><i class="string"></i>Boundary</b><span>Ties go to the closer class</span></div>
+  </div>
+  <div class="bench-body">
+    <div class="plot-host" id="benchHost"><span class="plot-hint" id="benchHint">Drag ◆ or any point · arrow keys move ◆</span></div>
+    <div class="controls">
+      <div class="readout" id="benchReadout" aria-live="polite"></div>
+      <div class="ctl"><span class="lbl">Neighbours</span><div class="stepper"><button type="button" id="kMinus" aria-label="Decrease k">−</button><label for="benchK">k =<input type="number" id="benchK" min="1" max="25" value="3" inputmode="numeric"></label><button type="button" id="kPlus" aria-label="Increase k">+</button></div></div>
+      <div class="ctl"><span class="lbl">Distance</span><div class="seg" role="group" aria-label="Distance metric"><button type="button" id="metricL2" aria-pressed="true">Euclidean</button><button type="button" id="metricL1" aria-pressed="false">Manhattan</button></div></div>
+      <div class="ctl"><span class="lbl">Dataset</span><div class="seg" role="group" aria-label="Dataset"><button type="button" data-ds="clean" aria-pressed="true">Clean</button><button type="button" data-ds="overlap" aria-pressed="false">Overlap</button><button type="button" data-ds="moons" aria-pressed="false">Crescents</button></div></div>
+      <div class="ctl"><span class="lbl">Tap on the map to</span><div class="seg" role="group" aria-label="Tap mode"><button type="button" data-mode="move" aria-pressed="true">Move</button><button type="button" class="sand" data-mode="sand" aria-pressed="false">Add Sand</button><button type="button" class="sea" data-mode="sea" aria-pressed="false">Add Sea</button></div></div>
+      <div class="toggles">
+        <label class="toggle"><input type="checkbox" id="tglRegions" checked> Shade decision regions</label>
+        <label class="toggle"><input type="checkbox" id="tglContour" checked> Draw the boundary as a string</label>
+        <label class="toggle"><input type="checkbox" id="tglLines" checked> Show neighbour lines and ball</label>
+      </div>
+      <div class="btn-row"><button type="button" class="btn" id="benchReset">Reset points</button></div>
+    </div>
+  </div>
+</section>
+
+<section class="prose" id="idea">
+  <h2>The idea</h2>
+  <p>You are given a few dozen labelled examples. Each one is a dot in the plane, coloured <span class="pill sand"><i></i>Sand</span> or <span class="pill sea"><i></i>Sea</span>. Then a new dot shows up with no colour. What should the computer say?</p>
+  <p><em>k</em>-nearest neighbours answers with a vote: find the <span class="k">k</span> labelled dots nearest to the newcomer, count colours, and go with the majority. There is no training step worth the name. The model <em>is</em> the data.</p>
+  <p>On the playground, the dashed shape around the ◆ is the neighbourhood: the smallest ball (for Manhattan distance, a diamond) that captures exactly <span class="k">k</span> points. The shading behind everything is the map of what the rule would answer at every location, and the dark string is the boundary: every place where the vote flips.</p>
+</section>
+
+<div class="bank-head" id="exercises">
+  <div><h2>Exercise bank</h2><p>Four kinds of exercise, checked on the spot. Once a card is solved it stays solved, but everything on it keeps working, so try the other options, other values of k, or other spots on the map and see what happens. Progress is saved in this browser.</p>
+    <div class="types"><span class="chip predict">Predict</span><span class="chip play">Parameter play</span><span class="chip break">Break it</span><span class="chip quiz">Quiz</span></div></div>
+  <div class="progress"><div class="lbl">Progress <output id="progOut">0 of 11</output></div><div class="bar"><i id="progBar"></i></div></div>
+</div>
+<div class="exlist" id="exlistA"></div>
+
+<section class="prose" id="whyk">
+  <h2>Why k matters</h2>
+  <p><span class="k">k = 1</span> trusts whichever point happens to be nearest. One stray point then gets its own little island on the map, and the boundary zigzags around every single point. Raise <span class="k">k</span> and each spot on the map asks a bigger crowd. Single points stop mattering, the islands close up, and the zigzag relaxes into a few long, calm curves. Push <span class="k">k</span> further still and the crowd gets so big that it is nearly the same crowd everywhere: a small group of one class, even a perfectly real one, is outvoted by its surroundings and disappears from the map.</p>
+  <p>Picture the boundary as a string pulled between the two classes. Small <span class="k">k</span> pulls the string tight around every point, noise included; that is overfitting. Large <span class="k">k</span> lets it hang slack and ignore real detail; that is underfitting. The right tension is a judgement call, but it does not have to be a guess.</p>
+</section>
+<figure class="figure" id="tension" aria-label="Overfitting and underfitting">
+  <div class="fig3">
+    <div class="panel"><div class="ph"><b>k = 1</b><span class="tag over">Overfit</span></div><div class="plot-host" id="tens1"></div><div class="pf"><span>Leave-one-out mistakes <b id="tens1loo">–</b></span></div></div>
+    <div class="panel"><div class="ph"><b>k = 5</b><span class="tag right">About right</span></div><div class="plot-host" id="tens2"></div><div class="pf"><span>Leave-one-out mistakes <b id="tens2loo">–</b></span></div></div>
+    <div class="panel"><div class="ph"><b>k = 21</b><span class="tag under">Underfit</span></div><div class="plot-host" id="tens3"></div><div class="pf"><span>Leave-one-out mistakes <b id="tens3loo">–</b></span></div></div>
+  </div>
+  <figcaption class="cap">The same 49 points three times. Four stray points, two of each colour, sit in the wrong territory, and a small, real group of Sea points lives in the bottom-left corner. At k = 1 the string wraps the strays and carves islands. At k = 5 the strays are outvoted but the corner group keeps its territory. At k = 21 the corner group is outvoted too, and the map forgets it.</figcaption>
+</figure>
+<section class="prose" style="margin-top:28px">
+  <p>One honest way to choose: <em>leave one out</em>. Hide a point, predict it from the others, and check. Repeat for every point and count the mistakes. Do this for each <span class="k">k</span> and pick the one that embarrasses the rule least. The counts under the three panels come from exactly this.</p>
+</section>
+<div class="exlist" id="exlistB"></div>
+
+<section class="prose" id="sheet">
+  <h2>The boundary in 3D</h2>
+  <p>With three measurements per example, the dots float inside a cube and the string becomes a sheet: a surface that splits the cube into Sand territory and Sea territory. The tension story is the same. 1-NN crumples the sheet around every stray point and blows bubbles around outliers; a larger <span class="k">k</span> irons it flat.</p>
+  <p>Drag either cube to turn both. Scroll or pinch to zoom, and keep zooming to step inside and look at the sheet from within. <strong>Zones</strong> fills the cube with the rule's answer at every spot. <strong>Sheet</strong> keeps only the spots where the answer flips, so you see the boundary itself. The ◆ sits on a disputed spot: 1-NN and 3-NN disagree about it.</p>
+</section>
+<section class="bench" id="cube" aria-label="k-NN in three dimensions">
+  <div class="cubebar">
+    <div class="ctl"><span class="lbl">Show</span><div class="seg" role="group" aria-label="3D view mode"><button type="button" data-c3mode="zones" aria-pressed="true">Zones</button><button type="button" data-c3mode="sheet" aria-pressed="false">Sheet</button></div></div>
+    <div class="ctl"><span class="lbl">Right cube k</span><div class="kpick" id="c3k" role="group" aria-label="k for the right cube"></div></div>
+    <label class="toggle"><input type="checkbox" id="c3train" checked> Training points</label>
+    <div class="ctl"><span class="lbl">View</span><div class="btn-row"><button type="button" class="btn sq" id="c3out" aria-label="Zoom out">−</button><button type="button" class="btn sq" id="c3in" aria-label="Zoom in">+</button><button type="button" class="btn" id="c3inside">Step inside</button><button type="button" class="btn" id="c3reset">Reset view</button></div></div>
+    <span class="where" id="c3where">Looking from outside</span>
+  </div>
+  <div class="cube-wrap">
+    <div class="cubes">
+      <div class="panel"><div class="ph"><b>1-NN</b><span class="tag">Tight</span></div><div class="plot-host" id="cubeL"></div><div class="pf" id="cubeLout"></div></div>
+      <div class="panel"><div class="ph"><b id="cubeRtitle">3-NN</b><span class="tag">Smoother</span></div><div class="plot-host" id="cubeR"></div><div class="pf" id="cubeRout"></div></div>
+    </div>
+    <p class="cap figure" style="margin-top:12px">44 training points, 22 of each class, with the two groups overlapping in the middle of the cube. Drag to turn, scroll or pinch to zoom, arrow keys and + / − work too.</p>
+  </div>
+</section>
+
+<section class="prose" id="break">
+  <h2>Breaking it</h2>
+  <p>Since the data is the model, changing the data changes the answer. Three well-placed points can flip a vote. That is a feature when the points are honest examples and a bug when they are noise or a typo in a spreadsheet.</p>
+  <p>Ties are possible too: with two classes and even <span class="k">k</span>, 2–2 is a real outcome. This page hands ties to the class of the closer neighbour. Notice how arbitrary that is. Every implementation picks <em>some</em> rule, and few mention it.</p>
+</section>
+<div class="exlist" id="exlistC"></div>
+
+<section class="prose" id="curse">
+  <h2>The catch: more dimensions</h2>
+  <p>In the plane, “nearest” means something. A few neighbours really are close, and the vote is informed. Add features, and this quietly stops being true.</p>
+  <p>Here is the geometry. Take a box with sides of length 1 and shave 5% off every face, leaving an inner box with sides of 0.9. In one dimension the inner part is 90% of the whole. In two, 81%. In three, 72.9%. Each new dimension multiplies by 0.9 again, because the volume of a box is always the product of its side lengths, however many sides it has. By 50 dimensions the inside is half a percent, and 99.5% of the box is a thin skin near its faces.</p>
+</section>
+<figure class="figure" id="dimfig" aria-label="Volume inside the inner box in one, two and three dimensions">
+  <div class="dims">
+    <div class="panel"><div class="ph"><b>d = 1</b><span class="tag">Line</span></div><canvas id="dim1"></canvas><div class="pf">Inside: <b>90%</b> of the length · <span id="dim1n"></span></div></div>
+    <div class="panel"><div class="ph"><b>d = 2</b><span class="tag">Square</span></div><canvas id="dim2"></canvas><div class="pf">Inside: <b>81%</b> of the area · <span id="dim2n"></span></div></div>
+    <div class="panel"><div class="ph"><b>d = 3</b><span class="tag">Cube · drag, pinch</span></div><div class="plot-host" id="dim3host"></div><div class="pf">Inside: <b>72.9%</b> of the volume · <span id="dim3n"></span></div></div>
+  </div>
+  <div class="chart-host"><canvas id="curseChart" role="img" aria-label="Line chart: share of the box inside the inner box falls from 90% at d=1 to 0.5% at d=50; the nearest-to-farthest distance ratio among 200 random points rises from near 0 to about 0.65."></canvas>
+    <div class="chart-legend"><b><i class="sand"></i>Share of the box that is inside (0.9<sup>d</sup>)</b><b><i class="sea"></i>Nearest ÷ farthest distance, 200 random points</b></div></div>
+  <figcaption class="cap">200 random points in each box, coloured Sand when they land inside and Sea when they land in the skin. The chart continues the story to 50 dimensions, and adds the part that hurts k-NN: as d grows, the nearest of 200 random points is almost as far away as the farthest one.</figcaption>
+</figure>
+<section class="prose" style="margin-top:28px">
+  <p>Points scattered in a high-dimensional box are therefore almost all “far out”, and the gap between the nearest and the farthest neighbour shrinks until “nearest” is a technicality. This is the curse of dimensionality, and it is why <em>k</em>-NN wants few, carefully chosen features.</p>
+</section>
+<div class="exlist" id="exlistD"></div>
+
+<aside class="next">
+  <div><h2>Next: Counting Steps</h2><p>Running time: one run of a program costs a number, the program itself costs a function of the input size. Count steps, plot them, and play the big-O game against a challenger.</p></div>
+  <div class="btn-row"><a class="btn primary" href="running-time.html">Open lesson 3</a><a class="btn" href="index.html">All lessons</a></div>
+</aside>
+<footer class="colophon">Nearest Neighbours · lesson 2 of 4 · <a href="index.html" style="color:var(--ink);text-decoration:none">All lessons</a> · <a href="../index.html" style="color:var(--ink);text-decoration:none">mmsquared.ca</a></footer>
+</main>
+</div>
+
+<script>
+(function(){
+'use strict';
+// ---------- core (shared with the exercise checker) ----------
+const ASPECT=4/3, PAD=10;
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function gauss(rnd){let u=0,v=0;while(u===0)u=rnd();while(v===0)v=rnd();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)}
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+function dist(ax,ay,bx,by,metric){const dx=Math.abs(ax-bx),dy=Math.abs(ay-by);return metric==='l1'?dx+dy:Math.hypot(dx,dy)}
+function kNearest(pts,x,y,k,metric,skip){
+  const best=[];
+  for(let i=0;i<pts.length;i++){
+    if(i===skip)continue;
+    const p=pts[i];const d=dist(p.x,p.y,x,y,metric);
+    if(best.length<k){best.push({i,d});let j=best.length-1;while(j>0&&best[j-1].d>best[j].d){const t=best[j-1];best[j-1]=best[j];best[j]=t;j--}}
+    else if(d<best[k-1].d){best[k-1]={i,d};let j=k-1;while(j>0&&best[j-1].d>best[j].d){const t=best[j-1];best[j-1]=best[j];best[j]=t;j--}}
+  }
+  return best;
+}
+function vote(pts,nbrs){
+  const count={sand:0,sea:0};
+  for(const n of nbrs)count[pts[n.i].c]++;
+  if(!nbrs.length)return{label:null,tie:false,count};
+  if(count.sand===count.sea)return{label:pts[nbrs[0].i].c,tie:true,count};
+  return{label:count.sand>count.sea?'sand':'sea',tie:false,count};
+}
+function predict(pts,x,y,k,metric,skip){const nbrs=kNearest(pts,x,y,k,metric,skip===undefined?-1:skip);return Object.assign(vote(pts,nbrs),{nbrs})}
+function looErrors(pts,k,metric){let e=0;for(let i=0;i<pts.length;i++){const r=predict(pts,pts[i].x,pts[i].y,k,metric,i);if(r.label!==pts[i].c)e++}return e}
+function blob(rnd,n,cx,cy,sd,c){const out=[];for(let i=0;i<n;i++)out.push({x:clamp(cx+gauss(rnd)*sd,0.03,ASPECT-0.03),y:clamp(cy+gauss(rnd)*sd,0.03,0.97),c});return out}
+function moons(rnd,n,noise){const out=[];for(let i=0;i<n;i++){const t=rnd()*Math.PI;out.push({x:clamp(0.35*Math.cos(t)+0.45+gauss(rnd)*noise,0.03,ASPECT-0.03),y:clamp(0.35*Math.sin(t)+0.35+gauss(rnd)*noise,0.03,0.97),c:'sand'});const u=rnd()*Math.PI;out.push({x:clamp(0.35*(1-Math.cos(u))+0.45+gauss(rnd)*noise,0.03,ASPECT-0.03),y:clamp(0.35*(1-Math.sin(u))+0.175+gauss(rnd)*noise,0.03,0.97),c:'sea'})}return out}
+const DATASETS={
+  clean:()=>{const r=mulberry32(11);return[...blob(r,18,0.42,0.64,0.11,'sand'),...blob(r,18,0.92,0.36,0.11,'sea')]},
+  overlap:()=>{const r=mulberry32(23);return[...blob(r,20,0.55,0.55,0.15,'sand'),...blob(r,20,0.80,0.45,0.15,'sea')]},
+  moons:()=>{const r=mulberry32(7);return moons(r,16,0.045)},
+  loo:()=>{const r=mulberry32(13);return[...blob(r,14,0.52,0.55,0.15,'sand'),...blob(r,14,0.82,0.45,0.15,'sea')]},
+  tension:()=>{const r=mulberry32(4);const g=()=>gauss(r);const pts=[];
+    for(let i=0;i<20;i++)pts.push({x:clamp(0.50+g()*0.13,0.03,1.3),y:clamp(0.62+g()*0.12,0.03,0.97),c:'sand'});
+    for(let i=0;i<20;i++)pts.push({x:clamp(0.98+g()*0.13,0.03,1.3),y:clamp(0.42+g()*0.12,0.03,0.97),c:'sea'});
+    for(let i=0;i<5;i++)pts.push({x:clamp(0.25+g()*0.05,0.03,1.3),y:clamp(0.28+g()*0.05,0.03,0.97),c:'sea'});
+    pts.push({x:1.05,y:0.52,c:'sand'},{x:1.12,y:0.3,c:'sand'},{x:0.42,y:0.72,c:'sea'},{x:0.6,y:0.5,c:'sea'});return pts},
+};
+const LABEL={sand:'Sand',sea:'Sea'};
+const REDUCED=matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// ---------- theme tokens ----------
+let tokCache={};
+function tok(name){if(tokCache[name])return tokCache[name];const v=getComputedStyle(document.documentElement).getPropertyValue(name).trim();tokCache[name]=v;return v}
+function isDark(){const t=document.documentElement.dataset.theme;if(t==='dark')return true;if(t==='light')return false;return matchMedia('(prefers-color-scheme: dark)').matches}
+function hexToRgb(h){h=h.replace('#','');if(h.length===3)h=h.split('').map(c=>c+c).join('');const n=parseInt(h,16);return[(n>>16)&255,(n>>8)&255,n&255]}
+function roundRect(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath()}
+function diamond(c,x,y,r,fill,stroke,lw){c.save();c.translate(x,y);c.rotate(Math.PI/4);roundRect(c,-r,-r,2*r,2*r,r*.2);c.fillStyle=fill;c.fill();c.lineWidth=lw;c.strokeStyle=stroke;c.stroke();c.restore()}
+function fitCanvas(canvas,w,h){const dpr=Math.min(window.devicePixelRatio||1,2);canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);canvas.style.height=h+'px';return dpr}
+
+// ---------- Scene: one 2D canvas with points, a query, and k-NN overlays ----------
+const redrawables=[];
+class Scene{
+  constructor(host,opts){
+    this.host=host;
+    this.o=Object.assign({k:3,metric:'l2',regions:true,contour:false,lines:true,ball:true,dragQuery:true,dragPoints:false,addMode:null,maxAdds:0,interactive:true,highlightQuery:true,showQuery:true},opts);
+    this.base=opts.points.map(p=>({x:p.x,y:p.y,c:p.c}));
+    this.pts=this.base.map(p=>({...p}));
+    this.query={x:opts.query.x,y:opts.query.y};
+    this.query0={...this.query};
+    this.reveal=Infinity;
+    this.canvas=document.createElement('canvas');this.canvas.className='plot';this.canvas.setAttribute('role','img');
+    this.canvas.setAttribute('aria-label','Scatter plot of Sand and Sea points'+(this.o.showQuery?' with an unlabelled query point':''));
+    if(this.o.interactive&&this.o.dragQuery){this.canvas.tabIndex=0;}
+    host.prepend(this.canvas);
+    this.ctx=this.canvas.getContext('2d');
+    this.regionCache=null;this.regionDirty=true;this.onChange=null;this.onRelease=null;this.w=0;this.h=0;this.dpr=1;this.drag=null;this._raf=0;
+    this._bind();
+    this._resize();
+    new ResizeObserver(()=>this._resize()).observe(host);
+    redrawables.push(this);
+  }
+  addsLeft(){return this.o.maxAdds-this.pts.filter(p=>p.added).length}
+  resetPoints(){this.pts=this.base.map(p=>({...p}));this.query={...this.query0};this.regionDirty=true;this.draw()}
+  setPoints(pts){this.base=pts.map(p=>({x:p.x,y:p.y,c:p.c}));this.pts=this.base.map(p=>({...p}));this.regionDirty=true;this.draw()}
+  set(opts){Object.assign(this.o,opts);if('k'in opts||'metric'in opts||'regions'in opts||'contour'in opts)this.regionDirty=true;this.draw()}
+  retheme(){this.regionDirty=true;this.draw()}
+  _resize(){const w=this.host.clientWidth;if(!w)return;const h=Math.round(w/ASPECT);this.w=w;this.h=h;this.dpr=fitCanvas(this.canvas,w,h);this.regionDirty=true;this.draw()}
+  frame(){const s=this.h-2*PAD;const padX=(this.w-ASPECT*s)/2;return{s,X0:padX,Y0:PAD,W:ASPECT*s,H:s}}
+  toPx(x,y){const f=this.frame();return[f.X0+x*f.s,f.Y0+f.H-y*f.s]}
+  toData(px,py){const f=this.frame();return[clamp((px-f.X0)/f.s,0,ASPECT),clamp((f.Y0+f.H-py)/f.s,0,1)]}
+  requestDraw(){if(this._raf)return;this._raf=requestAnimationFrame(()=>{this._raf=0;this.draw()})}
+  predict(k,metric){return predict(this.pts,this.query.x,this.query.y,k===undefined?this.o.k:k,metric||this.o.metric)}
+  draw(){
+    if(!this.w)return;
+    const c=this.ctx,dpr=this.dpr;c.setTransform(dpr,0,0,dpr,0,0);c.clearRect(0,0,this.w,this.h);
+    const T={surface:tok('--surface'),line:tok('--line'),ink:tok('--ink'),sand:tok('--sand'),sea:tok('--sea'),pink:tok('--pink')};
+    const f=this.frame();
+    roundRect(c,f.X0,f.Y0,f.W,f.H,12);c.fillStyle=T.surface;c.fill();
+    c.save();roundRect(c,f.X0,f.Y0,f.W,f.H,12);c.clip();
+    if(this.o.regions||this.o.contour)this._drawRegions(c,T,f);
+    c.strokeStyle=T.line;c.lineWidth=1;c.globalAlpha=.55;c.beginPath();
+    for(let gx=0.25;gx<ASPECT;gx+=0.25){const[x]=this.toPx(gx,0);c.moveTo(x,f.Y0);c.lineTo(x,f.Y0+f.H)}
+    for(let gy=0.25;gy<1;gy+=0.25){const[,y]=this.toPx(0,gy);c.moveTo(f.X0,y);c.lineTo(f.X0+f.W,y)}
+    c.stroke();c.globalAlpha=1;
+    if(this.o.contour&&this.regionCache&&this.regionCache.segs.length){const s=this.regionCache.segs;c.save();c.strokeStyle=T.ink;c.lineWidth=2.5;c.lineCap='round';c.globalAlpha=.85;c.beginPath();for(let i=0;i<s.length;i+=4){c.moveTo(f.X0+s[i],f.Y0+s[i+1]);c.lineTo(f.X0+s[i+2],f.Y0+s[i+3])}c.stroke();c.restore()}
+    const res=this.result=this.predict();
+    const[qx,qy]=this.toPx(this.query.x,this.query.y);
+    const shown=Math.min(this.reveal,res.nbrs.length);
+    if(this.o.showQuery&&this.o.lines&&res.nbrs.length&&shown>=res.nbrs.length&&this.o.ball){
+      const r=res.nbrs[res.nbrs.length-1].d*f.s;
+      c.save();c.setLineDash([5,5]);c.strokeStyle=T.ink;c.globalAlpha=.45;c.lineWidth=1.5;c.beginPath();
+      if(this.o.metric==='l1'){c.moveTo(qx+r,qy);c.lineTo(qx,qy+r);c.lineTo(qx-r,qy);c.lineTo(qx,qy-r);c.closePath()}else c.arc(qx,qy,r,0,Math.PI*2);
+      c.stroke();c.restore();
+    }
+    if(this.o.showQuery&&this.o.lines){
+      c.save();c.strokeStyle=T.ink;c.globalAlpha=.4;c.lineWidth=1.5;c.beginPath();
+      for(let i=0;i<shown;i++){const p=this.pts[res.nbrs[i].i];const[x,y]=this.toPx(p.x,p.y);c.moveTo(qx,qy);c.lineTo(x,y)}
+      c.stroke();c.restore();
+    }
+    for(let i=0;i<this.pts.length;i++){const p=this.pts[i];const[x,y]=this.toPx(p.x,p.y);
+      c.beginPath();c.arc(x,y,p.added?7:6,0,Math.PI*2);c.fillStyle=p.c==='sand'?T.sand:T.sea;c.fill();c.lineWidth=2;c.strokeStyle=T.surface;c.stroke();
+      if(p.added){c.beginPath();c.arc(x,y,10,0,Math.PI*2);c.strokeStyle=p.c==='sand'?T.sand:T.sea;c.lineWidth=1.5;c.setLineDash([3,3]);c.stroke();c.setLineDash([])}}
+    if(this.o.showQuery&&this.o.lines){for(let i=0;i<shown;i++){const p=this.pts[res.nbrs[i].i];const[x,y]=this.toPx(p.x,p.y);c.beginPath();c.arc(x,y,9.5,0,Math.PI*2);c.strokeStyle=T.ink;c.globalAlpha=.6;c.lineWidth=1.5;c.stroke();c.globalAlpha=1}}
+    if(this.o.showQuery){
+      if(this.o.highlightQuery){c.beginPath();c.arc(qx,qy,17,0,Math.PI*2);c.fillStyle=T.pink;c.globalAlpha=.22;c.fill();c.globalAlpha=1}
+      diamond(c,qx,qy,8,T.pink,T.ink,2);
+    }
+    c.restore();
+    roundRect(c,f.X0,f.Y0,f.W,f.H,12);c.strokeStyle=T.line;c.lineWidth=1;c.stroke();
+    if(this.onChange)this.onChange(res,this);
+  }
+  _drawRegions(c,T,f){
+    const cell=4;const cols=Math.ceil(f.W/cell),rows=Math.ceil(f.H/cell);
+    if(this.regionDirty||!this.regionCache||this.regionCache.cols!==cols||this.regionCache.rows!==rows){
+      const off=document.createElement('canvas');off.width=cols;off.height=rows;const oc=off.getContext('2d');const img=oc.createImageData(cols,rows);
+      const sand=hexToRgb(T.sand),sea=hexToRgb(T.sea);const dark=isDark();
+      const A=dark?74:62,At=dark?44:36;const lab=new Uint8Array(cols*rows);
+      for(let r=0;r<rows;r++)for(let q=0;q<cols;q++){const x=((q+.5)*cell)/f.s,y=1-((r+.5)*cell)/f.s;const v=vote(this.pts,kNearest(this.pts,x,y,this.o.k,this.o.metric,-1));const rgb=v.label==='sand'?sand:sea;const o=(r*cols+q)*4;img.data[o]=rgb[0];img.data[o+1]=rgb[1];img.data[o+2]=rgb[2];img.data[o+3]=v.tie?At:A;lab[r*cols+q]=v.label==='sand'?1:0}
+      oc.putImageData(img,0,0);
+      // marching squares on the label grid → boundary segments (px, relative to frame origin)
+      const segs=[];const h=cell;
+      const E=(ax,ay,bx,by,ox,oy)=>{segs.push(ox+ax*h,oy+ay*h,ox+bx*h,oy+by*h)};
+      for(let r=0;r<rows-1;r++)for(let q=0;q<cols-1;q++){const a=lab[r*cols+q],b=lab[r*cols+q+1],cc=lab[(r+1)*cols+q+1],d=lab[(r+1)*cols+q];const idx=a*8+b*4+cc*2+d;if(idx===0||idx===15)continue;const ox=(q+.5)*cell,oy=(r+.5)*cell;
+        switch(idx){case 1:case 14:E(0,.5,.5,1,ox,oy);break;case 2:case 13:E(.5,1,1,.5,ox,oy);break;case 3:case 12:E(0,.5,1,.5,ox,oy);break;case 4:case 11:E(.5,0,1,.5,ox,oy);break;case 5:E(.5,0,1,.5,ox,oy);E(0,.5,.5,1,ox,oy);break;case 6:case 9:E(.5,0,.5,1,ox,oy);break;case 7:case 8:E(.5,0,0,.5,ox,oy);break;case 10:E(.5,0,0,.5,ox,oy);E(.5,1,1,.5,ox,oy);break}}
+      this.regionCache={off,cols,rows,segs};this.regionDirty=false;
+    }
+    if(this.o.regions){c.imageSmoothingEnabled=false;c.drawImage(this.regionCache.off,f.X0,f.Y0,cols*cell,rows*cell);c.imageSmoothingEnabled=true}
+  }
+  _bind(){
+    const cv=this.canvas;
+    cv.addEventListener('pointerdown',e=>{
+      if(!this.o.interactive)return;const r=cv.getBoundingClientRect();const px=e.clientX-r.left,py=e.clientY-r.top;
+      const[qx,qy]=this.toPx(this.query.x,this.query.y);
+      if(this.o.showQuery&&this.o.dragQuery&&Math.hypot(px-qx,py-qy)<22){this.drag={type:'q'};cv.setPointerCapture(e.pointerId);e.preventDefault();return}
+      if(this.o.dragPoints){let best=-1,bd=18;for(let i=0;i<this.pts.length;i++){const[x,y]=this.toPx(this.pts[i].x,this.pts[i].y);const d=Math.hypot(px-x,py-y);if(d<bd){bd=d;best=i}}if(best>=0){this.drag={type:'p',i:best};cv.setPointerCapture(e.pointerId);e.preventDefault();return}}
+      if(this.o.addMode&&this.addsLeft()>0){const[x,y]=this.toData(px,py);this.pts.push({x,y,c:this.o.addMode,added:true});this.regionDirty=true;this.draw();if(this.onRelease)this.onRelease('add')}
+    });
+    cv.addEventListener('pointermove',e=>{if(!this.drag)return;const r=cv.getBoundingClientRect();const[x,y]=this.toData(e.clientX-r.left,e.clientY-r.top);if(this.drag.type==='q'){this.query.x=x;this.query.y=y}else{const p=this.pts[this.drag.i];p.x=x;p.y=y}this.requestDraw()});
+    const end=()=>{if(!this.drag)return;const t=this.drag.type;this.drag=null;if(t==='p')this.regionDirty=true;this.draw();if(this.onRelease)this.onRelease(t)};
+    cv.addEventListener('pointerup',end);cv.addEventListener('pointercancel',end);
+    cv.addEventListener('keydown',e=>{if(!this.o.dragQuery||!this.o.interactive)return;const step=e.shiftKey?0.05:0.015;let m=false;
+      if(e.key==='ArrowLeft'){this.query.x=clamp(this.query.x-step,0,ASPECT);m=true}else if(e.key==='ArrowRight'){this.query.x=clamp(this.query.x+step,0,ASPECT);m=true}else if(e.key==='ArrowUp'){this.query.y=clamp(this.query.y+step,0,1);m=true}else if(e.key==='ArrowDown'){this.query.y=clamp(this.query.y-step,0,1);m=true}
+      if(m){e.preventDefault();this.draw();if(this.onRelease)this.onRelease('q')}});
+  }
+}
+const mq=matchMedia('(prefers-color-scheme: dark)');
+const retheme=()=>{tokCache={};redrawables.forEach(s=>s.retheme?s.retheme():s.draw())};
+mq.addEventListener?mq.addEventListener('change',retheme):mq.addListener(retheme);
+new MutationObserver(retheme).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+
+// ---------- 3D helpers: an orbit camera that can also zoom in and step inside ----------
+const CORNERS=[];for(let i=0;i<8;i++)CORNERS.push([i&1,(i>>1)&1,(i>>2)&1]);
+const EDGES=[];for(let i=0;i<8;i++)for(let j=i+1;j<8;j++){const d=i^j;if(d===1||d===2||d===4)EDGES.push([i,j])}
+const D_HOME=3.0,D_MIN=0.08,D_MAX=7,NEAR=0.04,INSIDE_D=0.87;
+function rot(cam,x,y,z){const cx=x-.5,cy=y-.5,cz=z-.5;const ct=Math.cos(cam.theta),st=Math.sin(cam.theta),cp=Math.cos(cam.phi),sp=Math.sin(cam.phi);const x1=cx*ct+cz*st,z1=-cx*st+cz*ct;return{x:x1,y:cy*cp-z1*sp,z:cy*sp+z1*cp}}
+function focal(cam,w,h){return Math.min(w,h)*(cam.D>=1?1.1:0.7+0.4*cam.D)}
+function screen(cam,w,h,r){const f=focal(cam,w,h);const d=cam.D-r.z;const s=f/d;return{X:w/2+r.x*s,Y:h/2-r.y*s,d,k:D_HOME/d}}
+function proj(cam,w,h,x,y,z){return screen(cam,w,h,rot(cam,x,y,z))}
+function drawBox(c,cam,w,h,color,alpha,lw,lo,hi){const m=v=>lo+v*(hi-lo);
+  for(const[i,j]of EDGES){const a=CORNERS[i],b=CORNERS[j];let r1=rot(cam,m(a[0]),m(a[1]),m(a[2])),r2=rot(cam,m(b[0]),m(b[1]),m(b[2]));const d1=cam.D-r1.z,d2=cam.D-r2.z;if(d1<NEAR&&d2<NEAR)continue;
+    if(d1<NEAR){const t=(d1-NEAR)/(d1-d2);r1={x:r1.x+(r2.x-r1.x)*t,y:r1.y+(r2.y-r1.y)*t,z:r1.z+(r2.z-r1.z)*t}}else if(d2<NEAR){const t=(d2-NEAR)/(d2-d1);r2={x:r2.x+(r1.x-r2.x)*t,y:r2.y+(r1.y-r2.y)*t,z:r2.z+(r1.z-r2.z)*t}}
+    const P=screen(cam,w,h,r1),Q=screen(cam,w,h,r2);
+    c.globalAlpha=alpha*(0.45+0.55*clamp(((r1.z+r2.z)/2+0.87)/1.74,0,1));c.beginPath();c.moveTo(P.X,P.Y);c.lineTo(Q.X,Q.Y);c.strokeStyle=color;c.lineWidth=lw;c.stroke()}
+  c.globalAlpha=1}
+class Orbit{
+  constructor(theta,phi){this.t0=theta;this.p0=phi;this.theta=theta;this.phi=phi;this.D=D_HOME;this.views=[];this.auto=!REDUCED;this.visible=false;this.spinning=false;this.onChange=null}
+  setD(D){this.D=clamp(D,D_MIN,D_MAX);this.redraw()}
+  inside(){return this.D<INSIDE_D}
+  reset(){this.theta=this.t0;this.phi=this.p0;this.D=D_HOME;this.redraw()}
+  attach(canvas){const ptrs=new Map();let pinch=0,last=null;
+    canvas.addEventListener('pointerdown',e=>{canvas.setPointerCapture(e.pointerId);ptrs.set(e.pointerId,[e.clientX,e.clientY]);this.auto=false;
+      if(ptrs.size>=2){const a=[...ptrs.values()];pinch=Math.hypot(a[0][0]-a[1][0],a[0][1]-a[1][1]);last=null}else last=[e.clientX,e.clientY];e.preventDefault()});
+    canvas.addEventListener('pointermove',e=>{if(!ptrs.has(e.pointerId))return;ptrs.set(e.pointerId,[e.clientX,e.clientY]);
+      if(ptrs.size>=2){const a=[...ptrs.values()];const d=Math.hypot(a[0][0]-a[1][0],a[0][1]-a[1][1]);if(pinch>0&&d>0)this.setD(this.D*pinch/d);pinch=d;return}
+      if(last){this.theta+=(e.clientX-last[0])*0.011;this.phi=clamp(this.phi+(e.clientY-last[1])*0.011,-1.35,1.35);this.redraw()}last=[e.clientX,e.clientY]});
+    const up=e=>{ptrs.delete(e.pointerId);pinch=0;last=ptrs.size===1?[...ptrs.values()][0]:null};
+    canvas.addEventListener('pointerup',up);canvas.addEventListener('pointercancel',up);
+    canvas.addEventListener('wheel',e=>{e.preventDefault();this.auto=false;this.setD(this.D*Math.exp(e.deltaY*0.0012))},{passive:false});
+    canvas.tabIndex=0;
+    canvas.addEventListener('keydown',e=>{const s=0.08;let m=true;
+      if(e.key==='ArrowLeft')this.theta-=s;else if(e.key==='ArrowRight')this.theta+=s;else if(e.key==='ArrowUp')this.phi=clamp(this.phi-s,-1.35,1.35);else if(e.key==='ArrowDown')this.phi=clamp(this.phi+s,-1.35,1.35);
+      else if(e.key==='+'||e.key==='=')this.D=clamp(this.D/1.2,D_MIN,D_MAX);else if(e.key==='-'||e.key==='_')this.D=clamp(this.D*1.2,D_MIN,D_MAX);else m=false;
+      if(m){e.preventDefault();this.auto=false;this.redraw()}});
+    new IntersectionObserver(en=>{this.visible=en.some(x=>x.isIntersecting);this._spin()},{threshold:.1}).observe(canvas);
+  }
+  redraw(){this.views.forEach(v=>v.draw());if(this.onChange)this.onChange(this)}
+  _spin(){if(this.spinning||!this.auto||!this.visible)return;this.spinning=true;const step=()=>{if(!this.auto||!this.visible||document.visibilityState!=='visible'){this.spinning=false;return}this.theta+=0.0032;this.redraw();requestAnimationFrame(step)};requestAnimationFrame(step)}
+}
+class View3D{
+  constructor(host,orbit,render,maxH){this.host=host;this.orbit=orbit;this.render=render;this.maxH=maxH||400;this.canvas=document.createElement('canvas');this.canvas.className='plot3d';this.canvas.setAttribute('role','img');this.canvas.setAttribute('aria-label','Rotatable, zoomable three-dimensional plot');host.prepend(this.canvas);this.ctx=this.canvas.getContext('2d');this.w=0;this.h=0;orbit.views.push(this);orbit.attach(this.canvas);new ResizeObserver(()=>this.resize()).observe(host);this.resize();redrawables.push(this)}
+  resize(){const w=this.host.clientWidth;if(!w)return;const h=Math.min(w,this.maxH);this.w=w;this.h=h;this.dpr=fitCanvas(this.canvas,w,h);this.draw()}
+  draw(){if(!this.w)return;const c=this.ctx;c.setTransform(this.dpr,0,0,this.dpr,0,0);c.clearRect(0,0,this.w,this.h);this.render(c,this.orbit,this.w,this.h)}
+}
+
+// ---------- Playground ----------
+const bench=new Scene(document.getElementById('benchHost'),{points:DATASETS.clean(),query:{x:0.67,y:0.5},k:3,dragPoints:true,contour:true});
+const benchK=document.getElementById('benchK'),readout=document.getElementById('benchReadout');
+function pillHTML(label){return label?`<span class="pill ${label}"><i></i>${LABEL[label]}</span>`:'<span>no points</span>'}
+bench.onChange=res=>{
+  const far=res.nbrs.length?res.nbrs[res.nbrs.length-1].d:0;
+  readout.innerHTML=`<div class="verdict">◆ is ${pillHTML(res.label)}</div><div class="sub"><span class="mono">k = ${bench.o.k}</span> · ${res.count.sand} Sand, ${res.count.sea} Sea${res.tie?' · tie, closer class wins':''} · farthest neighbour at <span class="mono">${far.toFixed(2)}</span></div>`;
+};
+bench.draw();
+function setBenchK(k){k=clamp(Math.round(k)||1,1,25);benchK.value=k;bench.set({k})}
+benchK.addEventListener('change',()=>setBenchK(+benchK.value));
+benchK.addEventListener('input',()=>{const v=+benchK.value;if(v>=1&&v<=25)bench.set({k:Math.round(v)})});
+document.getElementById('kMinus').addEventListener('click',()=>setBenchK(+benchK.value-1));
+document.getElementById('kPlus').addEventListener('click',()=>setBenchK(+benchK.value+1));
+const seg=(sel,fn)=>document.querySelectorAll(sel).forEach(b=>b.addEventListener('click',()=>{b.parentElement.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed','false'));b.setAttribute('aria-pressed','true');fn(b)}));
+seg('#metricL2,#metricL1',b=>bench.set({metric:b.id==='metricL1'?'l1':'l2'}));
+seg('[data-ds]',b=>{bench.setPoints(DATASETS[b.dataset.ds]());bench.query={x:0.67,y:0.5};bench.draw()});
+seg('[data-mode]',b=>{const m=b.dataset.mode;bench.set({addMode:m==='move'?null:m,maxAdds:m==='move'?0:999,dragPoints:m==='move'});document.getElementById('benchHint').textContent=m==='move'?'Drag ◆ or any point':`Tap to drop a ${LABEL[m]} point`});
+document.getElementById('tglRegions').addEventListener('change',e=>bench.set({regions:e.target.checked}));
+document.getElementById('tglContour').addEventListener('change',e=>bench.set({contour:e.target.checked}));
+document.getElementById('tglLines').addEventListener('change',e=>bench.set({lines:e.target.checked,ball:e.target.checked}));
+document.getElementById('benchReset').addEventListener('click',()=>{const ds=document.querySelector('[data-ds][aria-pressed="true"]').dataset.ds;bench.setPoints(DATASETS[ds]());bench.query={x:0.67,y:0.5};bench.draw()});
+
+// ---------- Tension figure ----------
+const tensionPts=DATASETS.tension();
+[[1,'tens1'],[5,'tens2'],[21,'tens3']].forEach(([k,id])=>{
+  new Scene(document.getElementById(id),{points:tensionPts,query:{x:0.67,y:0.5},k,regions:true,contour:true,lines:false,interactive:false,showQuery:false});
+  document.getElementById(id+'loo').textContent=looErrors(tensionPts,k,'l2')+' of 49';
+});
+
+// ---------- 3D k-NN ----------
+const K3={N:11,ks:[1,3,5,7,9,15],target:{x:0.55,y:0.45,z:0.55}};
+K3.pts=(()=>{const r=mulberry32(4);const g=()=>gauss(r);const cl=v=>clamp(v,0.04,0.96);const pts=[];
+  for(let i=0;i<22;i++)pts.push({x:cl(0.38+g()*0.17),y:cl(0.5+g()*0.17),z:cl(0.5+g()*0.17),c:'sand'});
+  for(let i=0;i<22;i++)pts.push({x:cl(0.62+g()*0.17),y:cl(0.5+g()*0.17),z:cl(0.5+g()*0.17),c:'sea'});return pts})();
+function pred3(x,y,z,k){const pts=K3.pts;const d=new Array(pts.length);for(let i=0;i<pts.length;i++){const p=pts[i];d[i]={c:p.c,d:(p.x-x)**2+(p.y-y)**2+(p.z-z)**2}}d.sort((a,b)=>a.d-b.d);let s=0;for(let i=0;i<k;i++)if(d[i].c==='sand')s++;return s*2>k?'sand':'sea'}
+(function(){const N=K3.N;K3.labels={};K3.sheet={};K3.targetLabel={};
+  for(const k of K3.ks){const lab=new Uint8Array(N*N*N);for(let i=0;i<N;i++)for(let j=0;j<N;j++)for(let l=0;l<N;l++)lab[i*N*N+j*N+l]=pred3((i+.5)/N,(j+.5)/N,(l+.5)/N,k)==='sand'?1:0;
+    const sh=new Uint8Array(N*N*N);const at=(i,j,l)=>lab[i*N*N+j*N+l];
+    for(let i=0;i<N;i++)for(let j=0;j<N;j++)for(let l=0;l<N;l++){const me=at(i,j,l);let b=false;if(i>0&&at(i-1,j,l)!==me)b=true;else if(i<N-1&&at(i+1,j,l)!==me)b=true;else if(j>0&&at(i,j-1,l)!==me)b=true;else if(j<N-1&&at(i,j+1,l)!==me)b=true;else if(l>0&&at(i,j,l-1)!==me)b=true;else if(l<N-1&&at(i,j,l+1)!==me)b=true;if(b)sh[i*N*N+j*N+l]=1}
+    K3.labels[k]=lab;K3.sheet[k]=sh;K3.targetLabel[k]=pred3(K3.target.x,K3.target.y,K3.target.z,k)}})();
+const c3state={mode:'zones',kRight:3,train:true};
+function renderKnn3(k){return function(c,cam,w,h){
+  const T={line:tok('--line'),ink:tok('--ink'),sand:tok('--sand'),sea:tok('--sea'),pink:tok('--pink'),surface:tok('--surface')};
+  drawBox(c,cam,w,h,T.ink,.5,1,0,1);
+  const N=K3.N,lab=K3.labels[k],sh=K3.sheet[k];const items=[];
+  for(let i=0;i<N;i++)for(let j=0;j<N;j++)for(let l=0;l<N;l++){const idx=i*N*N+j*N+l;if(c3state.mode==='sheet'&&!sh[idx])continue;const p=proj(cam,w,h,(i+.5)/N,(j+.5)/N,(l+.5)/N);if(p.d<NEAR)continue;items.push({t:c3state.mode,X:p.X,Y:p.Y,d:p.d,k:p.k,col:lab[idx]?T.sand:T.sea})}
+  if(c3state.train)for(const p of K3.pts){const q=proj(cam,w,h,p.x,p.y,p.z);if(q.d<NEAR)continue;items.push({t:'pt',X:q.X,Y:q.Y,d:q.d,k:q.k,col:p.c==='sand'?T.sand:T.sea})}
+  const tq=proj(cam,w,h,K3.target.x,K3.target.y,K3.target.z);if(tq.d>=NEAR)items.push({t:'target',X:tq.X,Y:tq.Y,d:tq.d,k:tq.k});
+  items.sort((a,b)=>b.d-a.d);
+  const base=Math.min(w,h)/330;const rad=(r,it,max)=>Math.min(r*base*it.k,max);
+  for(const it of items){
+    if(it.t==='zones'){c.globalAlpha=.42;c.beginPath();c.arc(it.X,it.Y,rad(2.4,it,14),0,Math.PI*2);c.fillStyle=it.col;c.fill()}
+    else if(it.t==='sheet'){c.globalAlpha=.92;c.beginPath();c.arc(it.X,it.Y,rad(3.6,it,22),0,Math.PI*2);c.fillStyle=it.col;c.fill()}
+    else if(it.t==='pt'){c.globalAlpha=1;c.beginPath();c.arc(it.X,it.Y,rad(5.5,it,26),0,Math.PI*2);c.fillStyle=it.col;c.fill();c.lineWidth=1.5;c.strokeStyle=T.surface;c.stroke()}
+    else{const r=rad(8,it,30);c.globalAlpha=.22;c.beginPath();c.arc(it.X,it.Y,r*2,0,Math.PI*2);c.fillStyle=T.pink;c.fill();c.globalAlpha=1;diamond(c,it.X,it.Y,r,T.pink,T.ink,2)}
+  }
+  c.globalAlpha=1;
+}}
+const orbitA=new Orbit(0.65,0.42);
+new View3D(document.getElementById('cubeL'),orbitA,renderKnn3(1));
+const cubeR=new View3D(document.getElementById('cubeR'),orbitA,renderKnn3(3));
+function cubeOuts(){const kr=c3state.kRight;
+  document.getElementById('cubeLout').innerHTML=`<span>At ◆: ${pillHTML(K3.targetLabel[1])}</span>`;
+  document.getElementById('cubeRout').innerHTML=`<span>At ◆: ${pillHTML(K3.targetLabel[kr])}</span>`;
+  document.getElementById('cubeRtitle').textContent=kr+'-NN';}
+cubeOuts();
+const c3inside=document.getElementById('c3inside'),c3where=document.getElementById('c3where');
+orbitA.onChange=o=>{const inn=o.inside();c3inside.textContent=inn?'Step outside':'Step inside';c3where.textContent=inn?'Looking from inside the cube':'Looking from outside'};
+seg('[data-c3mode]',b=>{c3state.mode=b.dataset.c3mode;orbitA.redraw()});
+document.getElementById('c3train').addEventListener('change',e=>{c3state.train=e.target.checked;orbitA.redraw()});
+document.getElementById('c3in').addEventListener('click',()=>{orbitA.auto=false;orbitA.setD(orbitA.D/1.3)});
+document.getElementById('c3out').addEventListener('click',()=>{orbitA.auto=false;orbitA.setD(orbitA.D*1.3)});
+c3inside.addEventListener('click',()=>{orbitA.auto=false;orbitA.setD(orbitA.inside()?D_HOME:0.22)});
+document.getElementById('c3reset').addEventListener('click',()=>{orbitA.auto=false;orbitA.reset()});
+(function(){const box=document.getElementById('c3k');K3.ks.filter(k=>k>1).forEach(k=>{const b=document.createElement('button');b.type='button';b.textContent=k;b.setAttribute('aria-pressed',k===3?'true':'false');b.addEventListener('click',()=>{box.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed','false'));b.setAttribute('aria-pressed','true');c3state.kRight=k;cubeR.render=renderKnn3(k);cubeOuts();orbitA.redraw()});box.append(b)})})();
+
+// ---------- Dimension figure ----------
+const DIMPTS=(()=>{const r=mulberry32(77);const out={};for(const d of [1,2,3]){const pts=[];let inside=0;for(let i=0;i<200;i++){const p=[];let ins=true;for(let j=0;j<d;j++){const v=r();p.push(v);if(v<0.05||v>0.95)ins=false}if(ins)inside++;pts.push({p,ins})}out[d]={pts,inside}}return out})();
+['dim1n','dim2n','dim3n'].forEach((id,i)=>{document.getElementById(id).textContent=`${DIMPTS[i+1].inside} of 200 points`});
+function drawDim1(canvas){const w=canvas.parentElement.clientWidth-16;if(w<=0)return;const h=Math.min(w,150);const dpr=fitCanvas(canvas,w,h);const c=canvas.getContext('2d');c.setTransform(dpr,0,0,dpr,0,0);c.clearRect(0,0,w,h);
+  const T={ink:tok('--ink'),sand:tok('--sand'),sea:tok('--sea'),sandSoft:tok('--sand-soft')};const x0=w*.1,x1=w*.9,y=h/2;
+  c.fillStyle=T.sandSoft;c.fillRect(x0+(x1-x0)*.05,y-14,(x1-x0)*.9,28);
+  c.strokeStyle=T.ink;c.lineWidth=2;c.beginPath();c.moveTo(x0,y);c.lineTo(x1,y);c.stroke();
+  c.strokeStyle=T.sand;c.lineWidth=2;c.beginPath();c.moveTo(x0+(x1-x0)*.05,y-18);c.lineTo(x0+(x1-x0)*.05,y+18);c.moveTo(x0+(x1-x0)*.95,y-18);c.lineTo(x0+(x1-x0)*.95,y+18);c.stroke();
+  const r=mulberry32(5);for(const q of DIMPTS[1].pts){const px=x0+(x1-x0)*q.p[0],py=y+(r()-.5)*20;c.beginPath();c.arc(px,py,2.6,0,Math.PI*2);c.fillStyle=q.ins?T.sand:T.sea;c.fill()}}
+function drawDim2(canvas){const w=canvas.parentElement.clientWidth-16;if(w<=0)return;const h=Math.min(w,150);const dpr=fitCanvas(canvas,w,h);const c=canvas.getContext('2d');c.setTransform(dpr,0,0,dpr,0,0);c.clearRect(0,0,w,h);
+  const T={ink:tok('--ink'),sand:tok('--sand'),sea:tok('--sea'),sandSoft:tok('--sand-soft')};const S=h*.84,x0=(w-S)/2,y0=(h-S)/2;
+  c.fillStyle=T.sandSoft;c.fillRect(x0+S*.05,y0+S*.05,S*.9,S*.9);c.strokeStyle=T.ink;c.lineWidth=2;c.strokeRect(x0,y0,S,S);c.strokeStyle=T.sand;c.strokeRect(x0+S*.05,y0+S*.05,S*.9,S*.9);
+  for(const q of DIMPTS[2].pts){c.beginPath();c.arc(x0+S*q.p[0],y0+S*(1-q.p[1]),2.6,0,Math.PI*2);c.fillStyle=q.ins?T.sand:T.sea;c.fill()}}
+const dim1=document.getElementById('dim1'),dim2=document.getElementById('dim2');
+const dimStatic={draw(){drawDim1(dim1);drawDim2(dim2)}};redrawables.push(dimStatic);
+new ResizeObserver(()=>dimStatic.draw()).observe(dim1.parentElement);new ResizeObserver(()=>dimStatic.draw()).observe(dim2.parentElement);dimStatic.draw();
+const orbitB=new Orbit(0.7,0.4);
+new View3D(document.getElementById('dim3host'),orbitB,(c,cam,w,h)=>{const T={ink:tok('--ink'),sand:tok('--sand'),sea:tok('--sea')};
+  drawBox(c,cam,w,h,T.ink,.7,1.5,0,1);drawBox(c,cam,w,h,T.sand,.9,1.5,0.05,0.95);
+  const items=[];for(const q of DIMPTS[3].pts){const p=proj(cam,w,h,q.p[0],q.p[1],q.p[2]);if(p.d<NEAR)continue;items.push({X:p.X,Y:p.Y,d:p.d,k:p.k,ins:q.ins})}items.sort((a,b)=>b.d-a.d);const base=Math.min(w,h)/150;
+  for(const it of items){c.beginPath();c.arc(it.X,it.Y,Math.min(1.9*base*it.k,12),0,Math.PI*2);c.fillStyle=it.ins?T.sand:T.sea;c.globalAlpha=.9;c.fill()}c.globalAlpha=1},150);
+
+// curse chart
+const CURSE=(()=>{const r=mulberry32(99);const inside=[],ratio=[];for(let d=1;d<=50;d++){inside.push(Math.pow(.9,d));let acc=0;const Tn=8;for(let t=0;t<Tn;t++){const q=new Array(d);for(let j=0;j<d;j++)q[j]=r();let mn=1e9,mx=0;for(let i=0;i<200;i++){let s=0;for(let j=0;j<d;j++){const v=r()-q[j];s+=v*v}if(s<mn)mn=s;if(s>mx)mx=s}acc+=Math.sqrt(mn/mx)}ratio.push(acc/Tn)}return{inside,ratio}})();
+const chartCanvas=document.getElementById('curseChart');
+function drawChart(){const w=chartCanvas.parentElement.clientWidth-24;if(w<=0)return;const h=clamp(Math.round(w*.42),180,260);const dpr=fitCanvas(chartCanvas,w,h);const c=chartCanvas.getContext('2d');c.setTransform(dpr,0,0,dpr,0,0);c.clearRect(0,0,w,h);
+  const T={ink:tok('--ink'),muted:tok('--muted'),line:tok('--line'),sand:tok('--sand'),sea:tok('--sea')};const L=44,R=14,Tp=14,B=34;const pw=w-L-R,ph=h-Tp-B;
+  const X=d=>L+pw*(d-1)/49,Y=v=>Tp+ph*(1-v);
+  c.font='500 11px JetBrains Mono, ui-monospace, monospace';c.fillStyle=T.muted;c.textAlign='right';c.textBaseline='middle';
+  for(const v of [0,.25,.5,.75,1]){c.strokeStyle=T.line;c.lineWidth=1;c.beginPath();c.moveTo(L,Y(v));c.lineTo(w-R,Y(v));c.stroke();c.fillText(Math.round(v*100)+'%',L-8,Y(v))}
+  c.textAlign='center';c.textBaseline='top';for(const d of [1,10,20,30,40,50]){c.fillText(String(d),X(d),h-B+8)}
+  c.fillStyle=T.muted;c.font='500 11px Rubik, system-ui, sans-serif';c.fillText('dimensions d',L+pw/2,h-B+22);
+  const line=(arr,col)=>{c.strokeStyle=col;c.lineWidth=2.5;c.lineJoin='round';c.beginPath();arr.forEach((v,i)=>{i?c.lineTo(X(i+1),Y(v)):c.moveTo(X(1),Y(v))});c.stroke()};
+  line(CURSE.inside,T.sand);line(CURSE.ratio,T.sea);
+  for(const d of [1,2,3,50]){c.beginPath();c.arc(X(d),Y(CURSE.inside[d-1]),3.5,0,Math.PI*2);c.fillStyle=T.sand;c.fill()}
+  c.fillStyle=T.ink;c.font='700 11px Rubik, system-ui, sans-serif';c.textAlign='left';c.textBaseline='bottom';c.fillText('72.9%',X(3)+6,Y(CURSE.inside[2])-2);c.textAlign='right';c.fillText('0.5%',X(50)-4,Y(CURSE.inside[49])-6);
+  c.textBaseline='top';c.fillText(Math.round(CURSE.ratio[49]*100)+'%',X(50)-4,Y(CURSE.ratio[49])+6);}
+redrawables.push({draw:drawChart});new ResizeObserver(drawChart).observe(chartCanvas.parentElement);drawChart();
+
+// ---------- Exercise bank ----------
+const Q={x:0.67,y:0.5};
+const sceneA=[{x:0.71,y:0.52,c:'sand'},{x:0.59,y:0.47,c:'sea'},{x:0.73,y:0.42,c:'sea'},{x:0.64,y:0.59,c:'sea'},{x:0.2,y:0.85,c:'sand'},{x:0.28,y:0.92,c:'sand'},{x:0.14,y:0.72,c:'sand'},{x:1.15,y:0.15,c:'sand'},{x:1.22,y:0.27,c:'sand'},{x:1.05,y:0.1,c:'sand'},{x:0.95,y:0.8,c:'sea'},{x:1.05,y:0.86,c:'sea'},{x:0.35,y:0.18,c:'sea'},{x:0.45,y:0.1,c:'sea'}];
+const sceneB=[{x:0.62,y:0.55,c:'sand'},{x:0.73,y:0.47,c:'sand'},{x:0.66,y:0.42,c:'sand'},{x:0.82,y:0.6,c:'sea'},{x:0.52,y:0.4,c:'sea'},{x:0.77,y:0.33,c:'sea'},{x:0.5,y:0.6,c:'sea'},{x:0.69,y:0.7,c:'sea'},{x:0.87,y:0.45,c:'sea'},{x:1.1,y:0.85,c:'sea'},{x:0.25,y:0.2,c:'sea'},{x:0.2,y:0.9,c:'sand'},{x:1.2,y:0.1,c:'sand'},{x:0.3,y:0.75,c:'sand'}];
+const sceneC=[{x:0.70,y:0.52,c:'sand'},{x:0.63,y:0.53,c:'sand'},{x:0.67,y:0.58,c:'sea'},{x:0.75,y:0.46,c:'sea'},{x:0.60,y:0.44,c:'sea'},{x:0.72,y:0.60,c:'sea'},{x:0.57,y:0.55,c:'sea'},{x:1.1,y:0.8,c:'sea'},{x:0.3,y:0.2,c:'sea'},{x:1.0,y:0.15,c:'sea'},{x:0.2,y:0.85,c:'sand'},{x:1.2,y:0.3,c:'sand'},{x:0.15,y:0.6,c:'sand'}];
+const sceneD=[{x:0.72,y:0.55,c:'sand'},{x:0.60,y:0.47,c:'sea'},{x:0.70,y:0.42,c:'sea'},{x:0.63,y:0.57,c:'sea'},{x:0.75,y:0.50,c:'sea'},{x:0.9,y:0.8,c:'sea'},{x:1.1,y:0.7,c:'sea'},{x:0.4,y:0.3,c:'sea'},{x:0.25,y:0.85,c:'sand'},{x:0.35,y:0.9,c:'sand'},{x:1.15,y:0.2,c:'sand'},{x:1.05,y:0.3,c:'sand'},{x:0.9,y:0.1,c:'sand'}];
+const looErrsAll=pts=>{const e=[];for(let k=1;k<=11;k++)e.push(looErrors(pts,k,'l2'));return e};
+
+const EX=[
+ {id:'p1',list:'A',type:'predict',title:'Call the vote with k = 1',prompt:'Only the single nearest point gets a say. Which colour does the ◆ receive? Decide before you reveal.',
+  scene:{points:sceneA,query:Q,k:1,lines:false,regions:false,interactive:false},
+  options:[{v:'sand',dot:'sand',t:'Sand',why:'One neighbour, one vote. The Sand point sitting right beside the ◆ decides everything, however outnumbered it is a little further out.'},{v:'sea',dot:'sea',t:'Sea',why:'Sea has more points nearby, but k = 1 only hears the single closest one, and that one is Sand. Crowds do not count yet.'}],two:true,
+  answer:s=>s.predict(1).label,reveal:true},
+ {id:'p2',list:'A',type:'predict',title:'Same scene, k = 3',prompt:'Now the three nearest points vote. Does the answer hold?',
+  scene:{points:sceneA,query:Q,k:3,lines:false,regions:false,interactive:false},
+  options:[{v:'sand',dot:'sand',t:'Sand',why:'The closest point is Sand, but neighbours two and three are both Sea. The closest point gets outvoted 2 to 1.'},{v:'sea',dot:'sea',t:'Sea',why:'The nearest point is Sand, but neighbours two and three are both Sea: 1 against 2, and the ◆ flips. The 3D cubes further down show the same 1-NN versus 3-NN disagreement.'}],two:true,
+  answer:s=>s.predict(3).label,reveal:true},
+ {id:'p3',list:'B',type:'predict',title:'Will it flip?',prompt:'A tight trio of Sand points hugs the ◆, with a wider ring of Sea beyond. Going from k = 3 to k = 7, does the prediction change?',
+  scene:{points:sceneB,query:Q,k:3,lines:false,regions:false,interactive:false},
+  options:[{v:'yes',t:'Yes, it flips',why:'At k = 3 the trio wins 3–0. At k = 7 the four nearest Sea points join and win 4–3. Small pockets of one class survive at small k and get bulldozed at large k.'},{v:'no',t:'No, same label',why:'The trio wins 3–0 at k = 3, but the next four points are all Sea, so at k = 7 the vote is 4–3 for Sea. The extra votes all came from the same ring.'}],two:true,
+  answer:s=>s.predict(3).label!==s.predict(7).label?'yes':'no',reveal:true,revealK:7},
+ {id:'k1',list:'B',type:'play',title:'The smallest k that says Sea',prompt:'Pick a k and watch which points get connected. Find the smallest k for which the ◆ is labelled Sea, then check. Ties go to the closer class.',
+  scene:{points:sceneC,query:Q,k:1,lines:true,ball:true,regions:false,interactive:false},kRange:[1,9],
+  evalK:(s,k)=>{const r=s.predict(k);const tie=r.tie?' That is a tie, and the closer class is Sand.':'';
+    if(r.label!=='sea')return{good:false,text:`k = ${k} says Sand: ${r.count.sand} Sand against ${r.count.sea} Sea.${tie} Sea needs a bigger crowd.`};
+    if(k>1&&s.predict(k-1).label==='sea')return{good:false,text:`k = ${k} does say Sea (${r.count.sea} to ${r.count.sand}), but a smaller k already does. Look for the first k where Sea takes over.`};
+    return{good:true,text:'k = 5 is the first time Sea has the majority. At k = 4 the vote is 2–2, and the tie goes to Sand because the closest point is Sand. One vote earlier, one vote later, different answer.'}}},
+ {id:'k2',list:'B',type:'play',title:'Pick k by leave-one-out',prompt:'Two overlapping classes, 28 points. Pick the k you would ship, then check. The check runs leave-one-out for every k from 1 to 11 and shows you how your pick did.',
+  scene:{points:DATASETS.loo(),query:{x:0.67,y:0.5},k:1,lines:false,regions:true,contour:true,interactive:false,showQuery:false},kRange:[1,11],loo:true,
+  evalK:(s,k)=>{const errs=looErrsAll(s.pts);const min=Math.min(...errs),max=Math.max(...errs);const good=errs[k-1]===min;
+    const bars=`<div class="loo"><div class="bars">${errs.map((e,i)=>`<div class="bar${e===min?' min':''}${i+1===k?' you':''}" style="height:${Math.max(4,100*e/max)}%"><b>${e}</b></div>`).join('')}</div><div class="axis">${errs.map((_,i)=>`<span>${i+1}</span>`).join('')}</div><div class="cap">Leave-one-out mistakes for each k. Green: fewest. Outlined: your pick (k = ${k}).</div></div>`;
+    return{good,extra:bars,text:good?`k = ${k} makes ${errs[k-1]} mistakes out of 28, ${errs.filter(e=>e===min).length>1?'which ties for the fewest':'the fewest of any k'}. Notice how badly k = 1 does here: with overlapping classes, trusting the single nearest point means trusting noise.`:`k = ${k} makes ${errs[k-1]} leave-one-out mistakes; the best k makes ${min}. Pick one of the green bars and check again.`}}},
+ {id:'b1',list:'C',type:'break',title:'Flip the vote with three points',prompt:'With k = 5 the ◆ is currently Sea, 4 votes to 1. Tap on the map to add up to three Sand points so that the ◆ becomes Sand. Then check.',
+  scene:{points:sceneD,query:Q,k:5,lines:true,ball:true,regions:true,contour:true,interactive:true,dragQuery:false,addMode:'sand',maxAdds:3},adds:true,
+  check:s=>s.predict(5).label==='sand',
+  ok:'Three points you invented just changed what the “model” believes about this spot. k-NN has no filter between data and decision, which is why outliers and mislabelled rows hurt it so much.',
+  bad:'Still Sea. Your added points need to be among the five nearest to the ◆. Place them inside the dashed ball, close to the ◆, and try again.'},
+ {id:'b2',list:'C',type:'break',title:'Find a disputed spot',prompt:'Drag the ◆ to any place where 1-NN and 5-NN disagree about its colour. The readout below updates as you move; the check happens when you let go.',
+  scene:{points:DATASETS.overlap(),query:{x:0.67,y:0.5},k:1,lines:true,ball:false,regions:true,contour:true,interactive:true,dragQuery:true},dual:true,
+  check:s=>s.predict(1).label!==s.predict(5).label,
+  ok:'You found a spot where the nearest point and the local crowd disagree. These disputed strips are where k actually matters; everywhere else, every k agrees.',
+  bad:'Both rules still agree here. Head for the zone where the two colours mix, especially right next to a lone point surrounded by the other colour.'},
+ {id:'q1',list:'D',type:'quiz',title:'Why is k usually odd?',prompt:'For two-class problems, textbooks recommend an odd k. Why?',
+  options:[{v:'a',t:'Odd k makes the distance computation faster.',why:'Speed depends on the number of points and features, not on whether k is odd or even.'},{v:'b',t:'Odd k rules out a tied vote.',why:'With two classes, an odd number of votes cannot split evenly. With three or more classes, odd k no longer saves you: 3–3–1 is a tie at k = 7.'},{v:'c',t:'Odd k guarantees the nearest point wins.',why:'Odd k guarantees nothing of the sort: at k = 3 the nearest point can already be outvoted 2 to 1, as exercise 2 showed. Only k = 1 always follows the nearest point (and, on this page, k = 2, where a 1–1 tie goes to the closer class).'},{v:'d',t:'It is only convention, with no effect.',why:'With two classes it does have an effect: an even k makes 2–2 or 3–3 splits possible, and then some tie-break rule has to decide.'}],
+  answer:()=>'b'},
+ {id:'q2',list:'D',type:'quiz',title:'What has to be stored?',prompt:'You ship a k-NN classifier inside a phone app. Nothing is fitted ahead of time, so what must the app carry around in order to answer queries?',
+  options:[{v:'a',t:'All n labelled examples, as they are.',why:'The data is the model. That is why k-NN is called a lazy learner, why each prediction gets slower as n grows, and why memory is its real cost.'},{v:'b',t:'Just the boundary between the classes.',why:'No boundary is ever computed. The map on the playground is drawn by asking the rule at every pixel; the rule itself only knows the points.'},{v:'c',t:'The k examples nearest to the centre of the data.',why:'Which examples are nearest depends on the query, and the query has not arrived yet. All of them have to be on hand.'},{v:'d',t:'The average point of each class.',why:'Class averages make a different classifier (nearest centroid), and k-means is built on them. k-NN never averages anything.'}],
+  answer:()=>'a'},
+ {id:'q3',list:'D',type:'quiz',title:'How thin is the inside?',prompt:'Take the unit box in d = 50 dimensions and the inner box with sides of 0.9 inside it. What percentage of the volume is inside the inner box? Round to one decimal place.',
+  hint:'A box’s volume is the product of its side lengths: length in 1D, length × width in 2D, × height in 3D. The pattern continues: in d dimensions, multiply all d sides together. Here every side of the inner box is 0.9, and the outer box has volume 1.',
+  numeric:{unit:'%',tol:0.05,answer:100*Math.pow(0.9,50)},   // 0.515…: accepts 0.5 (and 0.52), not 0.4 or 0.6
+  ok:'0.9⁵⁰ ≈ 0.005, so about 0.5%. Over 99% of the box is the thin skin near the faces. Almost every point is “far out”, and so almost every point is far from almost every other point.',
+  bad:'The inner box has side 0.9 in each of 50 dimensions, so its volume is 0.9 multiplied by itself 50 times. Convert to a percentage.'},
+ {id:'q4',list:'D',type:'quiz',title:'The limit of large k',prompt:'Suppose one class has more points than the other, and you set k equal to the total number of points, n. What happens to the decision map?',
+  options:[{v:'a',t:'It follows every point exactly.',why:'That is the k = 1 end of the scale. With k = n, no single point can matter.'},{v:'b',t:'It disappears: every location gets the majority class.',why:'All n points vote at every location, so the answer is the same everywhere. That is the slack-string extreme: no boundary at all. (With the classes exactly balanced, as in the playground’s three datasets, every location would be a tie instead, and this page’s tie rule would hand each spot to its nearest point: the k = 1 map, the opposite extreme.)'},{v:'c',t:'It becomes a straight line between the class averages.',why:'Nothing in k-NN knows about class averages. The map simply goes flat, one colour everywhere.'},{v:'d',t:'It is undefined.',why:'It is perfectly well defined: every location gets the same, boring answer, the overall majority class.'}],
+  answer:()=>'b'},
+];
+
+const STORE='mlwb:knn:v3';
+let progress={};try{progress=JSON.parse(localStorage.getItem(STORE)||'{}')||{}}catch(e){progress={}}
+function save(){try{localStorage.setItem(STORE,JSON.stringify(progress))}catch(e){}}
+function updateProgress(){const done=EX.filter(e=>progress[e.id]==='ok').length;document.getElementById('progOut').value=`${done} of ${EX.length}`;document.getElementById('progBar').style.width=(100*done/EX.length)+'%'}
+
+function el(tag,cls,html){const e=document.createElement(tag);if(cls)e.className=cls;if(html!==undefined)e.innerHTML=html;return e}
+const TYPE_NAME={predict:'Predict',play:'Parameter play',break:'Break it',quiz:'Quiz'};
+const AGAIN='<span class="again">This card is already solved; keep exploring as much as you like.</span>';
+
+EX.forEach((ex,idx)=>{
+  const card=el('article','ex');card.dataset.id=ex.id;card.dataset.type=ex.type;
+  let done=progress[ex.id]==='ok';if(done)card.dataset.state='ok';
+  const head=el('div','ex-head');head.append(el('span',`chip ${ex.type}`,TYPE_NAME[ex.type]),el('span','n',String(idx+1).padStart(2,'0')),el('h3','',ex.title));
+  const st=el('span','status');st.setAttribute('aria-hidden','true');head.append(st);
+  card.append(head,el('p','prompt',ex.prompt));
+  const body=el('div','ex-body');card.append(body);
+  let scene=null,selected=null,kSel=null,kBtns=[],numInput=null,optBtns=[],liveOut=null,hintBox=null,resetBtn=null;
+  const actions=el('div','ex-actions');const checkBtn=el('button','btn primary',ex.type==='predict'?'Check and reveal':'Check');checkBtn.type='button';
+  const fb=el('div','feedback');fb.hidden=true;fb.setAttribute('aria-live','polite');
+
+  // Nothing ever locks. Solving marks the card; afterwards every control still answers, and wrong tries no longer un-solve it.
+  function setDone(){if(done)return;done=true;card.dataset.state='ok';progress[ex.id]='ok';save();updateProgress()}
+  function show(good,text,extra){const wasDone=done;if(good)setDone();
+    fb.hidden=false;fb.className='feedback '+(good?'ok':'bad');
+    fb.innerHTML=`<b>${good?'Correct.':(wasDone?'Not this one.':'Not yet.')}</b> ${text}${extra||''}${(!good&&wasDone)?AGAIN:''}`;
+    if(!good&&!done)card.dataset.state='retry'}
+
+  if(ex.scene){const host=el('div','plot-host'+(ex.scene.interactive?' live':''));body.append(host);scene=new Scene(host,ex.scene);
+    if(ex.scene.interactive&&ex.scene.addMode){host.append(el('span','plot-hint','Tap to drop a Sand point'))}
+    if(ex.scene.interactive&&ex.scene.dragQuery){host.append(el('span','plot-hint','Drag ◆'))}}
+  if(ex.kRange){const w=el('div','ctl');w.innerHTML=`<span class="lbl">Neighbours k</span>`;const row=el('div','kpick');row.setAttribute('role','group');row.setAttribute('aria-label','Choose k');
+    for(let k=ex.kRange[0];k<=ex.kRange[1];k++){const b=el('button','',String(k));b.type='button';b.setAttribute('aria-pressed','false');
+      b.addEventListener('click',()=>{kBtns.forEach(x=>x.setAttribute('aria-pressed','false'));b.setAttribute('aria-pressed','true');kSel=k;scene.set({k});checkBtn.disabled=false;if(done)check()});
+      kBtns.push(b);row.append(b)}
+    w.append(row);body.append(w)}
+  if(ex.options){const opts=el('div','opts'+(ex.two?' two':''));opts.setAttribute('role','radiogroup');ex.options.forEach(o=>{const b=el('button','opt');b.type='button';b.setAttribute('role','radio');b.setAttribute('aria-checked','false');b.dataset.v=o.v;b.innerHTML=`<span class="dot ${o.dot||''}"></span><span>${o.t}</span>`;
+      b.addEventListener('click',()=>{optBtns.forEach(x=>{x.setAttribute('aria-checked','false');x.classList.remove('wrong')});b.setAttribute('aria-checked','true');selected=o.v;checkBtn.disabled=false;if(done)check()});
+      optBtns.push(b);opts.append(b)});body.append(opts)}
+  if(ex.numeric){const w=el('div','numin');const id=`n_${ex.id}`;w.innerHTML=`<label for="${id}">Answer</label>`;numInput=el('input');numInput.type='number';numInput.id=id;numInput.step='0.1';numInput.inputMode='decimal';numInput.placeholder='0.0';w.append(numInput,el('span','',ex.numeric.unit));body.append(w);numInput.addEventListener('input',()=>{checkBtn.disabled=numInput.value===''});numInput.addEventListener('keydown',e=>{if(e.key==='Enter'&&!checkBtn.disabled)check()})}
+  actions.append(checkBtn);
+  if(ex.options||ex.numeric||ex.kRange)checkBtn.disabled=true;
+  if(ex.adds||ex.dual){resetBtn=el('button','btn','Reset');resetBtn.type='button';actions.append(resetBtn)}
+  if(ex.hint){const hb=el('button','btn','Show hint');hb.type='button';actions.append(hb);hintBox=el('div','hintbox',`<b>Hint.</b> ${ex.hint}`);hintBox.hidden=true;hb.addEventListener('click',()=>{hintBox.hidden=!hintBox.hidden;hb.textContent=hintBox.hidden?'Show hint':'Hide hint'})}
+  if(ex.adds||ex.dual){liveOut=el('span','live');actions.append(liveOut)}
+  card.append(actions);if(hintBox)card.append(hintBox);card.append(fb);
+  document.getElementById('exlist'+ex.list).append(card);
+
+  function updateLive(){if(!scene||!liveOut)return;
+    if(ex.adds){const n=scene.addsLeft();liveOut.innerHTML=`${n} point${n===1?'':'s'} left · ◆ is ${pillHTML(scene.predict(5).label)}`}
+    else if(ex.dual){const a=scene.predict(1).label,b=scene.predict(5).label;liveOut.innerHTML=`1-NN ${pillHTML(a)} · 5-NN ${pillHTML(b)} · ${a===b?'they agree':'disputed'}`}}
+  updateLive();
+  function hostHint(t){const h=card.querySelector('.plot-hint');if(h)h.textContent=t}
+  if(scene&&ex.dual){scene.onRelease=()=>{updateLive();if(!done&&ex.check(scene))check()}}
+  if(scene&&ex.adds){scene.onRelease=()=>{updateLive();if(scene.addsLeft()===0)hostHint('No points left · check or reset')}}
+  if(resetBtn)resetBtn.addEventListener('click',()=>{scene.resetPoints();updateLive();hostHint(ex.adds?'Tap to drop a Sand point':'Drag ◆');fb.hidden=true;if(!done)delete card.dataset.state});
+
+  function stagedReveal(k){scene.set({lines:true,ball:true,k,regions:false});if(REDUCED){scene.reveal=Infinity;scene.draw();return}
+    scene.reveal=0;scene.draw();let i=0;const n=scene.result.nbrs.length;const tick=()=>{i++;scene.reveal=i;scene.draw();if(i<n)setTimeout(tick,320)};setTimeout(tick,200)}
+  function check(){
+    if(ex.options){if(selected==null)return;const right=ex.answer(scene);const good=right===selected;const opt=ex.options.find(o=>o.v===selected);
+      optBtns.forEach(b=>{b.classList.remove('wrong');if(b.dataset.v===selected&&!good)b.classList.add('wrong');if(b.dataset.v===right&&(good||done))b.classList.add('correct')});
+      if(ex.reveal&&scene&&!done)stagedReveal(ex.revealK||ex.scene.k);
+      show(good,opt.why);return}
+    if(ex.numeric){const v=parseFloat(numInput.value);if(isNaN(v))return;const good=Math.abs(v-ex.numeric.answer)<=ex.numeric.tol;show(good,good?ex.ok:ex.bad);return}
+    if(ex.kRange){if(kSel==null)return;const r=ex.evalK(scene,kSel);show(r.good,r.text,r.extra);return}
+    if(ex.check){const good=ex.check(scene);show(good,good?ex.ok:ex.bad)}
+  }
+  checkBtn.addEventListener('click',check);
+});
+updateProgress();
+})();
+</script>
+
+</body></html>

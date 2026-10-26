@@ -1,0 +1,1475 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Quantifier Gym · Logic</title>
+<meta name="description" content="Two symbols, one rule: whoever is chosen later may depend on everything chosen earlier. Flip quantifiers, play ε–δ as a game, build negations, write a proof and let the page attack it. 57 checks.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@500;700;800&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@500&family=STIX+Two+Text:ital,wght@0,400;0,600;1,400;1,500&display=swap">
+<style>
+[hidden]:not([hidden=until-found i]){display:none!important}
+img{max-width:100%}
+</style>
+<style>
+/* Layout: one reading column (max 800px), stacked modules in a fixed ramp order, sticky pill nav.
+   Color system: ∀ is always tangerine, ∃ is always jade — the two quantifiers are the brand. */
+:root{
+  --bg:#FFFDF6; --surface:#FFFFFF; --ink:#1F2340; --muted:#646A86; --line:#E4E1D4; --soft:#F5F3EB;
+  --logic:#3A86FF; --turing:#B8700A; --time:#D8367A; --ml:#6A5AE0; --cbar-cur:#DDE9FF; --prose:'Source Serif 4',Georgia,'Times New Roman',serif;
+  --forall:#FF7A1A; --forall-ink:#8A3A00; --forall-soft:#FFE9D6;
+  --exists:#00B894; --exists-ink:#005F4B; --exists-soft:#D6F5EC;
+  --sun:#FFD23F; --sun-soft:#FFF4C2; --sun-ink:#6B5300;
+  --berry:#E84393; --berry-ink:#8E1D55; --berry-soft:#FFDCEC;
+  --sky:#3A86FF; --sky-soft:#DDE9FF;
+  --shadow:rgba(30,26,60,.35);
+  --display:'Rubik',system-ui,-apple-system,sans-serif;
+  --body:'Rubik',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --math:'STIX Two Text','Cambria Math','Times New Roman',serif;
+  --radius:18px;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#15182B; --surface:#1D2138; --ink:#F1F1F8; --muted:#A6AAC6; --line:#30355A; --soft:#252A48;
+  --logic:#6AA3FF; --turing:#F2B544; --time:#FF6FB5; --ml:#9C8EFF; --cbar-cur:#1B2C55;
+  --forall:#FF9450; --forall-ink:#FFD9BD; --forall-soft:#4A2A12;
+  --exists:#2BD9AC; --exists-ink:#B9F5E4; --exists-soft:#0F3F33;
+  --sun:#FFDC5E; --sun-soft:#4A3E10; --sun-ink:#FFF0B3;
+  --berry:#FF6FB5; --berry-ink:#FFB3D9; --berry-soft:#4A1A33;
+  --sky:#6AA3FF; --sky-soft:#1B2C55;
+  --shadow:rgba(0,0,0,.6);
+  color-scheme:dark; } }
+:root[data-theme="dark"]{
+  --bg:#15182B; --surface:#1D2138; --ink:#F1F1F8; --muted:#A6AAC6; --line:#30355A; --soft:#252A48;
+  --logic:#6AA3FF; --turing:#F2B544; --time:#FF6FB5; --ml:#9C8EFF; --cbar-cur:#1B2C55;
+  --forall:#FF9450; --forall-ink:#FFD9BD; --forall-soft:#4A2A12;
+  --exists:#2BD9AC; --exists-ink:#B9F5E4; --exists-soft:#0F3F33;
+  --sun:#FFDC5E; --sun-soft:#4A3E10; --sun-ink:#FFF0B3;
+  --berry:#FF6FB5; --berry-ink:#FFB3D9; --berry-soft:#4A1A33;
+  --sky:#6AA3FF; --sky-soft:#1B2C55;
+  --shadow:rgba(0,0,0,.6);
+  color-scheme:dark; }
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased}
+.lede,.intro,.why,.riddle .body,details.note p,footer p,.chal>span:nth-child(2){font-family:var(--prose)}
+.intro{font-size:17px;line-height:1.6}
+.why{font-size:16px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.wrap{max-width:800px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 72px}
+p{margin:0}
+a{color:var(--sky)}
+button{font-family:inherit}
+:is(button,a,[tabindex]):focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+
+/* hero */
+.hero{padding-block:36px 18px;display:grid;gap:18px}
+.eyebrow{font:800 12px/1 var(--body);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+h1{font:800 clamp(40px,8vw,62px)/1.05 var(--display);margin:0;letter-spacing:-.02em;text-wrap:balance}
+h1 .hl{background:linear-gradient(transparent 55%,var(--sun) 55%,var(--sun) 92%,transparent 92%);padding:0 .08em;border-radius:.1em}
+.lede{font-size:19px;max-width:34em;line-height:1.55}
+.legend{display:flex;flex-wrap:wrap;gap:12px}
+.sticker{display:flex;align-items:center;gap:12px;padding:10px 14px 10px 10px;border-radius:16px;border:2px solid;min-width:0;flex:1 1 280px}
+.sticker.fa{border-color:var(--forall);background:var(--forall-soft);color:var(--forall-ink)}
+.sticker.ex{border-color:var(--exists);background:var(--exists-soft);color:var(--exists-ink)}
+.sticker .big{font:600 30px/1 var(--math);width:48px;height:48px;flex:0 0 48px;border-radius:12px;display:grid;place-items:center;color:#fff;transform:rotate(-5deg)}
+.sticker.fa .big{background:var(--forall)} .sticker.ex .big{background:var(--exists);transform:rotate(5deg)}
+.sticker b{display:block;font:700 17px/1.2 var(--display)}
+.sticker small{display:block;font-size:13px;line-height:1.35;opacity:.9}
+.progress{display:flex;align-items:center;gap:12px;font-weight:800;color:var(--muted);font-size:14px;font-variant-numeric:tabular-nums}
+.bar{flex:1;height:10px;border-radius:99px;background:var(--soft);overflow:hidden}
+.bar i{display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,var(--forall),var(--sun),var(--exists))}
+
+/* nav */
+.tabs{position:sticky;top:calc(env(safe-area-inset-top,0px) + var(--cbar-h,53px));z-index:5;display:flex;flex-wrap:wrap;gap:8px;padding-block:10px;background:var(--bg)}
+.tabs a{flex:0 0 auto;text-decoration:none;color:var(--ink);font:700 14px/1 var(--body);padding:9px 14px;border-radius:99px;background:var(--surface);border:1.5px solid var(--line)}
+.tabs a:hover{border-color:var(--sky)}
+
+/* modules */
+.mod{padding-block:40px 8px;display:grid;grid-template-columns:minmax(0,1fr);gap:18px;scroll-margin-top:calc(var(--tabs-h,56px) + var(--cbar-h,53px) + 12px)}
+.mod-head{display:grid;gap:8px}
+.num{font:800 12px/1 var(--body);letter-spacing:.12em;color:var(--muted);text-transform:uppercase}
+.num b{color:var(--ink)}
+h2{font:700 clamp(28px,5.5vw,38px)/1.1 var(--display);margin:0;text-wrap:balance}
+h3{font:700 19px/1.2 var(--display);margin:0}
+.intro{max-width:40em}
+.intro.quiet{color:var(--muted)}
+.panel{background:var(--surface);border:1.5px solid var(--line);border-radius:var(--radius);padding:18px;display:grid;gap:14px;min-width:0}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:640px){.two{grid-template-columns:1fr}}
+
+/* math */
+.fm{font-family:var(--math);font-size:1.1em}
+.fm i{font-style:italic}
+.fm sub{font-size:.68em;line-height:0}
+.q{display:inline-grid;place-items:center;width:1.3em;height:1.3em;border-radius:.35em;color:#fff;font-weight:600;font-style:normal;margin:0 .08em;vertical-align:-.2em;font-size:.9em;line-height:1}
+.q.fa{background:var(--forall)} .q.ex{background:var(--exists)} .q.ng{background:var(--berry)}
+.formula{font-size:clamp(17px,4.2vw,24px);line-height:1.7;overflow-x:auto;white-space:nowrap;padding:10px 4px}
+/* Σ with limits: side limits in running text (inline style), stacked limits inside .formula (display style). */
+.sum{display:inline-grid;grid-template-columns:auto auto;grid-template-rows:auto auto;align-items:center;column-gap:.1em;vertical-align:middle;line-height:1;margin:0 .1em}
+.sum .sig{grid-row:1/3;grid-column:1;font-size:1.2em;line-height:1}
+.sum .top{grid-row:1;grid-column:2;font-size:.55em;line-height:1.1;align-self:end}
+.sum .bot{grid-row:2;grid-column:2;font-size:.55em;line-height:1.1;align-self:start}
+.formula .sum{grid-template-columns:auto;grid-template-rows:auto auto auto;justify-items:center;column-gap:0}
+.formula .sum .top{grid-row:1;grid-column:1}
+.formula .sum .sig{grid-row:2;grid-column:1;font-size:1.3em}
+.formula .sum .bot{grid-row:3;grid-column:1}
+.exhibit{position:sticky;top:calc(env(safe-area-inset-top,0px) + var(--tabs-h,56px) + var(--cbar-h,53px));z-index:4;display:flex;align-items:center;gap:12px;min-width:0;background:var(--surface);border:1.5px solid var(--line);border-radius:14px;padding:8px 14px;box-shadow:0 10px 22px -14px var(--shadow)}
+.exhibit .fm{flex:1;min-width:0;overflow-x:auto;white-space:nowrap;font-size:clamp(16px,3.8vw,20px);line-height:1.5;padding-block:3px;scrollbar-width:thin}
+.exhibit .fnote{font:500 14px var(--math);color:var(--muted);white-space:nowrap}
+.exhibit .fnote i{font-style:italic}
+.seg-btn.nt[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.jrow{display:flex;flex-wrap:wrap;gap:8px}
+.jchip{display:grid;gap:2px;padding:8px 10px;border-radius:10px;background:var(--soft);font-size:13px;line-height:1.25;min-width:6em;text-align:center;font-variant-numeric:tabular-nums}
+.jchip.ok{background:var(--exists-soft);color:var(--exists-ink)}
+.jchip.bad{background:var(--berry-soft);color:var(--berry-ink)}
+.jchip.more{color:var(--muted);align-content:center;font-style:italic}
+
+/* buttons & pills */
+.btn{appearance:none;border:0;border-radius:12px;padding:11px 16px;font:700 15px/1 var(--body);cursor:pointer;color:#fff;background:var(--sky)}
+.btn.ghost{background:var(--soft);color:var(--ink)}
+.btn.fa{background:var(--forall)} .btn.ex{background:var(--exists)}
+.btn:disabled{opacity:.45;cursor:default}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.pills{display:flex;flex-wrap:wrap;gap:8px}
+.pill{border:1.5px solid var(--line);background:var(--surface);color:var(--ink);border-radius:99px;padding:8px 12px;font:700 14px/1 var(--body);cursor:pointer}
+.pill[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.truth{font:800 11px/1 var(--body);letter-spacing:.08em;padding:6px 8px;border-radius:8px;text-transform:uppercase;white-space:nowrap}
+.truth.t{background:var(--exists-soft);color:var(--exists-ink)}
+.truth.f{background:var(--berry-soft);color:var(--berry-ink)}
+.truth.n{background:var(--soft);color:var(--muted)}
+
+/* 01 grid */
+.likes{display:grid;grid-template-columns:auto repeat(4,minmax(0,1fr));gap:6px;align-items:center}
+.likes .hd{font-weight:800;text-align:center;display:grid;gap:4px;justify-items:center;font-size:12px;line-height:1.1}
+.dot{width:14px;height:14px;border-radius:50%}
+.likes .rh{font-weight:800;padding-right:6px;font-size:14px}
+.cell{aspect-ratio:1;width:100%;max-width:100%;border-radius:12px;border:2px dashed var(--line);background:var(--surface);cursor:pointer;display:grid;place-items:center;padding:0}
+.cell::after{content:"";width:34%;height:34%;border-radius:50%;background:var(--line)}
+.cell[aria-pressed="true"]{border-style:solid;border-color:var(--sun);background:var(--sun-soft)}
+.cell[aria-pressed="true"]::after{content:"♥";width:auto;height:auto;background:none;color:var(--berry);font-size:22px;line-height:1}
+.stmts{display:grid;gap:8px}
+.stmt{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:8px 10px;border-radius:12px;background:var(--soft);min-width:0}
+.stmt .idx{font-weight:800;color:var(--muted);font-size:18px}
+.stmt .en{font-size:13px;color:var(--muted)}
+.chals{display:grid;gap:8px}
+.chal{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:10px 12px;border-radius:12px;border:1.5px dashed var(--line);font-size:15px}
+.chal.done{border-style:solid;border-color:var(--exists)}
+.chal .ck{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;font-weight:800;font-size:13px;background:var(--soft);color:var(--muted)}
+.chal.done .ck{background:var(--exists);color:#fff}
+
+/* 02 deck */
+.deck-top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.dots{display:flex;gap:6px;flex-wrap:wrap}
+.dots button{width:12px;height:12px;border-radius:50%;border:0;background:var(--line);cursor:pointer;padding:0}
+.dots button.ok{background:var(--exists)}
+.dots button.cur{outline:2px solid var(--ink);outline-offset:2px}
+.tag{font:800 11px/1 var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.ctx{font-size:14px;color:var(--muted)}
+.opts{display:grid;gap:8px}
+.opt{text-align:left;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);border-radius:12px;padding:12px 14px;font:600 15px/1.45 var(--body);cursor:pointer;display:flex;gap:10px;align-items:flex-start;min-width:0}
+.opt .key{font:800 12px/1 var(--body);background:var(--soft);border-radius:6px;padding:5px 7px;flex:0 0 auto;margin-top:2px}
+.opt>span:last-child{min-width:0}
+.opt:hover:not(:disabled){border-color:var(--sky)}
+.opt.right{border-color:var(--exists);background:var(--exists-soft)}
+.opt.right .key{background:var(--exists);color:#fff}
+.opt.wrong{border-color:var(--berry);background:var(--berry-soft)}
+.opt.wrong .key{background:var(--berry);color:#fff}
+.opt.sel{border-color:var(--sky);background:var(--sky-soft)}
+.opt:disabled{cursor:default}
+.why{border-left:4px solid var(--exists);padding:10px 14px;background:var(--exists-soft);border-radius:10px;font-size:15px;display:grid;gap:6px}
+.why.nudge{border-color:var(--sun);background:var(--sun-soft)}
+.why.lose{border-color:var(--berry);background:var(--berry-soft)}
+.why.info{border-color:var(--sky);background:var(--sky-soft)}
+.why .fm{font-size:1.05em}
+
+/* 03 game */
+.players{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.player{padding:10px 12px;border-radius:12px;display:grid;gap:2px;border:2px solid transparent;min-width:0}
+.player b{font:700 17px/1.2 var(--display)}
+.player small{font-size:13px;line-height:1.3}
+.player.fa{background:var(--forall-soft);color:var(--forall-ink)}
+.player.ex{background:var(--exists-soft);color:var(--exists-ink)}
+.player.turn.fa{border-color:var(--forall)} .player.turn.ex{border-color:var(--exists)}
+.plot{width:100%;height:auto;display:block;border-radius:14px;background:var(--bg);border:1px solid var(--line)}
+.eband{fill:var(--exists);opacity:.2} .dband{fill:var(--forall);opacity:.2}
+.curve{fill:none;stroke:var(--sky);stroke-width:2.5;stroke-linejoin:round}
+.axis{stroke:var(--line);stroke-width:1.5}
+.gridl{stroke:var(--line);stroke-width:1;stroke-dasharray:2 5}
+.lbl{font:700 12px var(--body);fill:var(--muted)}
+.lbl.fa{fill:var(--forall)} .lbl.ex{fill:var(--exists)} .lbl.bad{fill:var(--berry)}
+.Lline{stroke:var(--exists);stroke-width:1.5;stroke-dasharray:5 4}
+.aline{stroke:var(--forall);stroke-width:1.5;stroke-dasharray:5 4}
+.escp{fill:var(--berry);stroke:var(--bg);stroke-width:2.5}
+.escl{stroke:var(--berry);stroke-width:1.5;stroke-dasharray:3 3}
+.hole{fill:var(--bg);stroke:var(--sky);stroke-width:2.5}
+.full{fill:var(--sky)}
+.ctls{display:grid;gap:10px}
+.ctl{display:grid;grid-template-columns:9em 1fr auto;gap:10px;align-items:center}
+.ctl label{font:700 14px/1.2 var(--body);display:flex;align-items:center;gap:6px}
+@media (max-width:520px){.ctl{grid-template-columns:1fr auto}.ctl input[type=range]{grid-column:1/-1}}
+input[type=range]{width:100%;margin:0;accent-color:var(--forall)}
+.ctl.del input[type=range]{accent-color:var(--exists)}
+.ctl input:disabled{opacity:.55}
+.seg{display:inline-flex;border:1.5px solid var(--line);border-radius:12px;overflow:hidden;background:var(--surface);justify-self:start}
+.seg-btn{border:0;background:transparent;color:var(--ink);font:700 14px/1 var(--body);padding:10px 14px;cursor:pointer}
+.seg-btn.ex[aria-pressed="true"]{background:var(--exists);color:#fff}
+.seg-btn.fa[aria-pressed="true"]{background:var(--forall);color:#fff}
+details.note{border:1.5px dashed var(--line);border-radius:12px;padding:10px 14px;max-width:40em;font-size:15px}
+details.note summary{cursor:pointer;font:700 15px var(--display);color:var(--ink)}
+details.note p{margin-top:8px;color:var(--muted)}
+.mk circle{fill:var(--mk);stroke:var(--bg);stroke-width:2.5}
+.mk line{stroke:var(--mk);stroke-width:1.5;stroke-dasharray:3 3}
+.mk .lbl{fill:var(--mk)}
+input[type=number]{width:7.5em;font:700 15px var(--body);padding:10px 10px;border-radius:10px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);font-variant-numeric:tabular-nums}
+.hist{display:flex;flex-wrap:wrap;gap:6px}
+.hist span{font:700 13px var(--body);background:var(--soft);border-radius:8px;padding:6px 8px;font-variant-numeric:tabular-nums}
+.gtitle{font:700 16px/1.3 var(--display)}
+
+/* 04 proof: rule input, ∀bélard's rounds, a proof with gaps, a Parsons board, a writing box */
+.rulerow{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.rulerow .lab{font:400 21px var(--math)}
+input.rule{flex:1 1 12em;max-width:22em;min-width:0;font:400 19px var(--math);padding:9px 12px;border-radius:10px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink)}
+input.rule::placeholder{color:var(--muted);font-size:16px;font-family:var(--body);font-weight:500}
+.rounds{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.rounds span{font:700 13px var(--body);border-radius:8px;padding:6px 8px;font-variant-numeric:tabular-nums;background:var(--soft)}
+.rounds span.ok{background:var(--exists-soft);color:var(--exists-ink)}
+.rounds span.bad{background:var(--berry-soft);color:var(--berry-ink)}
+.rounds span.more{color:var(--muted);font-style:italic;font-weight:500;background:none;padding:0}
+.rounds .fm{font-size:1em}
+.proof{font-family:var(--prose);font-size:17px;line-height:2.1;max-width:46em}
+.proof .fm{font-size:1.06em}
+.gap{display:inline-block;min-width:3.4em;text-align:center;border:2px dashed var(--line);border-radius:10px;padding:1px 10px;margin:0 2px;background:var(--surface);color:var(--ink);font:inherit;line-height:1.6;cursor:pointer;vertical-align:baseline}
+.gap:hover:not(:disabled){border-color:var(--sky)}
+.gap.filled{border-style:solid}
+.gap.on{border-color:var(--sun);background:var(--sun-soft);border-style:solid}
+.gap.bad{border-color:var(--berry);background:var(--berry-soft)}
+.gap.ok{border-color:var(--exists);background:var(--exists-soft);cursor:default}
+.gap .ph{color:var(--muted);font:700 13px var(--body);letter-spacing:.04em}
+.gapopts{display:grid;gap:8px}
+.gapopts .lab{font:800 12px/1 var(--body);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.gapopts .pill .fm{font-size:1.1em}
+.parsons{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:640px){.parsons{grid-template-columns:1fr}}
+.pcol{display:grid;gap:8px;align-content:start;min-width:0}
+.pcol h4{font:800 12px/1 var(--body);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 2px}
+.pline{display:flex;gap:10px;align-items:flex-start;text-align:left;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);border-radius:12px;padding:10px 12px;font:600 15px/1.45 var(--body);cursor:pointer;min-width:0;width:100%}
+.pline>span:last-child{min-width:0}
+.pline:hover:not(:disabled){border-color:var(--sky)}
+.pline .n{font:800 12px/1 var(--body);background:var(--soft);border-radius:6px;padding:5px 7px;flex:0 0 auto;margin-top:2px;min-width:1.9em;text-align:center}
+.pline.bad{border-color:var(--berry);background:var(--berry-soft)}
+.pline.bad .n{background:var(--berry);color:#fff}
+.pline.ok{border-color:var(--exists);background:var(--exists-soft);cursor:default}
+.pline.ok .n{background:var(--exists);color:#fff}
+.pline:disabled{cursor:default}
+.pempty{border:1.5px dashed var(--line);border-radius:12px;padding:16px 14px;color:var(--muted);font-size:14px;text-align:center}
+textarea.proofbox{width:100%;min-height:12em;font:500 14px/1.55 'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;padding:12px;border-radius:12px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);resize:vertical}
+.recorded{font:800 11px/1 var(--body);letter-spacing:.08em;text-transform:uppercase;background:var(--sun-soft);color:var(--sun-ink);padding:6px 8px;border-radius:8px;white-space:nowrap}
+.why p{margin:0}
+.why p+p{margin-top:8px}
+.why .q{font-size:.85em}
+@media (prefers-reduced-motion: no-preference){ .gap,.pline{transition:border-color .15s,background .15s} }
+
+/* 05 negation */
+.toks{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-family:var(--math);font-size:clamp(17px,4.2vw,22px);padding-block:6px}
+.tok{padding:6px 8px;border-radius:10px;border:2px solid transparent}
+.tok.flip{cursor:pointer;background:var(--surface);border-color:var(--line);user-select:none}
+.tok.flip:hover{border-color:var(--sky)}
+.tok.flip.on{border-color:var(--sun);background:var(--sun-soft)}
+.tok.bad{border-color:var(--berry)!important;background:var(--berry-soft)!important}
+.hintline{font-size:14px;color:var(--muted)}
+
+/* 06 riddles */
+.riddle{display:grid;gap:12px}
+.riddle .body{font-size:16px}
+
+footer{padding-block:48px 0;display:grid;gap:12px;color:var(--muted);font-size:14px}
+.kbd{font:700 12px var(--body);background:var(--soft);border-radius:6px;padding:2px 6px;color:var(--ink)}
+
+@media (prefers-reduced-motion: no-preference){
+  .bar i{transition:width .45s ease}
+  .cell,.opt,.tok,.pill{transition:border-color .15s,background .15s}
+  @keyframes wiggle{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+  .tok.bad{animation:wiggle .35s}
+}
+/* Collection bar — identical on every page of the collection */
+.cbar{position:sticky;top:0;z-index:30;background:var(--bg);border-bottom:1px solid var(--line)}
+.cbar .in{max-width:1120px;margin:0 auto;padding:10px max(16px,env(safe-area-inset-left,0px)) 10px max(16px,env(safe-area-inset-right,0px));display:flex;align-items:center;justify-content:space-between;gap:16px}
+.cbar .mark{display:flex;align-items:center;gap:10px;text-decoration:none;font-family:var(--display);font-weight:800;font-size:1rem;white-space:nowrap;color:var(--ink)}
+.cbar .mark .dots{display:inline-grid;grid-template-columns:repeat(4,7px);gap:3px}
+.cbar .mark .dots i{width:7px;height:7px;border-radius:50%;display:block}
+.cbar .mark .dots i:nth-child(1){background:var(--logic)}.cbar .mark .dots i:nth-child(2){background:var(--ml)}.cbar .mark .dots i:nth-child(3){background:var(--time)}.cbar .mark .dots i:nth-child(4){background:var(--turing)}
+.cbar .mark small{font-weight:500;color:var(--muted);font-size:.9rem}
+.cbar nav{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;min-width:0}
+.cbar nav::-webkit-scrollbar{display:none}
+.cbar nav a{display:flex;align-items:center;gap:7px;padding:6px 11px;border-radius:999px;text-decoration:none;color:var(--muted);font-family:var(--display);font-weight:500;font-size:.88rem;white-space:nowrap}
+.cbar nav a i{width:8px;height:8px;border-radius:50%;flex:0 0 auto}
+.cbar nav a:hover{color:var(--ink);background:var(--soft,var(--surface-2))}
+.cbar nav a[aria-current]{background:var(--cbar-cur);color:var(--ink)}
+@media (max-width:720px){.cbar .mark span.name{display:none}.cbar .mark small{display:none}}
+.nextl{margin-top:40px;border:1px dashed var(--line);border-radius:18px;padding:18px 20px;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px}
+.nextl h2{font-size:1.1rem;margin:0}
+.nextl p{margin:4px 0 0;color:var(--muted);font-size:.95rem}
+a.btn{text-decoration:none}
+
+</style>
+</head>
+<body>
+
+<div class="cbar"><div class="in">
+  <a class="mark" href="index.html"><span class="dots" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span class="name">Mohammad Mahmoud</span> <small>Interactive lessons</small></a>
+  <nav aria-label="Lessons">
+    <a href="logic.html" aria-current="page"><i style="background:var(--logic)"></i>Logic</a>
+    <a href="ml.html"><i style="background:var(--ml)"></i>Machine learning</a>
+    <a href="running-time.html"><i style="background:var(--time)"></i>Running time</a>
+    <a href="turing.html"><i style="background:var(--turing)"></i>Turing machines</a>
+  </nav>
+</div></div>
+
+<div class="wrap">
+<header class="hero">
+  <p class="eyebrow">Lesson 1 of 4 — Logic · from the Ramp-Up exercise bank</p>
+  <h1>Quantifier <span class="hl">Gym</span></h1>
+  <p class="lede">Two symbols, one rule: <strong>whoever is chosen later may depend on everything chosen earlier.</strong> Flip them, swap them, play against them, and leave knowing exactly what an ε–δ sentence promises.</p>
+  <div class="legend">
+    <div class="sticker fa"><span class="big">∀</span><div><b>for all</b><small>The challenger's symbol. Someone who doubts the claim picks this value, and picks it to hurt.</small></div></div>
+    <div class="sticker ex"><span class="big">∃</span><div><b>there exists</b><small>The defender's symbol. You pick this value, and you may look at everything chosen before it.</small></div></div>
+  </div>
+  <div class="progress"><div class="bar"><i id="pbar"></i></div><span id="ptext">0 / 57 solved</span></div>
+</header>
+
+<nav class="tabs" aria-label="Sections">
+  <a href="#order">1 · Order</a>
+  <a href="#lookalikes">2 · Look-alikes</a>
+  <a href="#game">3 · Game</a>
+  <a href="#proof">4 · Proof</a>
+  <a href="#negation">5 · Negation</a>
+  <a href="#riddles">6 · Riddles</a>
+  <a href="#anatomy">7 · Anatomy</a>
+</nav>
+
+<main>
+
+<!-- ───────── 01 ORDER ───────── -->
+<section id="order" class="mod">
+  <div class="mod-head">
+    <p class="num"><b>1</b> · warm-up</p>
+    <h2>Order matters: the ice-cream grid</h2>
+    <p class="intro">Four people, four flavours. Tap a cell to toggle whether that person likes that flavour. The six sentences below are re-evaluated live. Read <span class="fm"><i>L</i>(<i>p</i>, <i>f</i>)</span> as "<i>p</i> likes <i>f</i>".</p>
+  </div>
+  <div class="two">
+    <div class="panel">
+      <div class="likes" id="likes"></div>
+      <p class="ctx">Hearts are likes. Rows are people, columns are flavours.</p>
+    </div>
+    <div class="panel">
+      <h3>Six sentences, live</h3>
+      <div class="stmts" id="stmts"></div>
+      <p class="ctx">Always true: ② ⇒ ① and ④ ⇒ ③. The converses fail, and challenges 1 and 2 ask you to build the counterexamples.</p>
+    </div>
+  </div>
+  <div class="panel">
+    <h3>Challenges</h3>
+    <div class="chals" id="chals"></div>
+  </div>
+</section>
+
+<!-- ───────── 02 LOOK-ALIKES ───────── -->
+<section id="lookalikes" class="mod">
+  <div class="mod-head">
+    <p class="num"><b>2</b> · the main set</p>
+    <h2>ε–δ look-alikes</h2>
+    <p class="intro">Each card shows a sentence that resembles the definition of <span class="fm">lim<sub><i>x</i>→<i>a</i></sub> <i>f</i>(<i>x</i>) = ℓ</span>. Some are the real thing in disguise, some are trivially true, some are impossible, and some say something else entirely. Throughout, <span class="fm"><i>f</i> : ℝ → ℝ</span> and <span class="fm"><i>a</i>, ℓ ∈ ℝ</span> are fixed. Several items are lifted from the Ramp-Up's own "valid definition?" problem; the rest are new.</p>
+  </div>
+  <div class="panel">
+    <div class="deck-top">
+      <div class="row"><span class="tag" id="deck-tag"></span><span class="ctx" id="deck-count"></span></div>
+      <div class="dots" id="deck-dots"></div>
+    </div>
+    <div class="formula" id="deck-formula"></div>
+    <p class="ctx" id="deck-ctx"></p>
+    <h3 id="deck-q"></h3>
+    <div class="opts" id="deck-opts"></div>
+    <div class="why" id="deck-why" hidden></div>
+    <div class="row" style="justify-content:space-between">
+      <button class="btn ghost" id="deck-prev" type="button">← Previous</button>
+      <button class="btn" id="deck-next" type="button">Next card →</button>
+    </div>
+  </div>
+</section>
+
+<!-- ───────── 03 GAME ───────── -->
+<section id="game" class="mod">
+  <div class="mod-head">
+    <p class="num"><b>3</b> · play it</p>
+    <h2>∀bélard vs ∃loïse</h2>
+    <p class="intro">A quantifier sentence is a two-player game. <strong>∀bélard</strong>, the challenger, plays every <span class="q fa">∀</span>: he picks the value that makes life hardest. <strong>∃loïse</strong>, the defender, plays every <span class="q ex">∃</span>: she picks a witness, knowing everything chosen so far. The sentence is true exactly when ∃loïse has a winning strategy, and false exactly when ∀bélard has one. Play both sides: each claim below can be won by exactly one of them, and which one tells you whether the claim is true.</p>
+    <details class="note">
+      <summary>Why these names?</summary>
+      <p>They are a logician's pun. The idea that a quantified sentence is a game between two players goes back to the 1950s and 60s (Paul Lorenzen's dialogue games, Jaakko Hintikka's game-theoretical semantics). Hintikka called the players <em>Myself</em> and <em>Nature</em>; other books say <em>Verifier</em> and <em>Falsifier</em>, or <em>Proponent</em> and <em>Opponent</em>. Later writers on game semantics nicknamed them ∀bélard and ∃loïse: the symbol ∀ is an upside-down A and ∃ a backwards E, and the names belong to Peter Abelard (1079–1142), a Paris logician, and Héloïse, the scholar whose letters with him are famous. Nothing mathematical depends on the names. If they get in the way, read them as <em>the challenger</em> and <em>the defender</em>.</p>
+    </details>
+  </div>
+  <div class="panel">
+    <div class="pills" id="scn-pills"></div>
+    <div class="seg" id="role-seg" role="group" aria-label="Choose your side">
+      <button type="button" class="seg-btn ex" data-role="ex" aria-pressed="true">Play as ∃loïse</button>
+      <button type="button" class="seg-btn fa" data-role="fa" aria-pressed="false">Play as ∀bélard</button>
+    </div>
+    <p class="gtitle" id="g-title"></p>
+    <div class="formula" id="g-formula"></div>
+    <div class="players">
+      <div class="player fa" id="pl-fa"><b id="pl-fa-name">∀bélard · challenger</b><small id="pl-fa-txt"></small></div>
+      <div class="player ex" id="pl-ex"><b id="pl-ex-name">∃loïse · defender (you)</b><small id="pl-ex-txt"></small></div>
+    </div>
+    <div id="g-plot"></div>
+    <div class="why info" id="g-msg"></div>
+    <div class="ctls">
+      <div class="ctl eps" id="ctl-eps" hidden><label for="g-eps-num"><span class="q fa">∀</span> ε tolerance</label><input type="range" id="g-eps-range" min="0" max="1000" value="818" aria-label="epsilon slider"><input type="number" id="g-eps-num" min="0.001" max="2" step="any" value="0.5"></div>
+      <div class="ctl del" id="ctl-del"><label for="g-del-num"><span class="q ex">∃</span> δ radius</label><input type="range" id="g-del-range" min="0" max="1000" value="833" aria-label="delta slider"><input type="number" id="g-del-num" min="0.001" max="1" step="any" value="0.3"></div>
+      <div class="ctl x" id="ctl-x" hidden><label for="g-x-num"><span class="q fa">∀</span> x challenge</label><input type="range" id="g-x-range" min="0" max="1000" value="750" aria-label="x slider"><input type="number" id="g-x-num" step="any" value="1.15"></div>
+    </div>
+    <div class="row">
+      <button class="btn ex" id="g-act" type="button">Lock in δ</button>
+      <button class="btn ghost" id="g-again" type="button" hidden>Try another ε</button>
+      <span style="flex:1"></span>
+      <button class="btn ghost" id="g-why" type="button" hidden>Why can no δ work?</button>
+      <button class="btn ghost" id="g-reset" type="button">New game</button>
+    </div>
+    <div class="hist" id="g-hist"></div>
+  </div>
+</section>
+
+<!-- ───────── 04 PROOF ───────── -->
+<section id="proof" class="mod">
+  <div class="mod-head">
+    <p class="num"><b>4</b> · write it down</p>
+    <h2>From strategy to proof</h2>
+    <p class="intro">In the game you answered one ε at a time. A proof answers all of them at once: it hands ∀bélard a <em>rule</em>, δ as a function of ε, and shows that the rule wins every round. That is all an ε–δ proof is. Three steps: write the rule and let ∀bélard attack it; supply the reasons, line by line; then assemble a proof from scratch. Nothing here is graded by guesswork. A rule fails when a concrete ε and x break it, and the feedback names them.</p>
+  </div>
+
+  <div class="panel">
+    <h3><span class="tag">step 1</span> The rule</h3>
+    <div class="pills" id="pr-pills"></div>
+    <p class="gtitle" id="pr-claim"></p>
+    <div class="formula" id="pr-formula"></div>
+    <p class="ctx">Write δ as a function of ε. Use ε, numbers, + − × ÷ ^, brackets, and <span class="kbd">min</span> <span class="kbd">max</span> <span class="kbd">sqrt</span> <span class="kbd">abs</span>. Not x: δ is chosen before x exists.</p>
+    <div class="rulerow"><span class="lab"><i>δ</i>(<i>ε</i>) =</span><input class="rule" id="pr-rule" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="e.g. ε/2 or min(1, ε/2)" aria-label="delta as a function of epsilon"><button class="btn ex" id="pr-go" type="button">Hand the rule to ∀bélard</button></div>
+    <div class="why info" id="pr-msg"></div>
+    <div class="rounds" id="pr-rounds" hidden></div>
+    <div id="pr-plot" hidden></div>
+  </div>
+
+  <div class="panel">
+    <h3><span class="tag">step 2</span> The reasons, with gaps</h3>
+    <p class="ctx" id="pr-chain-ctx"></p>
+    <div class="proof" id="pr-chain"></div>
+    <div class="gapopts" id="pr-gapopts" hidden></div>
+    <div class="row"><button class="btn" id="pr-chain-check" type="button">Check the proof</button><button class="btn ghost" id="pr-chain-reset" type="button">Clear the gaps</button></div>
+    <div class="why" id="pr-chain-fb" hidden></div>
+  </div>
+
+  <div class="panel">
+    <h3><span class="tag">step 3</span> Assemble a proof of the negation</h3>
+    <p class="ctx">Back to the jump from the game: <span class="fm"><i>f</i>(<i>x</i>) = 0.6</span> for <span class="fm"><i>x</i> &lt; 1</span> and <span class="fm">1.4</span> from 1 on. The claim <span class="fm">lim<sub><i>x</i>→1</sub> <i>f</i>(<i>x</i>) = 1</span> is false, and proving it false means proving its negation (the one section 5 builds):</p>
+    <div class="formula" id="pa-formula"></div>
+    <p class="ctx">This is ∀bélard's winning strategy written down. The lines are shuffled and three of them do not belong. Tap lines on the left in the order the proof should read; tap a line on the right to send it back. More than one order is right.</p>
+    <div class="parsons">
+      <div class="pcol"><h4>Lines</h4><div id="pa-pool"></div></div>
+      <div class="pcol"><h4>Your proof</h4><div id="pa-proof"></div></div>
+    </div>
+    <div class="row"><button class="btn" id="pa-check" type="button">Check the proof</button><button class="btn ghost" id="pa-reset" type="button">Start over</button></div>
+    <div class="why" id="pa-fb" hidden></div>
+  </div>
+
+  <div class="panel">
+    <div class="row" style="justify-content:space-between"><h3>Write it yourself</h3><span class="recorded">recorded demo</span></div>
+    <p class="ctx">Prove <span class="fm">lim<sub><i>x</i>→2</sub> <i>x</i><sup>2</sup> = 4</span> in your own words, in plain text or TeX. The steps above are checked by the page itself; free writing needs a reader, and this copy of the site has none attached. The two samples carry feedback recorded from Claude (Anthropic) in October 2026, so you can see what the reader returns; the note below says how the live version works.</p>
+    <div class="pills"><button type="button" class="pill" id="wr-s1">Load a correct proof</button><button type="button" class="pill" id="wr-s2">Load a flawed proof</button><button type="button" class="pill" id="wr-clear">Clear</button></div>
+    <textarea class="proofbox" id="wr-text" placeholder="Let ε > 0. Put δ = …" aria-label="Your proof"></textarea>
+    <div class="row"><button class="btn" id="wr-go" type="button">Get feedback</button></div>
+    <div class="why" id="wr-fb" hidden></div>
+    <details class="note">
+      <summary>What is recorded here, and how the live version works</summary>
+      <p>The page cannot read a proof written in free text; only a person or a language model can. In the live version, "Get feedback" sends three things to a model: the claim, a reference proof, and a short list of the mistakes students usually make on it (δ depending on x, the missing cap on δ, a bound used before it is earned, the implication run backwards). The model is asked for feedback, not a grade: what is right, the first gap, the one-line fix, and a question back. A handwritten proof goes the same route after one extra step, a transcription shown to the writer for correction before anything is judged, so misreadings are separated from mistakes.</p>
+      <p>A static page cannot keep a key secret, so the live version needs either a key the viewer supplies (stored only in their browser) or a small proxy that holds one with a spending cap. This copy ships with neither, on purpose: everything above it works offline, forever, and the two recorded samples show the rest.</p>
+    </details>
+  </div>
+</section>
+
+<!-- ───────── 05 NEGATION ───────── -->
+<section id="negation" class="mod">
+  <div class="mod-head">
+    <p class="num"><b>5</b> · say the opposite, precisely</p>
+    <h2>Negation builder</h2>
+    <p class="intro">Bordered tokens flip when tapped: <span class="q fa">∀</span> ↔ <span class="q ex">∃</span>, <span class="fm">⇒</span> ↔ <span class="fm">∧</span>, <span class="fm">&lt;</span> ↔ <span class="fm">≥</span>. Turn the sentence into its negation, then check. Some flippable tokens are traps.</p>
+  </div>
+  <div class="panel">
+    <div class="pills" id="neg-pills"></div>
+    <p class="ctx" id="neg-says"></p>
+    <div class="toks" id="neg-toks"></div>
+    <div class="row">
+      <button class="btn" id="neg-check" type="button">Check my negation</button>
+      <button class="btn ghost" id="neg-undo" type="button">Reset tokens</button>
+    </div>
+    <div class="why" id="neg-fb" hidden></div>
+  </div>
+</section>
+
+<!-- ───────── 06 RIDDLES ───────── -->
+<section id="riddles" class="mod">
+  <div class="mod-head">
+    <p class="num"><b>6</b> · weird, tough, true</p>
+    <h2>Riddles</h2>
+    <p class="intro">A generous professor, a famous bar, empty domains, scope traps. Single-answer riddles grade instantly; multi-answer ones have a Check button.</p>
+  </div>
+  <div id="riddles-list" style="display:grid;gap:14px"></div>
+</section>
+
+<!-- ───────── 07 ANATOMY ───────── -->
+<section id="anatomy" class="mod">
+  <div class="mod-head">
+    <p class="num"><b>7</b> · weird but useful</p>
+    <h2>Anatomy lab</h2>
+    <p class="intro">This sentence is lifted from the Ramp-Up (the example marked "skip on a first read"). Nobody writes like this on purpose. The point is the dissection skills every real definition relies on: which letters are free, which quantifier owns which letter, which quantifiers are dead weight, and what is left once the dead weight is gone. Throughout, <span class="fm"><i>f</i> : ℤ → ℕ</span> is the fixed function <span class="fm"><i>n</i> ↦ |<i>n</i>|</span>. The sentence stays pinned below the menu while you work; the steps build on each other, so take them in order.</p>
+  </div>
+  <div class="exhibit" id="anat-exhibit"><span class="fm" id="anat-formula"></span><span class="fnote"><i>f</i>(<i>n</i>) = |<i>n</i>|</span></div>
+  <h3>Dissection</h3>
+  <div id="anat-list" style="display:grid;gap:14px"></div>
+  <div class="panel" id="echk">
+    <h3>E(m) checker</h3>
+    <p class="ctx" id="em-def"></p>
+    <div class="ctl"><label for="em-num">m</label><input type="range" id="em-range" min="-6" max="8" step="1" value="5" aria-label="m slider"><input type="number" id="em-num" step="1" value="5"></div>
+    <div class="seg" id="em-dom" role="group" aria-label="Domain of j"><button type="button" class="seg-btn nt" data-dom="Z" aria-pressed="true">j ∈ ℤ</button><button type="button" class="seg-btn nt" data-dom="N" aria-pressed="false">j ∈ ℕ</button></div>
+    <div class="jrow" id="em-chips"></div>
+    <div class="why" id="em-verdict"></div>
+  </div>
+  <h3>Mutations</h3>
+  <p class="intro quiet">Each mutation changes one thing in the sentence above. Say what the change does. "The original" always means the sentence read with <span class="fm"><i>j</i> ∈ ℤ</span>, which step 6 shows is false for every <span class="fm"><i>m</i></span>.</p>
+  <div id="mut-list" style="display:grid;gap:14px"></div>
+</section>
+
+</main>
+
+<aside class="nextl">
+  <div><h2>Next: Nearest Neighbours</h2><p>Machine learning, starting from the simplest idea there is: to label a new point, look at the labelled points nearest to it. Drag the point, change <i>k</i>, and watch the decision change.</p></div>
+  <a class="btn" href="ml.html">Open lesson 2</a>
+</aside>
+<footer>
+  <p>This is set 0 of the Ramp-Up exercise bank. Every exercise on this page is a plain object in the script (sentence, options, answer, explanation), so adding a card is adding a few lines.</p>
+  <p>Progress is saved in this browser only. <button class="btn ghost" id="reset-all" type="button">Reset my progress</button></p>
+  <p>Quantifier Gym · lesson 1 of 4 · <a href="index.html">All lessons</a> · <a href="../index.html">mmsquared.ca</a></p>
+</footer>
+</div>
+
+<script>
+(function(){
+'use strict';
+const $=(s,r)=>(r||document).querySelector(s);
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+// Formula renderer: single Latin letters and ε/δ go italic, a_n becomes a subscript, ∀ ∃ ¬ become colored chips.
+function mathify(s){
+  return esc(s).replace(/([A-Za-z])_([A-Za-z0-9])|(?<![A-Za-z&#])([A-Za-z])(?![A-Za-z;])|[∀∃¬]|[εδ]/g,function(m,b,sub,single){
+    if(b) return '<i>'+b+'</i><sub>'+sub+'</sub>';
+    if(single) return '<i>'+single+'</i>';
+    if(m==='∀') return '<b class="q fa" title="for all">∀</b>';
+    if(m==='∃') return '<b class="q ex" title="there exists">∃</b>';
+    if(m==='¬') return '<b class="q ng" title="not">¬</b>';
+    return '<i>'+m+'</i>';
+  });
+}
+// Σ_{i=1}^{f(j)} renders as a stacked sum.
+function fm(s){
+  const sums=[];
+  s=s.replace(/Σ_\{([^}]*)\}\^\{([^}]*)\}/g,function(m,bot,top){ sums.push([bot,top]); return '\u0001'+(sums.length-1)+'\u0001'; });
+  const h=mathify(s).replace(/\u0001(\d+)\u0001/g,function(m,k){ const p=sums[+k]; return '<span class="sum"><span class="top">'+mathify(p[1])+'</span><span class="sig">Σ</span><span class="bot">'+mathify(p[0])+'</span></span>'; });
+  return '<span class="fm">'+h+'</span>';
+}
+
+/* ───────── progress store (per viewer) ───────── */
+const KEY='quantifier-gym-v2';
+let S={};
+try{ S=JSON.parse(localStorage.getItem(KEY)||'{}')||{}; }catch(e){ S={}; }
+const STORES=['deck','neg','rid','grid','game','proof','anat','mut'];
+STORES.forEach(k=>{ if(!S[k]||typeof S[k]!=='object') S[k]={}; });
+const save=()=>{ try{ localStorage.setItem(KEY,JSON.stringify(S)); }catch(e){} };
+function countSolved(){
+  let n=0;
+  STORES.forEach(k=>{ if(k!=='deck') n+=Object.values(S[k]).filter(Boolean).length; });
+  n+=Object.values(S.deck).filter(v=>v&&v.ok).length;
+  return n;
+}
+function progress(){ const total=CH.length+CARDS.length+SCN.length+2*PRF.length+1+NEG.length+RID.length+ANAT.length+MUT.length, n=countSolved(); $('#pbar').style.width=(100*n/total).toFixed(1)+'%'; $('#ptext').textContent=n+' / '+total+' solved'; }
+
+/* ───────── 01 grid ───────── */
+const people=['Ada','Bo','Cleo','Dev'];
+const flavours=[['Strawberry','#FF6B9A'],['Pistachio','#4FC07E'],['Mango','#FFB341'],['Blueberry','#6C8DFF']];
+let G=[[1,0,1,0],[1,1,0,0],[1,0,0,0],[1,0,0,1]];   // everyone likes Strawberry, so no challenge is met before the first tap
+const rowHas=i=>G[i].some(Boolean), rowAll=i=>G[i].every(Boolean), colHas=j=>G.some(r=>r[j]), colAll=j=>G.every(r=>r[j]);
+const STM=[
+  ['(∀p)(∃f) L(p, f)','Everyone likes at least one flavour.',()=>G.every((_,i)=>rowHas(i))],
+  ['(∃f)(∀p) L(p, f)','One flavour is liked by everyone.',()=>flavours.some((_,j)=>colAll(j))],
+  ['(∀f)(∃p) L(p, f)','Every flavour has at least one fan.',()=>flavours.every((_,j)=>colHas(j))],
+  ['(∃p)(∀f) L(p, f)','Someone likes every flavour.',()=>G.some((_,i)=>rowAll(i))],
+  ['(∀p)(∀f) L(p, f)','Everyone likes everything.',()=>G.flat().every(Boolean)],
+  ['(∃p)(∃f) L(p, f)','Someone likes something.',()=>G.flat().some(Boolean)]
+];
+const CH=[
+  ['Make ① true and ② false.', v=>v[0]&&!v[1]],
+  ['Make ③ true while ② and ④ are both false.', v=>v[2]&&!v[1]&&!v[3]],
+  ['Make ④ true and ② false, keeping ① true.', v=>v[3]&&!v[1]&&v[0]],
+  ['Make ① and ③ true, ② and ④ false, using exactly four hearts.', v=>v[0]&&v[2]&&!v[1]&&!v[3]&&G.flat().filter(Boolean).length===4]
+];
+function renderGrid(){
+  let h='<div></div>';
+  flavours.forEach(fl=>{ h+='<div class="hd"><span class="dot" style="background:'+fl[1]+'"></span>'+fl[0]+'</div>'; });
+  people.forEach((p,i)=>{
+    h+='<div class="rh">'+p+'</div>';
+    flavours.forEach((fl,j)=>{ h+='<button class="cell" type="button" aria-pressed="'+(G[i][j]?'true':'false')+'" data-i="'+i+'" data-j="'+j+'" aria-label="'+p+' likes '+fl[0]+'"></button>'; });
+  });
+  $('#likes').innerHTML=h;
+  const v=STM.map(s=>s[2]());
+  $('#stmts').innerHTML=STM.map((s,k)=>'<div class="stmt"><span class="idx">'+'①②③④⑤⑥'[k]+'</span><div>'+fm(s[0])+'<div class="en">'+s[1]+'</div></div><span class="truth '+(v[k]?'t':'f')+'">'+(v[k]?'true':'false')+'</span></div>').join('');
+  let newly=false;
+  $('#chals').innerHTML=CH.map((c,k)=>{
+    const now=c[1](v);
+    if(now&&!S.grid[k]){ S.grid[k]=true; newly=true; }
+    const done=!!S.grid[k];
+    return '<div class="chal'+(done?' done':'')+'"><span class="ck">'+(done?'✓':(k+1))+'</span><span>'+c[0]+'</span><span class="truth '+(now?'t':'n')+'">'+(now?'satisfied now':(done?'done earlier':'open'))+'</span></div>';
+  }).join('');
+  if(newly){ save(); progress(); }
+}
+$('#likes').addEventListener('click',e=>{ const b=e.target.closest('.cell'); if(!b) return; const i=+b.dataset.i, j=+b.dataset.j; G[i][j]=G[i][j]?0:1; renderGrid(); });
+
+/* ───────── 02 deck ───────── */
+const LIM='(∀ε>0)(∃δ>0)(∀x∈ℝ)[ 0<|x−a|<δ ⇒ |f(x)−ℓ|<ε ]';
+const Q_DEFAULT='What does this sentence actually say?';
+const CARDS=[
+ {tag:'the real thing', f:LIM, q:Q_DEFAULT,
+  opts:[fm('f(x)')+' tends to ℓ as '+fm('x')+' tends to '+fm('a')+'.', fm('f')+' is continuous at '+fm('a')+'.', fm('f(a) = ℓ')+'.', fm('f')+' is bounded near '+fm('a')+'.'], ans:0,
+  why:'This is the definition. Note the puncture: <b>0 &lt; |<i>x</i> − <i>a</i>|</b> keeps <i>x</i> = <i>a</i> out, so <i>f</i>(<i>a</i>) is never consulted and <i>f</i> need not even be defined at <i>a</i>. The Ramp-Up\'s own example, <i>f</i> = 5 everywhere except <i>f</i>(7) = 10, has limit 5 at 7 for exactly this reason.'},
+ {tag:'swapped', f:'(∃δ>0)(∀ε>0)(∀x∈ℝ)[ 0<|x−a|<δ ⇒ |f(x)−ℓ|<ε ]', q:Q_DEFAULT,
+  opts:['Same as the limit; the order of the first two quantifiers never matters.', fm('f(x) = ℓ')+' for every '+fm('x')+' in a punctured neighbourhood of '+fm('a')+'.', fm('f')+' is bounded near '+fm('a')+'.', 'Always false.'], ans:1,
+  why:'<i>δ</i> is fixed <em>before</em> <i>ε</i> arrives, so one punctured ball must survive every tolerance. Freeze any <i>x</i> with 0 &lt; |<i>x</i> − <i>a</i>| &lt; <i>δ</i>: then |<i>f</i>(<i>x</i>) − ℓ| &lt; <i>ε</i> for all <i>ε</i> &gt; 0, which forces <i>f</i>(<i>x</i>) = ℓ. So <i>f</i> is identically ℓ on that punctured ball. <i>f</i>(<i>x</i>) = <i>x</i>² at <i>a</i> = 1 fails; <i>f</i> = 1 away from 1 (anything at 1) passes.'},
+ {tag:'both universal', f:'(∀ε>0)(∀δ>0)(∀x∈ℝ)[ 0<|x−a|<δ ⇒ |f(x)−ℓ|<ε ]', q:Q_DEFAULT,
+  opts:[fm('f(x) = ℓ')+' for every '+fm('x ≠ a')+'.', 'Same as the limit.', fm('f')+' is constant on some neighbourhood of '+fm('a')+'.', 'Always true, since nothing is chosen.'], ans:0,
+  why:'Now <i>δ</i> is universal too, so ∀bélard takes it enormous: every <i>x</i> ≠ <i>a</i> must satisfy |<i>f</i>(<i>x</i>) − ℓ| &lt; <i>ε</i> for every <i>ε</i>, i.e. <i>f</i>(<i>x</i>) = ℓ. Only the value at <i>a</i> is free. "For all" is cheap to write and brutally expensive to satisfy.'},
+ {tag:'no puncture', f:'(∀ε>0)(∃δ>0)(∀x∈ℝ)[ |x−a|<δ ⇒ |f(x)−ℓ|<ε ]', q:Q_DEFAULT,
+  opts:['Exactly the limit definition; the puncture is cosmetic.', 'The limit at '+fm('a')+' is ℓ <em>and</em> '+fm('f(a) = ℓ')+'.', fm('f(a) = ℓ')+', nothing about nearby points.', fm('f')+' is bounded near '+fm('a')+'.'], ans:1,
+  why:'Without the puncture, <i>x</i> = <i>a</i> is allowed: |<i>f</i>(<i>a</i>) − ℓ| &lt; <i>ε</i> for all <i>ε</i> &gt; 0 forces <i>f</i>(<i>a</i>) = ℓ, and the rest is the usual limit. This is precisely "<i>f</i> is continuous at <i>a</i> with value ℓ". The Ramp-Up example with <i>f</i>(7) = 10 satisfies the real definition and fails this one.'},
+ {tag:'∀x pulled out front', f:'(∀x∈ℝ)(∀ε>0)(∃δ>0)[ 0<|x−a|<δ ⇒ |f(x)−ℓ|<ε ]', q:Q_DEFAULT,
+  opts:['Same as the limit; ∀ symbols commute with each other.', 'Always true, for every '+fm('f')+', '+fm('a')+' and ℓ.', 'Always false.', fm('f')+' is locally constant.'], ans:1,
+  why:'Dragging <span class="q fa">∀</span><i>x</i> to the front lets <i>δ</i> depend on <i>x</i>. Given <i>x</i> ≠ <i>a</i> and <i>ε</i>, ∃loïse answers <i>δ</i> = |<i>x</i> − <i>a</i>| / 2: the hypothesis 0 &lt; |<i>x</i> − <i>a</i>| &lt; <i>δ</i> fails and the implication holds for free. (For <i>x</i> = <i>a</i> the hypothesis fails too.) The order ∃<i>δ</i> ∀<i>x</i> is what forces one <i>δ</i> to serve all <i>x</i>.'},
+ {tag:'∧ instead of ⇒', f:'(∀ε>0)(∃δ>0)(∀x∈ℝ)[ 0<|x−a|<δ ∧ |f(x)−ℓ|<ε ]', q:Q_DEFAULT,
+  opts:['Same as the limit.', 'Always false.', 'Always true.', 'The limit is ℓ and '+fm('f(a) = ℓ')+'.'], ans:1,
+  why:'The bracket now claims that <em>every</em> real <i>x</i> lies in the punctured <i>δ</i>-ball. <i>x</i> = <i>a</i> alone refutes it (0 &lt; 0 is false), and so does any far-away <i>x</i>. Implications are safe because they say nothing when the hypothesis fails; conjunctions have no such escape hatch.'},
+ {tag:'∃x with ∧', f:'(∀ε>0)(∃δ>0)(∃x∈ℝ)[ 0<|x−a|<δ ∧ |f(x)−ℓ|<ε ]', q:Q_DEFAULT,
+  opts:['Same as the limit.', fm('f')+' comes within any ε of ℓ at some point '+fm('x ≠ a')+', anywhere at all.', 'Always true.', fm('f(a) = ℓ')+'.'], ans:1,
+  why:'The <span class="q ex">∃</span><i>δ</i> is powerless here: ∃loïse may take it huge, so the sentence collapses to "for every <i>ε</i> there is some <i>x</i> ≠ <i>a</i> with |<i>f</i>(<i>x</i>) − ℓ| &lt; <i>ε</i>", i.e. ℓ is in the closure of the values <i>f</i> takes away from <i>a</i>. <i>f</i>(<i>x</i>) = <i>x</i> with <i>a</i> = 0 and ℓ = 7 passes (use <i>x</i> = 7) although the limit at 0 is 0.'},
+ {tag:'ε after δ', f:'(∀δ>0)(∃ε>0)(∀x∈ℝ)[ 0<|x−a|<δ ⇒ |f(x)−ℓ|<ε ]', q:Q_DEFAULT,
+  opts:['Same as the limit.', fm('f')+' is bounded on every punctured δ-ball around '+fm('a')+'.', fm('f')+' is locally constant.', 'Always true.'], ans:1,
+  why:'<i>ε</i> comes after <i>δ</i>, so it is a <em>bound</em>, not a tolerance: on each punctured ball, however large, <i>f</i> stays within some <i>ε</i> of ℓ. So <i>f</i> is bounded on every bounded set around <i>a</i> (its value at <i>a</i> aside), which asks more than "bounded near <i>a</i>", and there is no limit in sight. sin(1/<i>x</i>) at <i>a</i> = 0 passes; 1/<i>x</i> fails.'},
+ {tag:'arrow reversed', f:'(∀ε>0)(∃δ>0)(∀x∈ℝ)[ |f(x)−ℓ|<ε ⇒ 0<|x−a|<δ ]', q:Q_DEFAULT,
+  opts:['The converse of the limit, true for the same functions.', 'False for every '+fm('f')+' (the domain is all of ℝ).', fm('f')+' is injective near '+fm('a')+'.', 'Always true.'], ans:1,
+  why:'Put <i>x</i> = <i>a</i>. For <i>ε</i> &gt; |<i>f</i>(<i>a</i>) − ℓ| the hypothesis holds, but the conclusion reads 0 &lt; |<i>a</i> − <i>a</i>| &lt; <i>δ</i>, i.e. 0 &lt; 0. So the sentence fails for every function defined at <i>a</i>. (If <i>a</i> were outside the domain it would say something real: points where <i>f</i> is <i>ε</i>-close to ℓ are <i>δ</i>-close to <i>a</i>.)'},
+ {tag:'ℓ chosen late', f:'(∀ε>0)(∃δ>0)(∃ℓ∈ℝ)(∀x∈ℝ)[ 0<|x−a|<δ ⇒ |f(x)−ℓ|<ε ]', q:'ℓ is now bound inside, and may change with ε. What does the sentence say?',
+  opts:['Strictly weaker than "the limit of '+fm('f')+' at '+fm('a')+' exists".', 'Equivalent to "the limit of '+fm('f')+' at '+fm('a')+' exists".', 'Always true.', fm('f')+' is locally constant.'], ans:1,
+  why:'A moving target ℓ sounds weaker, but ∀<i>ε</i> ∃<i>δ</i> still puts all values of <i>f</i> on the punctured ball inside a window of width 2<i>ε</i>. That is the Cauchy criterion, and in ℝ it is equivalent to the limit existing. Pushing <span class="q ex">∃</span>ℓ inward costs nothing here. (Over ℚ it would: completeness is doing the work.)'},
+ {tag:'≤ 3ε', f:'(∀ε>0)(∃δ>0)(∀x∈ℝ)[ 0<|x−a|<δ ⇒ |f(x)−ℓ|≤3ε ]', q:'Compared with the definition, this sentence is…',
+  opts:['weaker: it allows three times the error.', 'equivalent.', 'stronger.', 'always true.'], ans:1,
+  why:'Feed it <i>ε</i>/4: you get |<i>f</i>(<i>x</i>) − ℓ| ≤ 3<i>ε</i>/4 &lt; <i>ε</i>. Any fixed positive multiple of <i>ε</i>, and ≤ in place of &lt;, leave the definition unchanged. What matters is the quantifier order and who is allowed to depend on whom.',
+  nudge:'Try running the sentence with a smaller ε than the one you were handed.'},
+ {tag:'Ramp-Up problem, item (g)', f:'(∀ε≥0)(∃δ≥0)(∀x∈[a−δ, a+δ])[ |f(x)−ℓ|≤ε ]', q:'Only two symbols changed: ≥ for &gt;, and a closed interval. What does it say?',
+  opts:['Same as the limit.', fm('f(a) = ℓ')+', and nothing about nearby points.', 'Always true.', fm('f')+' is constant near '+fm('a')+'.'], ans:1,
+  why:'<i>δ</i> = 0 is now allowed, and [<i>a</i>, <i>a</i>] is just {<i>a</i>}. ∃loïse answers <i>δ</i> = 0 to every <i>ε</i>, and the sentence shrinks to |<i>f</i>(<i>a</i>) − ℓ| ≤ <i>ε</i> for all <i>ε</i> ≥ 0, i.e. <i>f</i>(<i>a</i>) = ℓ. Conversely, if <i>f</i>(<i>a</i>) = ℓ then <i>δ</i> = 0 always works. Two tiny ≥ signs deleted the limit entirely.'},
+ {tag:'Ramp-Up problem, item (i)', f:'(∀ε>0)(∃δ>0)(∀x∈ℝ)[ x−a<δ ⇒ |f(x)−ℓ|<ε ]', q:'The absolute value around x − a is gone. What does it say?',
+  opts:['Same as the limit.', 'The left-hand limit at '+fm('a')+' is ℓ.', fm('f = ℓ')+' on all of (−∞, '+fm('a')+'] and '+fm('f(x)')+' → ℓ as '+fm('x → a⁺')+'.', 'Always false.'], ans:2,
+  why:'<i>x</i> − <i>a</i> &lt; <i>δ</i> holds for every <i>x</i> to the left of <i>a</i>, however far away, and for <i>x</i> = <i>a</i> itself. So the bracket demands |<i>f</i>(<i>x</i>) − ℓ| &lt; <i>ε</i> on (−∞, <i>a</i> + <i>δ</i>) for every <i>ε</i>, which forces <i>f</i> = ℓ on (−∞, <i>a</i>], plus the ordinary right-hand limit. A missing pair of bars turned a local statement into a global one.'},
+ {tag:'sequences', f:'(∀ε>0)(∀c∈ℕ)(∃n∈ℕ)[ n>c ∧ |f_n−ℓ|<ε ]', q:fm('(f_n)')+' is a real sequence. What does this say about ℓ?',
+  opts:[fm('f_n')+' → ℓ.', 'ℓ is the limit of some subsequence of '+fm('(f_n)')+'.', fm('f_n = ℓ')+' for infinitely many '+fm('n')+'.', 'Always true.'], ans:1,
+  why:'(∀<i>c</i>)(∃<i>n</i> &gt; <i>c</i>) means "for infinitely many <i>n</i>". So for every <i>ε</i>, infinitely many terms are <i>ε</i>-close to ℓ: ℓ is a cluster point, the limit of some subsequence. <i>f<sub>n</sub></i> = (−1)<sup><i>n</i></sup> with ℓ = 1 passes, yet the sequence does not converge. Compare the Ramp-Up definition, where <i>c</i> is existential and <i>n</i> universal.'},
+ {tag:'sequences', f:'(∀c∈ℕ)(∃ε>0)(∀n∈ℕ)[ n>c ⇒ |f_n−ℓ|<ε ]', q:'What does this say about '+fm('(f_n)')+'?',
+  opts:[fm('f_n')+' → ℓ.', fm('(f_n)')+' is bounded.', fm('(f_n)')+' is eventually constant.', 'Always false.'], ans:1,
+  why:'<i>ε</i> is chosen after <i>c</i>, so it is a bound: beyond some index, all terms stay within some fixed distance of ℓ. Only finitely many terms come before any <i>c</i>, so this just says the sequence is bounded. <i>f<sub>n</sub></i> = (−1)<sup><i>n</i></sup> passes, with any ℓ you like.'},
+ {tag:'uniform continuity', f:'(∀ε>0)(∃δ>0)(∀x∈ℝ)(∀y∈ℝ)[ |x−y|<δ ⇒ |f(x)−f(y)|<ε ]', q:'One δ must serve every x. Which continuous '+fm('f : ℝ → ℝ')+' fails this?',
+  opts:[fm('f(x) = sin x'), fm('f(x) = x²'), fm('f(x) = |x|'), fm('f(x) = √|x|')], ans:1,
+  why:'Move <span class="q fa">∀</span><i>x</i> in front of <span class="q ex">∃</span><i>δ</i> and you get ordinary continuity, which all four satisfy. Here <i>δ</i> may not look at <i>x</i>, and <i>x</i>² has slopes that grow without bound: for <i>ε</i> = 1 and any <i>δ</i>, take <i>x</i> = 1/<i>δ</i> and <i>y</i> = <i>x</i> + <i>δ</i>/2, then <i>y</i>² − <i>x</i>² &gt; 1. sin <i>x</i>, |<i>x</i>| and √|<i>x</i>| are all uniformly continuous on ℝ.'}
+];
+let ci=0;
+const cardKey=c=>c.f;   // progress is keyed by the formula, so cards can be inserted or reordered later
+function renderDeck(){
+  const c=CARDS[ci], st=S.deck[cardKey(c)];
+  $('#deck-count').textContent='Card '+(ci+1)+' of '+CARDS.length;
+  $('#deck-tag').textContent=c.tag;
+  $('#deck-formula').innerHTML=fm(c.f);
+  $('#deck-ctx').innerHTML=(ci===0)?'Read it twice. Every other card is a variation on this one.':'Compare with card 1: '+fm(LIM);
+  $('#deck-q').innerHTML=c.q;
+  $('#deck-opts').innerHTML=c.opts.map((o,k)=>{
+    let cls='opt';
+    if(st&&st.ok&&k===c.ans) cls+=' right';
+    else if(st&&!st.ok&&st.pick===k) cls+=' wrong';
+    return '<button type="button" class="'+cls+'" data-k="'+k+'"'+(st&&st.ok?' disabled':'')+'><span class="key">'+'ABCD'[k]+'</span><span>'+o+'</span></button>';
+  }).join('');
+  const w=$('#deck-why');
+  if(st&&st.ok){ w.className='why'; w.innerHTML='<b>Right.</b> '+c.why; w.hidden=false; }
+  else if(st&&!st.ok){ w.className='why nudge'; w.innerHTML='<b>Not that one.</b> '+(c.nudge||'Ask: which symbol is chosen first, and what is it allowed to depend on?'); w.hidden=false; }
+  else w.hidden=true;
+  $('#deck-dots').innerHTML=CARDS.map((cd,k)=>{ const s=S.deck[cardKey(cd)]; return '<button type="button" data-k="'+k+'" class="'+((s&&s.ok)?'ok':'')+(k===ci?' cur':'')+'" aria-label="Card '+(k+1)+'"></button>'; }).join('');
+  $('#deck-prev').disabled=ci===0;
+  $('#deck-next').disabled=ci===CARDS.length-1;
+}
+$('#deck-opts').addEventListener('click',e=>{
+  const b=e.target.closest('.opt'); if(!b) return;
+  const k=+b.dataset.k, c=CARDS[ci], st=S.deck[cardKey(c)];
+  if(st&&st.ok) return;
+  S.deck[cardKey(c)]={pick:k,ok:k===c.ans}; save(); progress(); renderDeck();
+});
+$('#deck-prev').addEventListener('click',()=>{ ci=Math.max(0,ci-1); renderDeck(); });
+$('#deck-next').addEventListener('click',()=>{ ci=Math.min(CARDS.length-1,ci+1); renderDeck(); });
+$('#deck-dots').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; ci=+b.dataset.k; renderDeck(); });
+
+/* ───────── 03 game ───────── */
+// dev(x) is |f(x) − ℓ|, written so that it is exact where it matters: in floating point 1.4 − 1 is 0.3999999999999999,
+// and (x² − 1)/(x − 1) loses digits near x = 1, which used to flip rounds that sit exactly on a threshold.
+const SCN=[
+ {id:'sq', label:'x² at 1', title:'Claim: lim x² = 1 as x → 1.  (true)', f:x=>x*x, dev:x=>Math.abs((x-1)*(x+1)), a:1, L:1, dom:[0,2], yr:[-0.2,4.2], mode:'normal', truth:true,
+  rule:'δ = min(1, ε/3)', ruleF:e=>Math.min(1,e/3),
+  ruleWhy:'and then 0 &lt; |x − 1| &lt; δ ≤ 1 gives |x² − 1| = |x − 1|·|x + 1| &lt; δ(2 + δ) ≤ 3δ ≤ ε',
+  win:'You answered every ε ∀bélard tried. A single rule does it for all of them at once: δ = min(1, ε/3), because |x² − 1| = |x − 1|·|x + 1| ≤ δ(2 + δ) ≤ 3δ. Writing down that rule <em>is</em> the proof, and section 4 does exactly that.'},
+ {id:'hole', label:'(x²−1)/(x−1) at 1', title:'Claim: lim (x²−1)/(x−1) = 2 as x → 1.  (true, f(1) undefined)', f:x=>Math.abs(x-1)<1e-12?NaN:(x*x-1)/(x-1), dev:x=>Math.abs(x-1)<1e-12?NaN:Math.abs(x-1), a:1, L:2, dom:[0,2], yr:[0.5,3.5], mode:'normal', truth:true, hole:[1,2],
+  rule:'δ = ε', ruleF:e=>e,
+  ruleWhy:'and away from 1 the function is x + 1, so 0 &lt; |x − 1| &lt; δ gives |f(x) − 2| = |x − 1| &lt; ε',
+  win:'f(1) does not exist, and the game never asked for it: the clause 0 &lt; |x − a| keeps x = a off the board. Away from 1 the function is x + 1, so δ = ε wins every round.'},
+ {id:'step', label:'a jump at 1', title:'Claim: lim f(x) = 1 as x → 1, where f = 0.6 left of 1 and 1.4 from 1 on.  (false)', f:x=>x<1?0.6:1.4, dev:()=>0.4, a:1, L:1, dom:[0,2], yr:[0,2], mode:'normal', truth:false, thr:0.4, breakAt:1, open:[1,0.6], closed:[1,1.4],
+  hintFa:'She cannot win once ε ≤ 0.4, because both sides of the jump sit at distance exactly 0.4 from ℓ = 1. Name such an ε; then any x in her band other than 1 escapes.',
+  lose:'Both sides sit at distance 0.4 from 1, so every round with ε &gt; 0.4 was easy. Once ε ≤ 0.4 no δ can help: every punctured ball around 1 contains points at distance exactly 0.4. This is the negation, lived: (∃ε&gt;0)(∀δ&gt;0)(∃x) with 0 &lt; |x − 1| &lt; δ and |f(x) − 1| ≥ ε.'},
+ {id:'osc', label:'sin(1/(x−1))', title:'Claim: lim 1 + 0.8·sin(1/(x−1)) = 1 as x → 1.  (false)', f:x=>Math.abs(x-1)<1e-12?NaN:1+0.8*Math.sin(1/(x-1)), dev:x=>Math.abs(x-1)<1e-12?NaN:0.8*Math.abs(Math.sin(1/(x-1))), a:1, L:1, dom:[0,2], yr:[-0.1,2.1], mode:'normal', truth:false, thr:0.8,
+  worst:d=>{ const k=Math.ceil((1/d-Math.PI/2)/(2*Math.PI))+1; return 1+1/(Math.PI/2+2*Math.PI*k); },
+  hintFa:'She cannot win once ε ≤ 0.8. The peaks sit at x = 1 + 1/(π/2 + 2πk): pick k large enough that a peak lands inside her band, or slide x slowly and watch the marker climb. (At ε = 0.8 exactly only a peak itself escapes, which takes typing x to many digits; any ε a little below 0.8 gives you room.)',
+  lose:'Every punctured ball around 1, however tiny, contains a peak where sin(1/(x − 1)) = 1: take x = 1 + 1/(π/2 + 2πk) with k large. So no δ works for any ε ≤ 0.8, and the same argument kills every other candidate ℓ. The function is bounded (card 8 of the deck is satisfied) but has no limit.'},
+ {id:'swap', label:'∃δ ∀ε, swapped', title:'Same x² at 1, same ℓ = 1, but the sentence is (∃δ>0)(∀ε>0)(∀x)[…].  (false)', f:x=>x*x, dev:x=>Math.abs((x-1)*(x+1)), a:1, L:1, dom:[0,2], yr:[-0.2,4.2], mode:'swap', truth:false}
+];
+const gs={sc:SCN[0], role:'ex', state:'pick', round:0, seq:[1], eps:1, del:0.3, x:1.15, mark:null, hist:[], losses:0};
+const fmtN=n=>{ if(!Number.isFinite(n)) return '–'; const a=Math.abs(n); if(a>=1) return String(+n.toFixed(3)); return String(+n.toPrecision(3)); };
+const nice=e=>+e.toPrecision(2);
+const f6=v=>Number.isFinite(v)?String(+v.toPrecision(6)):'–', fx10=v=>Number.isFinite(v)?String(+v.toPrecision(10)):'–';
+// Rounds are decided on 12 significant digits, so the numbers the learner can type and read are the ones that decide.
+const R12=v=>+v.toPrecision(12);
+function devAt(sc,x){ const y=sc.dev?sc.dev(x):Math.abs(fx(sc,x)-sc.L); return Number.isFinite(y)?y:NaN; }
+function inBand(sc,x,del){ const d=Math.abs(x-sc.a); return d>0&&R12(d)<R12(del); }
+function escapes(sc,x,eps){ const s=devAt(sc,x); return Number.isFinite(s)&&R12(s)>=R12(eps); }
+// Two numbers printed with just enough digits that the printed comparison is the real one ("0.79998 < 0.8", never "0.8 < 0.8").
+function cmpPair(a,b){ const s=Math.sign(R12(a)-R12(b)); for(let p=3;p<=12;p++){ const A=+a.toPrecision(p), B=+b.toPrecision(p); if(Math.sign(A-B)===s) return [String(A),String(B)]; } return [String(R12(a)),String(R12(b))]; }
+// A short decimal x that still escapes, so the feedback names a number the learner can check by hand.
+function niceEsc(sc,del,eps,x){ const a=sc.a, s=x>a?1:-1, d=Math.abs(x-a); for(let k=1;k<=9;k++){ const m=Math.pow(10,k), r=+(a+s*Math.floor(d*m)/m).toFixed(k); if(inBand(sc,r,del)&&escapes(sc,r,eps)) return r; } return x; }
+// ∀bélard's opening sequence: random, decreasing, and (on a false claim) below the breaking threshold by round 3.
+function epsSeq(sc){
+  const seq=[]; let e=0.6+Math.random()*1.4;
+  for(let k=0;k<5;k++){ seq.push(e); e*=0.3+0.4*Math.random(); }
+  if(sc.thr){ const target=sc.thr*(0.45+0.4*Math.random()); if(seq[2]>target){ const f=target/seq[2]; for(let k=2;k<5;k++) seq[k]*=f; } }
+  const out=seq.map(nice);
+  for(let k=1;k<out.length;k++) if(out[k]>=out[k-1]) out[k]=nice(out[k-1]*0.6);
+  return out;
+}
+const ELO=0.001, EHI=2, DLO=0.001, DHI=1;
+function setEps(v){ v=Math.min(EHI,Math.max(ELO,v)); gs.eps=v; $('#g-eps-num').value=f6(v); $('#g-eps-range').value=String(Math.round(1000*Math.log(v/ELO)/Math.log(EHI/ELO))); }
+function setDel(v,clamp){ if(clamp) v=Math.min(DHI,Math.max(DLO,v)); gs.del=v; $('#g-del-num').value=f6(v); const c=Math.min(DHI,Math.max(DLO,v)); $('#g-del-range').value=String(Math.round(1000*Math.log(c/DLO)/Math.log(DHI/DLO))); }
+function setX(v){ gs.x=v; const a=gs.sc.a, d=gs.del; $('#g-x-num').value=String(+v.toFixed(6)); $('#g-x-range').value=String(Math.round(Math.min(1000,Math.max(0,1000*(v-a+d)/(2*d))))); }
+function fx(sc,x){ const y=sc.f(x); return Number.isFinite(y)?y:NaN; }
+function markAt(x,cls,label){ return {x:x,y:fx(gs.sc,x),cls:cls,label:label}; }
+// ∃loïse's reply on a false claim: the largest safe δ on a geometric grid (one notch of margin), or null if none is safe.
+function bestDelta(sc,eps){
+  for(let k=0;k<=60;k++){ const d=Math.pow(10,-k/15); const x=worstX(sc,d); if(x==null) continue; if(!escapes(sc,x,eps)) return +Math.pow(10,-(k+1)/15).toPrecision(3); }
+  return null;
+}
+const stall=()=>[0.05,0.08,0.1,0.15,0.2][Math.floor(Math.random()*5)];
+// The x in the open δ-band with the largest |f(x) − ℓ|: a scan of the band plus probes just inside its two edges,
+// because for these functions the supremum usually sits at an edge and a scan alone can miss it by a hair.
+function worstX(sc,del){
+  if(sc.worst){ const x=sc.worst(del); if(inBand(sc,x,del)) return x; }
+  let best=null, bd=-1; const N=4000;
+  const probe=x=>{ if(!inBand(sc,x,del)) return; const d=devAt(sc,x); if(!Number.isFinite(d)) return; if(d>bd){ bd=d; best=x; } };
+  for(let i=1;i<=N;i++) probe(sc.a-del+2*del*i/(N+1));
+  [1-1e-9,1-1e-6,1-1e-3].forEach(t=>{ probe(sc.a+del*t); probe(sc.a-del*t); });
+  return best;
+}
+function sentenceFor(sc){
+  const L=sc.L, a=sc.a;
+  if(sc.mode==='swap') return fm('(∃δ>0)(∀ε>0)(∀x∈ℝ)[ 0<|x−'+a+'|<δ ⇒ |f(x)−'+L+'|<ε ]');
+  return fm('(∀ε>0)(∃δ>0)(∀x∈ℝ)[ 0<|x−'+a+'|<δ ⇒ |f(x)−'+L+'|<ε ]');
+}
+function plot(sc,eps,del,mark){
+  const W=640,H=330,P={l:40,r:14,t:14,b:30};
+  const [x0,x1]=sc.dom,[y0,y1]=sc.yr;
+  const sx=x=>P.l+(x-x0)/(x1-x0)*(W-P.l-P.r);
+  const sy=y=>P.t+(y1-y)/(y1-y0)*(H-P.t-P.b);
+  const clampY=y=>Math.max(y0,Math.min(y1,y));
+  let s='<svg viewBox="0 0 '+W+' '+H+'" class="plot" role="img" aria-label="Graph of f with the ε band around ℓ and the δ band around a">';
+  // grid lines
+  for(let y=Math.ceil(y0);y<=Math.floor(y1);y++){ s+='<line class="gridl" x1="'+P.l+'" x2="'+(W-P.r)+'" y1="'+sy(y)+'" y2="'+sy(y)+'"/><text class="lbl" x="'+(P.l-8)+'" y="'+(sy(y)+4)+'" text-anchor="end">'+y+'</text>'; }
+  for(let x=Math.ceil(x0);x<=Math.floor(x1);x++){ s+='<line class="gridl" y1="'+P.t+'" y2="'+(H-P.b)+'" x1="'+sx(x)+'" x2="'+sx(x)+'"/><text class="lbl" x="'+sx(x)+'" y="'+(H-P.b+18)+'" text-anchor="middle">'+x+'</text>'; }
+  // bands
+  if(eps!=null){ const ya=sy(clampY(sc.L+eps)), yb=sy(clampY(sc.L-eps)); s+='<rect class="eband" x="'+P.l+'" y="'+ya+'" width="'+(W-P.l-P.r)+'" height="'+Math.max(0,yb-ya)+'"/>';
+    s+='<text class="lbl ex" x="'+(W-P.r-6)+'" y="'+(ya-5)+'" text-anchor="end">ℓ + ε</text><text class="lbl ex" x="'+(W-P.r-6)+'" y="'+(yb+14)+'" text-anchor="end">ℓ − ε</text>'; }
+  if(del!=null){ const xa=sx(Math.max(x0,sc.a-del)), xb=sx(Math.min(x1,sc.a+del)); s+='<rect class="dband" x="'+xa+'" y="'+P.t+'" width="'+Math.max(0,xb-xa)+'" height="'+(H-P.t-P.b)+'"/>';
+    s+='<text class="lbl fa" x="'+(xb+5)+'" y="'+(P.t+12)+'">a + δ</text>'; }
+  // axes
+  s+='<line class="axis" x1="'+P.l+'" x2="'+(W-P.r)+'" y1="'+(H-P.b)+'" y2="'+(H-P.b)+'"/><line class="axis" x1="'+P.l+'" x2="'+P.l+'" y1="'+P.t+'" y2="'+(H-P.b)+'"/>';
+  // reference lines
+  s+='<line class="Lline" x1="'+P.l+'" x2="'+(W-P.r)+'" y1="'+sy(sc.L)+'" y2="'+sy(sc.L)+'"/><line class="aline" y1="'+P.t+'" y2="'+(H-P.b)+'" x1="'+sx(sc.a)+'" x2="'+sx(sc.a)+'"/>';
+  // curve
+  const N=1600; let d='', pen=false;
+  for(let i=0;i<=N;i++){
+    const x=x0+(x1-x0)*i/N;
+    if(sc.breakAt!=null && i>0){ const xp=x0+(x1-x0)*(i-1)/N; if(xp<sc.breakAt&&x>=sc.breakAt) pen=false; }
+    const y=fx(sc,x);
+    if(!Number.isFinite(y)){ pen=false; continue; }
+    d+=(pen?'L':'M')+sx(x).toFixed(1)+' '+sy(clampY(y)).toFixed(1)+' '; pen=true;
+  }
+  s+='<path class="curve" d="'+d+'"/>';
+  if(sc.hole) s+='<circle class="hole" cx="'+sx(sc.hole[0])+'" cy="'+sy(sc.hole[1])+'" r="5"/>';
+  if(sc.open) s+='<circle class="hole" cx="'+sx(sc.open[0])+'" cy="'+sy(sc.open[1])+'" r="5"/>';
+  if(sc.closed) s+='<circle class="full" cx="'+sx(sc.closed[0])+'" cy="'+sy(sc.closed[1])+'" r="5"/>';
+  // marker: the x under discussion (candidate, escaped, or safely inside)
+  if(mark&&Number.isFinite(mark.y)&&mark.x>=x0&&mark.x<=x1){
+    const col=mark.cls==='esc'?'var(--berry)':(mark.cls==='safe'?'var(--exists)':'var(--sky)');
+    const ex=sx(mark.x), ey=sy(clampY(mark.y)), tx=ex>W-90?ex-10:ex+10, anchor=ex>W-90?'end':'start';
+    s+='<g class="mk" style="--mk:'+col+'"><line x1="'+ex+'" x2="'+ex+'" y1="'+ey+'" y2="'+sy(sc.L)+'"/><circle cx="'+ex+'" cy="'+ey+'" r="6"/><text class="lbl" x="'+tx+'" y="'+(ey-9)+'" text-anchor="'+anchor+'">'+mark.label+'</text></g>';
+  }
+  s+='</svg>';
+  return s;
+}
+function gmsg(cls,html){ const m=$('#g-msg'); m.className='why '+cls; m.innerHTML=html; }
+function ctl(id,show,dis){ const el=$('#'+id); el.hidden=!show; el.querySelectorAll('input').forEach(i=>i.disabled=!!dis); }
+function renderGame(){
+  const sc=gs.sc, you=gs.role==='fa', swap=sc.mode==='swap', st=gs.state;
+  $('#scn-pills').innerHTML=SCN.map(s=>'<button type="button" class="pill" aria-pressed="'+(s.id===sc.id?'true':'false')+'" data-id="'+s.id+'">'+s.label+(S.game[s.id]?' ✓':'')+'</button>').join('');
+  $('#role-seg').querySelectorAll('.seg-btn').forEach(b=>b.setAttribute('aria-pressed',b.dataset.role===gs.role?'true':'false'));
+  $('#g-title').textContent=sc.title;
+  $('#g-formula').innerHTML=sentenceFor(sc);
+  let turn=null;
+  if(st==='pick'||st==='fail') turn='ex'; else if(st==='fa-eps'||st==='fa-x'||st==='fa-swap') turn='fa';
+  $('#pl-fa').className='player fa'+(turn==='fa'?' turn':'');
+  $('#pl-ex').className='player ex'+(turn==='ex'?' turn':'');
+  $('#pl-fa-name').textContent='∀bélard · challenger'+(you?' (you)':'');
+  $('#pl-ex-name').textContent='∃loïse · defender'+(you?'':' (you)');
+  let faTxt, exTxt;
+  if(!you){
+    if(swap){ faTxt=st==='pick'?'Waits. He will see your δ before choosing ε and x.':'Chose ε = '+f6(gs.eps)+' after seeing your δ.'; exTxt=st==='pick'?'You must commit to δ first.':'Committed to δ = '+f6(gs.del)+'.'; }
+    else {
+      faTxt=st==='won'?'Out of moves after '+gs.seq.length+' rounds.':'Round '+Math.min(gs.round+1,gs.seq.length)+' of '+gs.seq.length+': ε = '+f6(gs.eps)+(st==='fail'?'. Found an escaping x.':(st==='lost'?'. Unanswerable.':'.'));
+      exTxt=st==='pick'?'Choose δ so that every x in the orange band lands in the green band.':(st==='won'?'Winning strategy exhibited.':(st==='lost'?'No δ can answer this ε.':'δ = '+f6(gs.del)+' failed. Try again.'));
+    }
+  } else {
+    if(swap){ faTxt=st==='won'?'Wins with ε = '+f6(gs.eps)+' and x = '+fx10(gs.x)+'.':'Choose ε and x, knowing δ = '+f6(gs.del)+'.'; exTxt='Committed to δ = '+f6(gs.del)+' before hearing any ε.'; }
+    else {
+      faTxt=st==='fa-eps'?'Name a tolerance ε.':(st==='fa-x'?'ε = '+f6(gs.eps)+'. Now choose x inside her band.':(st==='won'?'Wins with x = '+fx10(gs.x)+'.':'Out-ruled.'));
+      exTxt=st==='fa-eps'?'Waits for your ε.':(st==='fa-x'?'Answered δ = '+f6(gs.del)+'.':(st==='won'?'No δ could have worked.':'Plays the rule '+sc.rule+'.'));
+    }
+  }
+  $('#pl-fa-txt').textContent=faTxt; $('#pl-ex-txt').textContent=exTxt;
+  let showEps, showDel;
+  if(!you){ showEps=swap?(st==='pick'?null:gs.eps):gs.eps; showDel=gs.del; }
+  else { showEps=gs.eps; showDel=(swap||st!=='fa-eps')?gs.del:null; }
+  $('#g-plot').innerHTML=plot(sc,showEps,showDel,gs.mark);
+  $('#g-hist').innerHTML=gs.hist.map(h=>you?'<span>ε '+f6(h.eps)+' · δ '+f6(h.del)+' · x '+f6(h.x)+(h.ok?' → escapes':' → inside')+'</span>':'<span>ε = '+f6(h.eps)+' → δ = '+f6(h.del)+' ✓</span>').join('');
+  const over=st==='won'||st==='lost';
+  ctl('ctl-eps', you, over||st==='fa-x');
+  ctl('ctl-del', !you||st!=='fa-eps', you||over);
+  ctl('ctl-x', you&&st!=='fa-eps', over);
+  const act=$('#g-act');
+  act.textContent=!you?'Lock in δ':(st==='fa-eps'?'Lock in ε':(swap?'Challenge':'Challenge with x'));
+  act.className='btn '+(you?'fa':'ex');
+  act.disabled=over;
+  $('#g-again').hidden=!(you&&!swap&&st==='fa-x');
+  $('#g-why').hidden=!(sc.lose&&!you&&st==='fail');
+}
+function startGame(sc){
+  gs.sc=sc; gs.round=0; gs.hist=[]; gs.losses=0; gs.mark=null;
+  gs.seq=epsSeq(sc); gs.eps=gs.seq[0];
+  const swap=sc.mode==='swap', a=sc.a;
+  if(gs.role==='ex'){
+    gs.state='pick'; setDel(0.3,true);
+    if(swap) gmsg('info','<b>Order swapped.</b> Now <span class="q ex">∃</span>δ comes first: you must commit to δ <em>before</em> ∀bélard says a word. Pick any δ and lock it in.');
+    else gmsg('info','<b>∀bélard opens:</b> "ε = '+f6(gs.eps)+'." Your move. Slide δ until the piece of the curve inside the orange band fits inside the green band, then lock it in.');
+  } else {
+    setEps(0.5);
+    if(swap){
+      const d=[0.05,0.1,0.2,0.3,0.5][Math.floor(Math.random()*5)]; setDel(d,false); gs.state='fa-swap'; setX(+(a+d/2).toFixed(6)); gs.mark=markAt(gs.x,'cand','your x');
+      gmsg('info','<b>∃loïse had to commit first.</b> Without hearing any ε she chose δ = '+f6(d)+'. Now you choose ε and x. You win if 0 &lt; |x − '+a+'| &lt; δ and |f(x) − ℓ| ≥ ε.');
+    } else {
+      gs.state='fa-eps'; setDel(0.3,true);
+      gmsg('info','<b>You are ∀bélard.</b> Name a tolerance ε; the green band follows your slider. ∃loïse will answer with a δ, and then you hunt for an x inside her orange band whose value lands outside the green band.');
+    }
+  }
+  renderGame();
+}
+function lockDelta(){
+  const sc=gs.sc, del=gs.del;
+  if(gs.state==='won'||gs.state==='lost') return;
+  const w=worstX(sc,del), spread0=devAt(sc,w);
+  if(sc.mode==='swap'){
+    if(!(spread0>0)){ gs.state='won'; gmsg('','<b>You win</b>, because f is constantly ℓ on that punctured ball. That is the only way to win this ordering, which is exactly what deck card 2 says.'); }
+    else {
+      gs.eps=+(spread0/2).toPrecision(2); const x=niceEsc(sc,del,gs.eps,w), spread=devAt(sc,x);
+      gs.mark={x:x,y:fx(sc,x),cls:'esc',label:'x escapes'}; gs.state='lost';
+      gmsg('lose','<b>∀bélard waited.</b> Seeing δ = '+f6(del)+', he picks ε = '+f6(gs.eps)+' and then x = '+fx10(x)+': |f(x) − ℓ| = '+cmpPair(spread,gs.eps)[0]+' ≥ ε. With δ first, he always has the last word unless f is constantly ℓ on the ball. Try a smaller δ with "New game" and watch him shrink ε to match, or switch sides and play him.');
+    }
+    renderGame(); return;
+  }
+  if(w!=null&&escapes(sc,w,gs.eps)){
+    const x=niceEsc(sc,del,gs.eps,w), [sS,sE]=cmpPair(devAt(sc,x),gs.eps);
+    gs.mark={x:x,y:fx(sc,x),cls:'esc',label:'x escapes'}; gs.state='fail';
+    gmsg('lose','<b>∀bélard answers</b> with x = '+fx10(x)+': it lies in your δ-band, yet |f(x) − ℓ| = '+sS+' ≥ ε = '+sE+'. Round to ∀bélard. Try another δ for the same ε'+(sc.lose?', or ask why none can work.':'.'));
+  } else {
+    gs.mark=null; gs.hist.push({eps:gs.eps,del:del}); gs.round++;
+    if(gs.round>=gs.seq.length){
+      gs.state='won'; S.game[sc.id]=true; save(); progress();
+      gmsg('','<b>∃loïse wins.</b> '+sc.win);
+    } else {
+      gs.eps=gs.seq[gs.round]; gs.state='pick';
+      gmsg('info','<b>Nothing escapes.</b> Round to ∃loïse. ∀bélard tightens: "ε = '+f6(gs.eps)+'." Choose again (your old δ probably no longer fits).');
+    }
+  }
+  renderGame();
+}
+function lockEps(){
+  const sc=gs.sc, eps=gs.eps; let d;
+  if(sc.truth) d=sc.ruleF(eps); else { d=bestDelta(sc,eps); if(d==null) d=stall(); }
+  setDel(d,false); gs.state='fa-x'; setX(+(sc.a+d/2).toFixed(6)); gs.mark=markAt(gs.x,'cand','your x');
+  gmsg('info','<b>∃loïse answers:</b> δ = '+f6(d)+'. Pick x with 0 &lt; |x − '+sc.a+'| &lt; δ, inside the orange band. You win the round if |f(x) − ℓ| ≥ ε.');
+  renderGame();
+}
+function challenge(){
+  const sc=gs.sc, x=gs.x, eps=gs.eps, del=gs.del, dist=Math.abs(x-sc.a);
+  if(dist===0){ gmsg('nudge','<b>x = a is off the board.</b> The hypothesis 0 &lt; |x − a| excludes it'+(Number.isFinite(fx(sc,sc.a))?'':', and f(a) is not even defined here')+'. Pick an x on either side of a.'); return; }
+  if(!inBand(sc,x,del)){ const [sD,sd]=cmpPair(dist,del); gmsg('nudge','<b>Outside her band.</b> |x − a| = '+sD+' ≥ δ = '+sd+', so the hypothesis 0 &lt; |x − a| &lt; δ fails and the implication holds for free. Keep x inside the orange band.'); return; }
+  const y=fx(sc,x), spread=devAt(sc,x), ok=escapes(sc,x,eps), [sS,sE]=cmpPair(spread,eps);
+  gs.hist.push({eps:eps,del:del,x:x,ok:ok});
+  if(ok){
+    gs.mark={x:x,y:y,cls:'esc',label:'x escapes'}; gs.state='won'; S.game[sc.id]=true; save(); progress();
+    if(sc.mode==='swap') gmsg('','<b>∀bélard wins.</b> x = '+fx10(x)+' is in her band and |f(x) − ℓ| = '+sS+' ≥ ε = '+sE+'. With δ fixed first you always get the last word: any x ≠ 1 in her band has |x² − 1| &gt; 0, and you simply choose ε below it. Only a function constantly equal to ℓ on the punctured ball could have saved her, which is what this quantifier order really says (deck card 2).');
+    else gmsg('','<b>∀bélard wins.</b> x = '+fx10(x)+' sits inside her band, yet |f(x) − ℓ| = '+sS+' ≥ ε = '+sE+'. '+(sc.lose||''));
+  } else {
+    gs.mark={x:x,y:y,cls:'safe',label:'inside'}; gs.losses++;
+    if(sc.mode==='swap') gmsg('lose','<b>Round to ∃loïse.</b> |f(x) − ℓ| = '+sS+' &lt; ε = '+sE+'. You chose ε without looking at x. Pick x first (inside her band, x ≠ 1), then set ε below |f(x) − ℓ|.');
+    else if(sc.truth&&gs.losses>=3){ gs.state='lost'; gmsg('lose','<b>Three challenges, three losses, and it will never change.</b> ∃loïse is not guessing: she answers every ε with the rule '+sc.rule+', '+sc.ruleWhy+'. A rule that answers every ε is a winning strategy, and a winning strategy for ∃loïse is exactly what makes the claim true. Switch sides and play the rule yourself.'); }
+    else gmsg('lose','<b>Inside the green band.</b> |f(x) − ℓ| = '+sS+' &lt; ε = '+sE+'. Round to ∃loïse. Try another x in her band, or name a new ε.'+(!sc.truth&&gs.losses>=2&&sc.hintFa?'<br><b>Hint:</b> '+sc.hintFa:''));
+  }
+  renderGame();
+}
+$('#scn-pills').addEventListener('click',e=>{ const b=e.target.closest('.pill'); if(!b) return; startGame(SCN.find(s=>s.id===b.dataset.id)); });
+$('#role-seg').addEventListener('click',e=>{ const b=e.target.closest('.seg-btn'); if(!b) return; gs.role=b.dataset.role; startGame(gs.sc); });
+// Slider values are rounded to the digits the boxes show, so the number on screen is the number in play.
+$('#g-del-range').addEventListener('input',e=>{ setDel(+(DLO*Math.pow(DHI/DLO,(+e.target.value)/1000)).toPrecision(3),true); gs.mark=null; if(gs.state==='fail') gs.state='pick'; renderGame(); });
+$('#g-del-num').addEventListener('change',e=>{ const v=parseFloat(e.target.value); if(Number.isFinite(v)) setDel(v,true); gs.mark=null; if(gs.state==='fail') gs.state='pick'; renderGame(); });
+$('#g-eps-range').addEventListener('input',e=>{ setEps(+(ELO*Math.pow(EHI/ELO,(+e.target.value)/1000)).toPrecision(3)); if(gs.mark) gs.mark=markAt(gs.x,'cand','your x'); renderGame(); });
+$('#g-eps-num').addEventListener('change',e=>{ const v=parseFloat(e.target.value); if(Number.isFinite(v)&&v>0) setEps(v); if(gs.mark) gs.mark=markAt(gs.x,'cand','your x'); renderGame(); });
+$('#g-x-range').addEventListener('input',e=>{ const a=gs.sc.a, d=gs.del; setX(+(a-d+2*d*(+e.target.value)/1000).toFixed(6)); gs.mark=markAt(gs.x,'cand','your x'); renderGame(); });
+$('#g-x-num').addEventListener('change',e=>{ const v=parseFloat(e.target.value); if(Number.isFinite(v)) setX(v); gs.mark=markAt(gs.x,'cand','your x'); renderGame(); });
+$('#g-act').addEventListener('click',()=>{ const st=gs.state; if(gs.role==='ex') lockDelta(); else if(st==='fa-eps') lockEps(); else if(st==='fa-x'||st==='fa-swap') challenge(); });
+$('#g-again').addEventListener('click',()=>{ gs.state='fa-eps'; gs.mark=null; gmsg('info','<b>New round.</b> Name another ε; ∃loïse will answer it with a fresh δ.'); renderGame(); });
+$('#g-reset').addEventListener('click',()=>startGame(gs.sc));
+$('#g-why').addEventListener('click',()=>{ gs.state='lost'; gmsg('lose','<b>Why no δ can work.</b> '+gs.sc.lose); renderGame(); });
+
+/* ───────── 04 proof: from strategy to proof ───────── */
+// Prose with math: «…» spans are rendered by fm(); the words between them are left as written.
+const prose=s=>s.replace(/«([^»]*)»/g,(m,t)=>fm(t));
+const nf=v=>{ if(!Number.isFinite(v)) return '–'; const l=Math.log10(Math.abs(v)); if(v>0&&Math.abs(l-Math.round(l))<1e-9&&Math.abs(l)>=4) return '10<sup>'+Math.round(l)+'</sup>'; return fmtN(v); };
+// exact-looking numbers for the x that breaks a round (it was chosen to have few digits) and for δ
+const nx=v=>Number.isFinite(v)?String(+v.toPrecision(10)):'–', nd=v=>Number.isFinite(v)?String(+v.toPrecision(6)):'–';
+
+/* A small evaluator for δ as an expression in ε. The input is tokenised and parsed by hand; nothing is passed to eval. */
+function parseRule(src){
+  const s=String(src).replace(/[−–]/g,'-').replace(/[×·]/g,'*').replace(/÷/g,'/').replace(/\s+/g,'');
+  if(!s) return {err:'Write a rule first: δ in terms of ε.'};
+  const toks=[]; let i=0, m;
+  while(i<s.length){
+    const rest=s.slice(i);
+    if((m=/^(\d+\.?\d*|\.\d+)(e[+-]?\d+)?/i.exec(rest))){ toks.push({t:'num',v:parseFloat(m[0])}); i+=m[0].length; if(s[i]==='.') return {err:'A number can have only one decimal point.'}; continue; }   // 1e-3 is a number; 2e and 2eps are 2ε
+    if((m=/^(ε|epsilon|eps|e)(?![a-zA-Z])/i.exec(rest))){ toks.push({t:'eps'}); i+=m[0].length; continue; }
+    if((m=/^(min|max|sqrt|abs|√)/i.exec(rest))){ toks.push({t:'fn',v:m[0]==='√'?'sqrt':m[0].toLowerCase()}); i+=m[0].length; continue; }
+    if((m=/^[a-zA-Zα-ωΑ-Ω]+/.exec(rest))){
+      const w=m[0];
+      if(/^(x|y)$/i.test(w)) return {err:'δ may depend on ε only. x is chosen <em>after</em> δ, so a rule that mentions x is not a rule ∃loïse can play.'};
+      if(/^(δ|delta|d)$/i.test(w)) return {err:'δ is what the rule defines, so it cannot appear on the right-hand side.'};
+      return {err:'“'+esc(w)+'” is not something the rule can use. Allowed: ε, numbers, + − × ÷ ^, brackets, min, max, sqrt, abs.'};
+    }
+    if('+-*/^(),'.indexOf(s[i])>=0){ toks.push({t:s[i]}); i++; continue; }
+    return {err:'I do not know what to do with “'+esc(s[i])+'”.'};
+  }
+  // implicit multiplication: 2ε, 3(ε+1), ε(…), (…)(…)
+  for(let k=0;k+1<toks.length;k++){ const a=toks[k], b=toks[k+1]; const endsVal=a.t==='num'||a.t==='eps'||a.t===')'; const startsVal=b.t==='num'||b.t==='eps'||b.t==='fn'||b.t==='('; if(endsVal&&startsVal){ toks.splice(k+1,0,{t:'*'}); } }
+  let p=0; const peek=()=>toks[p], next=()=>toks[p++];
+  function expr(){ let l=term(); while(peek()&&(peek().t==='+'||peek().t==='-')){ const op=next().t, r=term(); l={t:'bin',op:op,l:l,r:r}; } return l; }
+  function term(){ let l=unary(); while(peek()&&(peek().t==='*'||peek().t==='/')){ const op=next().t, r=unary(); l={t:'bin',op:op,l:l,r:r}; } return l; }
+  function unary(){ if(peek()&&(peek().t==='-'||peek().t==='+')){ const op=next().t, a=unary(); return op==='-'?{t:'neg',a:a}:a; } return power(); }
+  function power(){ const b=atom(); if(peek()&&peek().t==='^'){ next(); const e=unary(); return {t:'bin',op:'^',l:b,r:e}; } return b; }
+  function atom(){
+    const k=next(); if(!k) throw new Error('The rule ends too soon.');
+    if(k.t==='num') return {t:'num',v:k.v};
+    if(k.t==='eps') return {t:'eps'};
+    if(k.t==='fn'){
+      if(peek()&&peek().t==='('){ next(); const args=[expr()]; while(peek()&&peek().t===','){ next(); args.push(expr()); } if(!peek()||peek().t!==')') throw new Error('A bracket is not closed.'); next(); if((k.v==='sqrt'||k.v==='abs')&&args.length!==1) throw new Error(k.v+' takes one argument.'); return {t:'call',fn:k.v,args:args}; }
+      return {t:'call',fn:k.v,args:[unary()]};
+    }
+    if(k.t==='('){ const e=expr(); if(!peek()||peek().t!==')') throw new Error('A bracket is not closed.'); next(); return e; }
+    if(k.t===')') throw new Error('A bracket closes before it opens.');
+    throw new Error('Unexpected “'+esc(k.t)+'”.');
+  }
+  try{ const ast=expr(); if(p<toks.length){ const t=toks[p]; throw new Error(t.t===')'?'A bracket closes that was never opened.':'Unexpected “'+esc(t.t==='num'?String(t.v):t.t)+'”.'); } return {ast:ast}; }catch(e){ return {err:e.message}; }
+}
+function evalRule(n,e){
+  switch(n.t){
+    case 'num': return n.v;
+    case 'eps': return e;
+    case 'neg': return -evalRule(n.a,e);
+    case 'bin': { const a=evalRule(n.l,e), b=evalRule(n.r,e); return n.op==='+'?a+b:n.op==='-'?a-b:n.op==='*'?a*b:n.op==='/'?a/b:Math.pow(a,b); }
+    case 'call': { const v=n.args.map(x=>evalRule(x,e)); if(n.fn==='min') return Math.min.apply(null,v); if(n.fn==='max') return Math.max.apply(null,v); if(n.fn==='sqrt') return Math.sqrt(v[0]); return Math.abs(v[0]); }
+  }
+  return NaN;
+}
+
+/* ∀bélard's attack on a rule: a list of ε (ten shown, 121 more from 10⁻⁶ to 10⁶), and for each the worst x in the δ-band. */
+const EPS_SHOW=[1000,100,10,5,2,1,0.5,0.1,0.01,0.001];
+function epsList(){ const out=EPS_SHOW.slice(); for(let k=-60;k<=60;k++) out.push(+Math.pow(10,k/10).toPrecision(6)); return out; }
+function worstIn(sc,del){
+  let best=null, bd=-1; const N=1200, a=sc.a;
+  const probe=x=>{ if(x===a) return; const y=sc.f(x); if(!Number.isFinite(y)) return; const d=Math.abs(y-sc.L); if(d>bd){ bd=d; best=x; } };
+  for(let i=1;i<=N;i++) probe(a-del+2*del*i/(N+1));
+  [1-1e-9,1-1e-6,1-1e-3].forEach(t=>{ probe(a+del*t); probe(a-del*t); });
+  return {x:best,spread:bd};
+}
+function attack(sc,ast){
+  const rounds=[];
+  epsList().forEach(e=>{
+    let d; try{ d=evalRule(ast,e); }catch(err){ d=NaN; }
+    if(!Number.isFinite(d)||d<=0){ rounds.push({eps:e,del:d,bad:true,invalid:true}); return; }
+    // The verdict compares δ with the largest safe radius sc.safe(ε), so no round is decided by where a scan happened to look.
+    // A relative 1e-8 absorbs rounding in rules that are equal on paper (√(4 + ε) − 2 loses digits at small ε). The scan supplies
+    // the x that ∀bélard names; if it misses by a hair, any x between the safe radius and δ escapes, and a round is only lost
+    // when such an x can actually be shown.
+    const s=sc.safe(e);
+    let bad=d>s*(1+1e-8), w=worstIn(sc,d);
+    if(bad&&!(w.x!=null&&w.spread>=e)){ const t=(s+Math.min(d,2*s+1))/2; w={x:sc.a+t,spread:Math.abs(sc.f(sc.a+t)-sc.L)}; if(!(w.spread>=e)) bad=false; }
+    rounds.push({eps:e,del:d,x:w.x,spread:w.spread,bad:bad});
+  });
+  return rounds;
+}
+// A rounder x that still breaks the round, for the feedback; otherwise the raw one, printed in full.
+function niceX(sc,del,eps,x){ const a=sc.a, s=x>a?1:-1, d=Math.abs(x-a); for(let k=1;k<=9;k++){ const m=Math.pow(10,k), r=+(a+s*Math.floor(d*m)/m).toFixed(k); if(r!==a&&Math.abs(r-a)<del&&Math.abs(sc.f(r)-sc.L)>=eps) return r; } return x; }
+// Is the learner's rule the reference rule (the one the written proof in step 2 uses)?
+function sameRule(ast,sc){ const ref=parseRule(sc.best).ast; return epsList().every(e=>{ const a=evalRule(ast,e), b=evalRule(ref,e); return Math.abs(a-b)<=1e-12*Math.max(1,Math.abs(b)); }); }
+
+const PRF=[
+ {id:'lin', label:'3x + 1 at 2', claim:'Claim: lim (3x + 1) = 7 as x → 2.  (true)', f:x=>3*x+1, a:2, L:7, dom:[0,4], yr:[0,14], fx:'|(3x + 1) − 7|',
+  sentence:'(∀ε>0)(∃δ>0)(∀x∈ℝ)[ 0<|x−2|<δ ⇒ |f(x)−7|<ε ]',
+  safe:e=>e/3, best:'ε/3',
+  reason:'with δ = ε/3, every x in the band keeps |(3x + 1) − 7| = 3|x − 2| &lt; 3δ = ε',
+  hint(r){
+    if(r.constant) return 'Your δ does not look at ε at all. A δ chosen before ε is the swapped sentence of deck card 2, and only a function that is constantly 7 near 2 could survive it.';
+    if(r.del>r.eps) return 'The function stretches distances by 3: |(3x + 1) − 7| = 3|x − 2|. Your δ is not even below ε, let alone below ε/3.';
+    const [sd,ss]=cmpPair(r.del,r.eps/3);
+    return 'Since |(3x + 1) − 7| = 3|x − 2|, the band survives exactly when 3δ ≤ ε. The largest safe δ at ε = '+nf(r.eps)+' is ε/3 = '+ss+'; yours is '+sd+'.';
+  },
+  cautious:ast=>evalRule(ast,1)<1/3-1e-9?'Yours is more cautious than it needs to be: ε/3 is the largest rule that wins, and the proof below uses it.':'The proof below uses ε/3; yours wins too.',
+  chainCtx:'The rule for «lim (3x + 1) = 7» is «δ = ε/3». Here is the proof that it wins, with the reasons removed. Tap a gap, pick a line, check.',
+  chain:[
+   'Let «ε > 0». Put «δ =» ', {opts:['ε/3','3ε','ε','ε/2'], ans:0, why:['','Then 3δ = 9ε: the band lets x stray three times too far, and f stretches that by three again.','Then 3δ = 3ε, not ε. f stretches distances by 3, so x may stray only a third as far as the tolerance.','Then 3δ = 3ε/2, which is more than ε. Closer, but the stretch factor is 3, not 2.']},
+   '. Suppose «0 < |x − 2| < δ». Then «|(3x + 1) − 7| = |3x − 6| =» ', {opts:['3|x − 2|','|3x| − 6','3|x| − 6','|x − 2|'], ans:0, why:['','Absolute value does not distribute over subtraction: |3x − 6| is not |3x| − 6 (try x = 1).','Same problem: |3x − 6| is not 3|x| − 6 (try x = 0).','The factor 3 went missing: |3x − 6| = |3(x − 2)| = 3|x − 2|.']},
+   ' «<» ', {opts:['3δ','δ','3ε','ε/3'], ans:0, why:['','The hypothesis bounds |x − 2| by δ, so 3|x − 2| is bounded by 3δ, not by δ.','ε has not entered yet: the hypothesis speaks of δ. 3|x − 2| &lt; 3δ, and only then does δ = ε/3 turn 3δ into ε.','δ = ε/3, so the bound on 3|x − 2| is 3δ = ε, not ε/3.']},
+   ' «= ε». ∎'
+  ],
+  chainWin:'Each line follows from the one before, and the only choice in the whole proof, δ = ε/3, is the rule from step 1. Read it once more as a game: ∀bélard names ε, ∃loïse answers ε/3, ∀bélard picks any x in the band, and the chain of inequalities is the referee saying "inside".'},
+ {id:'sq', label:'x² at 2', claim:'Claim: lim x² = 4 as x → 2.  (true)', f:x=>x*x, a:2, L:4, dom:[0,4], yr:[0,16], fx:'|x² − 4|',
+  sentence:'(∀ε>0)(∃δ>0)(∀x∈ℝ)[ 0<|x−2|<δ ⇒ |f(x)−4|<ε ]',
+  safe:e=>e/(2+Math.sqrt(4+e)), best:'min(1, ε/5)',   // = √(4 + ε) − 2, written without the cancellation
+  reason:'with δ = min(1, ε/5), every x in the band has 1 &lt; x &lt; 3, so |x² − 4| = |x − 2|·|x + 2| &lt; δ · 5 ≤ ε',
+  hint(r){
+    if(r.constant) return 'Your δ does not look at ε at all. A δ chosen before ε is the swapped sentence of deck card 2, and only a function that is constantly 4 near 2 could survive it.';
+    if(r.onlyLarge) return 'Your rule is fine while ε is small, but δ grows with ε, and then x can wander: at x = '+nx(r.x)+', |x + 2| = '+nx(Math.abs(r.x+2))+', so 5 is no longer a bound on the second factor. Cap the radius: min(1, …) keeps every x inside (1, 3), where |x + 2| &lt; 5.';
+    const [sd,ss]=cmpPair(r.del,r.eps/(2+Math.sqrt(4+r.eps)));
+    return 'Near 2, |x² − 4| = |x − 2|·|x + 2|, and |x + 2| is a little more than 4 just to the right of 2, so ε/4 is not enough. With δ ≤ 1 you have |x + 2| &lt; 5, and ε/5 then works. The largest safe δ at ε = '+nf(r.eps)+' is √(4 + ε) − 2 = '+ss+'; yours is '+sd+'.';
+  },
+  cautious:ast=>evalRule(ast,1)<0.2-1e-9?'Yours is more cautious than it needs to be; min(1, ε/5) is the usual choice, and the proof below uses it.':'The proof below uses the usual choice, min(1, ε/5); yours wins too.',
+  chainCtx:'The rule for «lim x² = 4» is «δ = min(1, ε/5)». Here is the proof that it wins, with the reasons removed. Tap a gap, pick a line, check.',
+  chain:[
+   'Let «ε > 0». Put «δ =» ', {opts:['min(1, ε/5)','ε/5','ε/4','min(1, ε/4)'], ans:0, why:['','Without the cap, δ exceeds 1 as soon as ε &gt; 5, and the bound |x + 2| &lt; 5 used below stops being true.','|x + 2| is a little more than 4 just to the right of 2, so 4δ does not bound |x² − 4|; and nothing keeps δ small when ε is large.','The cap is right, but |x + 2| &lt; 4 is false just to the right of 2. Inside (1, 3) the honest bound is 5.']},
+   '. Suppose «0 < |x − 2| < δ». Then «|x² − 4| =» ', {opts:['|x − 2| · |x + 2|','|x − 2|²','|x − 2| + |x + 2|','|x + 2|²'], ans:0, why:['','|x − 2|² is (x − 2)², and |x² − 4| is not that: at x = 1 one is 1 and the other is 3. x² − 4 is a difference of squares.','x² − 4 factors as a product, (x − 2)(x + 2), not a sum.','|x + 2|² is (x + 2)², and |x² − 4| is not that: at x = 1 one is 9 and the other is 3.']},
+   '. Since «|x − 2| < δ ≤» ', {opts:['1','ε/5','ε','5'], ans:0, why:['','δ ≤ ε/5 is also true, but it is the cap δ ≤ 1 that pins x inside (1, 3); ε/5 can be huge.','δ ≤ ε is true but useless here: it does not keep x near 2 when ε is large.','δ ≤ 5 is true (δ ≤ 1), but too weak to use: |x − 2| &lt; 5 only gives |x + 2| &lt; 9.']},
+   ', we have «1 < x < 3», so «|x + 2| <» ', {opts:['5','4','3','δ'], ans:0, why:['','4 is |x + 2| at x = 2 exactly; to the right of 2 it is bigger. With 1 &lt; x &lt; 3 the honest bound is 5.','3 is less than the value at x = 2 itself.','|x + 2| is about 4 near 2 while δ is small; the two factors got mixed up.']},
+   '. Hence «|x² − 4| <» ', {opts:['5δ','δ','5ε','4δ'], ans:0, why:['','The product bound is |x − 2| · |x + 2| &lt; δ · 5.','δ bounds |x − 2|, not ε; ε arrives only at the last step.','|x + 2| &lt; 4 fails to the right of 2; the bound established was 5.']},
+   ' «≤» ', {opts:['ε','ε/5','5ε','1'], ans:0, why:['','5δ ≤ 5 · (ε/5) = ε, not ε/5.','5δ ≤ ε, since δ ≤ ε/5; 5ε would be weaker than what the claim needs.','5δ = min(5, ε), which is more than 1 as soon as ε &gt; 1; and the target was ε anyway.']},
+   ', because «δ ≤ ε/5». ∎'
+  ],
+  chainWin:'The cap δ ≤ 1 is used exactly once, to earn |x + 2| &lt; 5, and that bound is used exactly once, to turn the product into 5δ. Every proof of a limit of a polynomial has this shape: one factor is small because of δ, the others are bounded because of the cap.'}
+];
+let prCur=PRF[0], prAst=null, prRounds=null;
+const gapSel={}, chainBad={};
+let prAct=null;
+
+function prPills(){ $('#pr-pills').innerHTML=PRF.map(s=>'<button type="button" class="pill" aria-pressed="'+(s.id===prCur.id?'true':'false')+'" data-id="'+s.id+'">'+s.label+(S.proof['rule-'+s.id]&&S.proof['chain-'+s.id]?' ✓':'')+'</button>').join(''); }
+function prSelect(sc){
+  prCur=sc; prAst=null; prRounds=null; prAct=null;
+  prPills();
+  $('#pr-claim').textContent=sc.claim;
+  $('#pr-formula').innerHTML=fm(sc.sentence);
+  $('#pr-rule').value='';
+  const msg=$('#pr-msg'); msg.className='why info';
+  msg.innerHTML=S.proof['rule-'+sc.id]?'<b>Solved earlier.</b> Try another rule if you like: ∀bélard will attack it the same way.':'<b>∀bélard is waiting.</b> In the game he named one ε at a time; now he gets a whole list, and your rule has to answer all of them at once.';
+  $('#pr-rounds').hidden=true; $('#pr-plot').hidden=true;
+  $('#pr-chain-ctx').innerHTML=prose(sc.chainCtx);
+  chainBad[sc.id]=[]; $('#pr-chain-fb').hidden=true;
+  renderChain();
+}
+function prCheck(){
+  const sc=prCur, raw=$('#pr-rule').value.trim(), msg=$('#pr-msg'), rd=$('#pr-rounds'), pl=$('#pr-plot');
+  const parsed=parseRule(raw);
+  if(parsed.err){ msg.className='why nudge'; msg.innerHTML='<b>Not a rule yet.</b> '+parsed.err; rd.hidden=true; pl.hidden=true; return; }
+  const ast=parsed.ast, rounds=attack(sc,ast);
+  const shown=rounds.slice(0,EPS_SHOW.length), hidden=rounds.length-shown.length;
+  rd.hidden=false;
+  rd.innerHTML=shown.map(r=>'<span class="'+(r.bad?'bad':'ok')+'">ε = '+nf(r.eps)+(r.bad?' ✗':' ✓')+'</span>').join('')+'<span class="more">and '+hidden+' more between 10<sup>−6</sup> and 10<sup>6</sup>'+(rounds.slice(EPS_SHOW.length).some(r=>r.bad)?', not all survived':', all survived')+'</span>';
+  const bads=rounds.filter(r=>r.bad);
+  if(bads.length===0){
+    S.proof['rule-'+sc.id]=true; save(); progress(); prPills();
+    const same=sameRule(ast,sc);   // the stored reason argues for the reference rule, so it is quoted only for that rule
+    msg.className='why';
+    msg.innerHTML='<b>∀bélard is out of moves.</b> Every ε on his list was answered'+(same?': '+sc.reason+'.':'.')+' A rule that answers every ε is a winning strategy, and a winning strategy for ∃loïse is what makes the claim true. His list is finite, though, so this was a test and not a proof, which is what step 2 is for. '+(same?'':sc.cautious(ast));
+    pl.hidden=false; pl.innerHTML=plot(sc,1,evalRule(ast,1),null);
+    return;
+  }
+  // which failure to report: one from the shown list whose x lies on the chart, else any shown, else the first
+  const onChart=r=>r.x!=null&&r.x>=sc.dom[0]&&r.x<=sc.dom[1];
+  const inv=bads.find(r=>r.invalid);
+  let r=null;
+  if(inv) r=inv; else r=shown.find(x=>x.bad&&onChart(x))||shown.find(x=>x.bad)||bads[0];
+  msg.className='why lose';
+  if(r.invalid){
+    msg.innerHTML='<b>Not a radius.</b> At ε = '+nf(r.eps)+' your rule gives δ = '+(Number.isFinite(r.del)?nd(r.del):'nothing finite')+'. A δ must be a positive number for every ε &gt; 0, including that one.';
+    pl.hidden=true; return;
+  }
+  const x=niceX(sc,r.del,r.eps,r.x), spread=Math.abs(sc.f(x)-sc.L);
+  const vals=[1,0.1,0.001,100].map(e=>{ try{ return evalRule(ast,e); }catch(err){ return NaN; } });
+  const info={eps:r.eps,del:r.del,x:x,spread:spread,constant:vals.every(v=>Math.abs(v-vals[0])<1e-12),onlyLarge:rounds.every(q=>q.eps>1||!q.bad)&&bads.length>0};
+  // x, |x − a| and δ printed with enough digits that "|x − a| < δ" reads true on the page
+  const gap=Math.abs(x-sc.a), xs=+nx(x)===x?nx(x):String(x);
+  let gapS=nx(gap), ds=nd(r.del);
+  for(let p=7;p<=17&&!(+gapS<+ds);p++){ ds=String(+r.del.toPrecision(p)); gapS=String(+gap.toPrecision(Math.max(p,10))); }
+  msg.innerHTML='<b>∀bélard answers.</b> At ε = '+nf(r.eps)+' your rule gives δ = '+ds+'. He picks x = '+xs+': it lies in your band, |x − '+sc.a+'| = '+gapS+' &lt; δ, yet '+sc.fx+' = '+nx(spread)+' ≥ ε. '+sc.hint(info);
+  if(onChart({x:x})){ pl.hidden=false; pl.innerHTML=plot(sc,r.eps,r.del,{x:x,y:sc.f(x),cls:'esc',label:'x escapes'}); } else pl.hidden=true;
+}
+$('#pr-pills').addEventListener('click',e=>{ const b=e.target.closest('.pill'); if(!b) return; prSelect(PRF.find(s=>s.id===b.dataset.id)); });
+$('#pr-go').addEventListener('click',prCheck);
+$('#pr-rule').addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); prCheck(); } });
+
+/* step 2: the proof with gaps */
+function gapsOf(sc){ return sc.chain.filter(x=>typeof x==='object'); }
+function renderChain(){
+  const sc=prCur, gaps=gapsOf(sc), sel=gapSel[sc.id]||(gapSel[sc.id]=gaps.map(()=>null)), bad=chainBad[sc.id]||[];
+  const solved=!!S.proof['chain-'+sc.id];
+  let g=0;
+  $('#pr-chain').innerHTML=sc.chain.map(seg=>{
+    if(typeof seg==='string') return prose(seg);
+    const k=g++, v=solved?seg.ans:sel[k];
+    const cls='gap'+(v==null?'':' filled')+(solved?' ok':(prAct===k?' on':''))+(bad.indexOf(k)>=0?' bad':'');
+    return '<button type="button" class="'+cls+'" data-k="'+k+'"'+(solved?' disabled':'')+' aria-label="gap '+(k+1)+'">'+(v==null?'<span class="ph">gap '+(k+1)+'</span>':fm(seg.opts[v]))+'</button>';
+  }).join('');
+  const o=$('#pr-gapopts');
+  if(!solved&&prAct!=null){ const gp=gaps[prAct]; o.hidden=false; o.innerHTML='<span class="lab">Gap '+(prAct+1)+' of '+gaps.length+'</span><div class="pills">'+gp.opts.map((op,i)=>'<button type="button" class="pill" aria-pressed="'+(sel[prAct]===i?'true':'false')+'" data-i="'+i+'">'+fm(op)+'</button>').join('')+'</div>'; }
+  else { o.hidden=true; o.innerHTML=''; }
+  const fb=$('#pr-chain-fb');
+  if(solved){ fb.hidden=false; fb.className='why'; fb.innerHTML='<b>Proved.</b> '+sc.chainWin; }
+  else if(!bad.length) fb.hidden=true;   // a fresh pick clears stale feedback; the check handler writes its own after rendering
+  $('#pr-chain-check').disabled=solved; $('#pr-chain-reset').disabled=solved;
+}
+$('#pr-chain').addEventListener('click',e=>{ const b=e.target.closest('.gap'); if(!b||b.disabled) return; prAct=+b.dataset.k; renderChain(); });
+$('#pr-gapopts').addEventListener('click',e=>{
+  const b=e.target.closest('.pill'); if(!b||prAct==null) return;
+  const sc=prCur, sel=gapSel[sc.id]; sel[prAct]=+b.dataset.i; chainBad[sc.id]=[];
+  const nxt=sel.findIndex((v,k)=>v==null&&k>prAct); prAct=nxt>=0?nxt:sel.findIndex(v=>v==null); if(prAct<0) prAct=null;
+  renderChain();
+});
+$('#pr-chain-check').addEventListener('click',()=>{
+  const sc=prCur, gaps=gapsOf(sc), sel=gapSel[sc.id], fb=$('#pr-chain-fb');
+  const empty=sel.map((v,k)=>v==null?k:-1).filter(k=>k>=0);
+  if(empty.length){ prAct=empty[0]; chainBad[sc.id]=[]; renderChain(); fb.hidden=false; fb.className='why nudge'; fb.innerHTML='<b>'+empty.length+' gap'+(empty.length>1?'s':'')+' still open.</b> Fill every gap, then check.'; return; }
+  const bad=sel.map((v,k)=>v===gaps[k].ans?-1:k).filter(k=>k>=0);
+  chainBad[sc.id]=bad;
+  if(bad.length===0){ S.proof['chain-'+sc.id]=true; save(); progress(); prPills(); prAct=null; renderChain(); return; }
+  prAct=bad[0]; renderChain();
+  fb.hidden=false; fb.className='why nudge';
+  fb.innerHTML='<b>'+bad.length+' gap'+(bad.length>1?'s':'')+' off, highlighted.</b>'+bad.map(k=>'<p><b>Gap '+(k+1)+':</b> '+gaps[k].why[sel[k]]+'</p>').join('');
+});
+$('#pr-chain-reset').addEventListener('click',()=>{ const sc=prCur; gapSel[sc.id]=gapsOf(sc).map(()=>null); chainBad[sc.id]=[]; prAct=0; renderChain(); });
+
+/* step 3: a Parsons board for the proof of the negation. Lines carry the lines they depend on; several orders are right. */
+const PA={
+ sentence:'(∃ε>0)(∀δ>0)(∃x∈ℝ)[ 0<|x−1|<δ ∧ |f(x)−1|≥ε ]',
+ lines:[
+  {id:'e', t:'Take «ε = 0.4».', miss:'The proof never names its ε. In (∃ε)(∀δ)(∃x), ε is the first move and it is ours to make.'},
+  {id:'d', t:'Let «δ > 0» be arbitrary.', deps:[['e','In (∃ε)(∀δ), ε is chosen before δ: we commit to ε, and only then does ∃loïse name any δ she likes.']], miss:'The proof never takes an arbitrary δ. Beating one δ is not enough: the negation says every δ fails.'},
+  {id:'x', t:'Put «x = 1 − δ/2».', deps:[['d','x is built from δ, so δ must already be on the table.']], miss:'The proof never chooses its x. Once δ is on the table, we must point at an x inside the band that escapes.'},
+  {id:'h', t:'Then «x ≠ 1» and «|x − 1| = δ/2 < δ».', deps:[['x','This line talks about x, which has not been chosen yet.']], miss:'Nobody checked that x is inside the band: the proof needs 0 &lt; |x − 1| &lt; δ, in writing.'},
+  {id:'v', t:'Since «x < 1», «f(x) = 0.6».', deps:[['x','This line talks about x, which has not been chosen yet.']], miss:'The value f(x) is never worked out, so nothing can be said about |f(x) − 1|.'},
+  {id:'c', t:'So «|f(x) − 1| = 0.4 ≥ ε».', deps:[['v','The value f(x) = 0.6 has to be established before it is used.'],['e','ε = 0.4 has to be on the table before anything is compared with it.']], miss:'The proof never shows that f(x) escapes the ε-band, which is the whole point of choosing x.'},
+  {id:'q', t:'«δ» was arbitrary, so no «δ» answers «ε = 0.4»: the limit is not 1. ∎', deps:[['h','The conclusion needs the hypothesis 0 &lt; |x − 1| &lt; δ checked first.'],['c','The conclusion needs |f(x) − 1| ≥ ε established first.']], last:true, miss:'The proof stops before concluding. Say why beating every δ settles it.'}
+ ],
+ distractors:[
+  {id:'D1', t:'Let «ε > 0» be arbitrary.', why:'That is ∃loïse\'s opening for proving the limit <em>is</em> 1. To refute it, ε is ours: one bad ε is enough, and it must be named, not left arbitrary.'},
+  {id:'D2', t:'Choose «δ = ε».', why:'Choosing δ is ∃loïse\'s move. In the negation δ is universal: whatever δ she names, we must beat it, so we may not pick it.'},
+  {id:'D3', t:'Put «x = 1».', why:'x = 1 is off the board: the hypothesis 0 &lt; |x − 1| &lt; δ excludes it, so nothing about f(1) counts against the claim.'}
+ ]
+};
+const paOrder=['v','D2','e','q','x','D1','h','c','D3','d'];
+let paSeq=[], paBad=null;
+const paLine=id=>PA.lines.find(l=>l.id===id)||PA.distractors.find(d=>d.id===id);
+function renderParsons(){
+  const solved=!!S.proof.parsons;
+  $('#pa-formula').innerHTML=fm(PA.sentence);
+  const seq=solved&&paSeq.length!==PA.lines.length?PA.lines.map(l=>l.id):paSeq;
+  const pool=paOrder.filter(id=>seq.indexOf(id)<0);
+  $('#pa-pool').innerHTML=solved?'<div class="pempty">Done. The three leftover lines were the ones that did not belong.</div>':(pool.length?pool.map(id=>'<button type="button" class="pline" data-id="'+id+'"><span class="n">+</span><span>'+prose(paLine(id).t)+'</span></button>').join(''):'<div class="pempty">All lines used. Three of them do not belong; tap a line on the right to send it back.</div>');
+  $('#pa-proof').innerHTML=seq.length?seq.map((id,i)=>'<button type="button" class="pline'+(solved?' ok':(paBad===id?' bad':''))+'" data-id="'+id+'"'+(solved?' disabled':'')+'><span class="n">'+(i+1)+'</span><span>'+prose(paLine(id).t)+'</span></button>').join(''):'<div class="pempty">Tap lines on the left, in the order the proof should read.</div>';
+  const fb=$('#pa-fb');
+  if(solved){ fb.hidden=false; fb.className='why'; fb.innerHTML='<b>Proved: the limit is not 1.</b> This is ∀bélard\'s strategy from the game, written down: whatever δ is named, x = 1 − δ/2 beats it, so the ∃ε at the front has its witness. Note the order of the three choices, ε then δ then x, and that x was allowed to use δ while ε was not: the quantifiers dictated it. (Had you preferred x = 1 + δ/2, with f(x) = 1.4, the proof would be just as good.)'; }
+  $('#pa-check').disabled=solved; $('#pa-reset').disabled=solved;
+}
+function checkParsons(seq){
+  for(const id of seq){ const d=PA.distractors.find(x=>x.id===id); if(d) return {bad:id,msg:'<b>“'+prose(d.t)+'” does not belong.</b> '+d.why}; }
+  const pos={}; seq.forEach((id,i)=>pos[id]=i);
+  for(const l of PA.lines){ if(pos[l.id]==null) continue; for(const dep of (l.deps||[])){ if(pos[dep[0]]==null||pos[dep[0]]>pos[l.id]) return {bad:l.id,msg:'<b>“'+prose(l.t)+'” comes too early.</b> '+dep[1]}; } }
+  for(const l of PA.lines){ if(pos[l.id]==null) return {bad:null,msg:'<b>Something is missing.</b> '+l.miss}; }
+  const last=PA.lines.find(l=>l.last); if(pos[last.id]!==seq.length-1) return {bad:last.id,msg:'<b>The conclusion comes last.</b> Everything after it is evidence it should have waited for.'};
+  return {ok:true};
+}
+$('#pa-pool').addEventListener('click',e=>{ const b=e.target.closest('.pline'); if(!b) return; paSeq.push(b.dataset.id); paBad=null; $('#pa-fb').hidden=true; renderParsons(); });
+$('#pa-proof').addEventListener('click',e=>{ const b=e.target.closest('.pline'); if(!b||b.disabled) return; paSeq=paSeq.filter(id=>id!==b.dataset.id); paBad=null; $('#pa-fb').hidden=true; renderParsons(); });
+$('#pa-check').addEventListener('click',()=>{
+  const fb=$('#pa-fb');
+  if(paSeq.length===0){ fb.hidden=false; fb.className='why nudge'; fb.innerHTML='<b>Nothing to check yet.</b> Start with the first move of (∃ε)(∀δ)(∃x).'; return; }
+  const r=checkParsons(paSeq);
+  if(r.ok){ S.proof.parsons=true; save(); progress(); paBad=null; renderParsons(); return; }
+  paBad=r.bad; renderParsons(); fb.hidden=false; fb.className='why nudge'; fb.innerHTML=r.msg;
+});
+$('#pa-reset').addEventListener('click',()=>{ paSeq=[]; paBad=null; $('#pa-fb').hidden=true; renderParsons(); });
+
+/* write it yourself: two recorded samples; free text has no reader in this copy */
+const WR=[
+ {btn:'wr-s1', text:'Claim: \\lim_{x \\to 2} x^2 = 4.\n\nProof. Let \\varepsilon > 0 and set \\delta = \\min(1, \\varepsilon/5).\nSuppose 0 < |x - 2| < \\delta.\nSince |x - 2| < 1, we have 1 < x < 3, so |x + 2| < 5.\nThen |x^2 - 4| = |x - 2| \\, |x + 2| < 5\\delta \\le \\varepsilon. \\qed',
+  cls:'why', fb:'<p><b>Correct, and complete.</b> δ is chosen before x and depends only on ε; each line follows from the one before; and the bound |x + 2| &lt; 5 is justified before it is used, which is the step most proofs of this limit skip.</p><p>Two small things, neither a mistake. The last inequality, 5δ ≤ ε, deserves its reason in writing ("because δ ≤ ε/5"), since a reader checking the proof has to reconstruct it. And notice that the puncture 0 &lt; |x − 2| was never used: the argument also shows that x² is continuous at 2, which is worth knowing.</p><p>A question back: where exactly would the argument break if δ were ε/5 alone?</p>'},
+ {btn:'wr-s2', text:'Claim: \\lim_{x \\to 2} x^2 = 4.\n\nProof. Let \\varepsilon > 0. Near 2 we have |x + 2| < 5, so take \\delta = \\varepsilon/5.\nIf 0 < |x - 2| < \\delta then |x^2 - 4| = |x - 2| |x + 2| < \\delta \\cdot 5 = \\varepsilon. \\qed',
+  cls:'why nudge', fb:'<p><b>One gap, and it is the usual one.</b> "Near 2 we have |x + 2| &lt; 5" is true for x within 1 of 2, but δ = ε/5 is larger than 1 as soon as ε &gt; 5, and then x need not be near 2 at all: for ε = 10 the rule allows x = 3.9, where |x + 2| = 5.9 and |x² − 4| = 11.21 ≥ 10.</p><p>The fix is one word, δ = min(1, ε/5), and then state the bound on |x + 2| <em>after</em> δ, where it is earned. Everything else, the order of the choices, the factoring, the chain of inequalities, is right. (Step 1 above finds the same break if you hand it ε/5.)</p>'}
+];
+const wrNorm=s=>s.replace(/\s+/g,' ').trim();
+WR.forEach(w=>$('#'+w.btn).addEventListener('click',()=>{ $('#wr-text').value=w.text; $('#wr-fb').hidden=true; }));
+$('#wr-clear').addEventListener('click',()=>{ $('#wr-text').value=''; $('#wr-fb').hidden=true; });
+$('#wr-go').addEventListener('click',()=>{
+  const t=wrNorm($('#wr-text').value), fb=$('#wr-fb'); fb.hidden=false;
+  if(!t){ fb.className='why nudge'; fb.innerHTML='<b>Nothing to read yet.</b> Write a proof, or load one of the two samples.'; return; }
+  const w=WR.find(x=>wrNorm(x.text)===t);
+  if(w){ fb.className=w.cls; fb.innerHTML='<p><span class="recorded">recorded</span></p>'+w.fb; return; }
+  fb.className='why info'; fb.innerHTML='<b>No reader is attached to this copy.</b> The page checks rules, gaps and line order by itself; a proof in free text needs a model to read it, and this copy ships without one so that it stays self-contained. The two samples show what the reader returns; the note below says what the live version does with your text.';
+});
+
+/* ───────── 05 negation ───────── */
+// k: 'q' quantifier (∀↔∃), 'c' connective (⇒↔∧), 'r' relation, 's' static. flip: whether the correct negation flips it.
+const NEG=[
+ {name:'Limit', says:'Sentence: lim f(x) = ℓ as x → a. Build "the limit of f at a is not ℓ".',
+  toks:[{t:'(∀ε>0)',k:'q',alt:'(∃ε>0)',flip:true},{t:'(∃δ>0)',k:'q',alt:'(∀δ>0)',flip:true},{t:'(∀x∈ℝ)',k:'q',alt:'(∃x∈ℝ)',flip:true},{t:'[ 0',k:'s'},{t:'<',k:'r',alt:'≥',flip:false},{t:'|x−a|',k:'s'},{t:'<',k:'r',alt:'≥',flip:false},{t:'δ',k:'s'},{t:'⇒',k:'c',alt:'∧',flip:true},{t:'|f(x)−ℓ|',k:'s'},{t:'<',k:'r',alt:'≥',flip:true},{t:'ε ]',k:'s'}],
+  read:'There is a bad ε: however small δ is, some x within δ of a (but not a itself) has f(x) at least ε away from ℓ. The hypothesis 0 &lt; |x − a| &lt; δ is kept as is; only the conclusion is denied, and ⇒ becomes ∧ because "P ⇒ Q" fails exactly when P holds and Q fails.',
+  hint:'Bounds on quantifiers and the hypothesis of the implication never flip. Walk the negation through the quantifiers one at a time, then negate the bracket: ¬(P ⇒ Q) is P ∧ ¬Q.'},
+ {name:'Sequence', says:'Sentence: f_n → ℓ (the Ramp-Up form). Build "f_n does not converge to ℓ".',
+  toks:[{t:'(∀ε>0)',k:'q',alt:'(∃ε>0)',flip:true},{t:'(∃c∈ℕ)',k:'q',alt:'(∀c∈ℕ)',flip:true},{t:'(∀n∈ℕ)',k:'q',alt:'(∃n∈ℕ)',flip:true},{t:'[ n',k:'s'},{t:'>',k:'r',alt:'≤',flip:false},{t:'c',k:'s'},{t:'⇒',k:'c',alt:'∧',flip:true},{t:'|f_n−ℓ|',k:'s'},{t:'<',k:'r',alt:'≥',flip:true},{t:'ε ]',k:'s'}],
+  read:'There is a bad ε: past every index c there is still some n with |f_n − ℓ| ≥ ε. This is exactly the shape the Ramp-Up proves for f_n = n² − 5: "for any arbitrary c we found an n &gt; c that breaks the inequality".',
+  hint:'n &gt; c is the hypothesis, so it stays. Only the conclusion |f_n − ℓ| &lt; ε is denied.'},
+ {name:'Uniform continuity', says:'Sentence: f is uniformly continuous on ℝ. Build its negation.',
+  toks:[{t:'(∀ε>0)',k:'q',alt:'(∃ε>0)',flip:true},{t:'(∃δ>0)',k:'q',alt:'(∀δ>0)',flip:true},{t:'(∀x∈ℝ)',k:'q',alt:'(∃x∈ℝ)',flip:true},{t:'(∀y∈ℝ)',k:'q',alt:'(∃y∈ℝ)',flip:true},{t:'[ |x−y|',k:'s'},{t:'<',k:'r',alt:'≥',flip:false},{t:'δ',k:'s'},{t:'⇒',k:'c',alt:'∧',flip:true},{t:'|f(x)−f(y)|',k:'s'},{t:'<',k:'r',alt:'≥',flip:true},{t:'ε ]',k:'s'}],
+  read:'There is a bad ε: for every δ you can find two points closer than δ whose values differ by at least ε. For f(x) = x² with ε = 1, the pair x = 1/δ, y = x + δ/2 does it for every δ.',
+  hint:'Every quantifier flips, including both ∀x and ∀y. The hypothesis |x − y| &lt; δ stays.'},
+ {name:'Bounded', says:'Sentence: f is bounded. Build "f is unbounded".',
+  toks:[{t:'(∃M∈ℝ)',k:'q',alt:'(∀M∈ℝ)',flip:true},{t:'(∀x∈ℝ)',k:'q',alt:'(∃x∈ℝ)',flip:true},{t:'[ |f(x)|',k:'s'},{t:'≤',k:'r',alt:'>',flip:true},{t:'M ]',k:'s'}],
+  read:'Whatever bound M you propose, some x beats it. No implication here, so there is nothing to turn into ∧: just flip both quantifiers and deny the inequality.',
+  hint:'Two quantifiers, one inequality, no implication.'}
+];
+let ni=0, nstate=[];
+function renderNeg(keepBad){
+  const n=NEG[ni];
+  if(nstate.length!==n.toks.length) nstate=n.toks.map(()=>false);
+  $('#neg-pills').innerHTML=NEG.map((x,k)=>'<button type="button" class="pill" aria-pressed="'+(k===ni?'true':'false')+'" data-k="'+k+'">'+x.name+(S.neg[k]?' ✓':'')+'</button>').join('');
+  $('#neg-says').innerHTML=fm(n.says);
+  $('#neg-toks').innerHTML=n.toks.map((t,k)=>{
+    const flip=t.k!=='s', txt=nstate[k]?t.alt:t.t;
+    const bad=keepBad&&keepBad.indexOf(k)>=0;
+    return '<span class="tok'+(flip?' flip':'')+(nstate[k]?' on':'')+(bad?' bad':'')+'"'+(flip?' role="button" tabindex="0" aria-pressed="'+(nstate[k]?'true':'false')+'" data-k="'+k+'"':'')+'>'+fm(txt)+'</span>';
+  }).join('');
+  if(!keepBad){ const fb=$('#neg-fb'); if(S.neg[ni]&&nstate.every((v,k)=>n.toks[k].k==='s'||v===!!n.toks[k].flip)){ fb.className='why'; fb.innerHTML='<b>Negated.</b> '+n.read; fb.hidden=false; } else fb.hidden=true; }
+}
+function flipTok(k){ const t=NEG[ni].toks[k]; if(!t||t.k==='s') return; nstate[k]=!nstate[k]; renderNeg(); }
+$('#neg-toks').addEventListener('click',e=>{ const t=e.target.closest('.tok.flip'); if(!t) return; flipTok(+t.dataset.k); });
+$('#neg-toks').addEventListener('keydown',e=>{ if(e.key!=='Enter'&&e.key!==' ') return; const t=e.target.closest('.tok.flip'); if(!t) return; e.preventDefault(); flipTok(+t.dataset.k); });
+$('#neg-pills').addEventListener('click',e=>{ const b=e.target.closest('.pill'); if(!b) return; ni=+b.dataset.k; nstate=[]; renderNeg(); });
+$('#neg-undo').addEventListener('click',()=>{ nstate=[]; renderNeg(); });
+$('#neg-check').addEventListener('click',()=>{
+  const n=NEG[ni], bad=[];
+  n.toks.forEach((t,k)=>{ if(t.k!=='s'&&nstate[k]!==!!t.flip) bad.push(k); });
+  const fb=$('#neg-fb'); fb.hidden=false;
+  if(bad.length===0){ S.neg[ni]=true; save(); progress(); renderNeg(); fb.className='why'; fb.innerHTML='<b>Negated.</b> '+n.read; }
+  else { renderNeg(bad); fb.className='why nudge'; fb.innerHTML='<b>'+bad.length+' token'+(bad.length>1?'s':'')+' off</b> (highlighted). '+n.hint; }
+});
+
+/* ───────── 06 riddles ───────── */
+const RID=[
+ {title:'The generous professor', body:'On the first day of class a professor announces: <em>"If you pass this course, I will buy you a red Ferrari."</em> Write '+fm('P')+' for "you pass" and '+fm('F')+' for "you get the Ferrari"; the promise is '+fm('P ⇒ F')+'. The term ends. In which of these cases has the professor lied? Select every case that applies.',
+  opts:['Sam passes and gets a Ferrari.','Sam passes and gets nothing.','Sam fails and gets nothing.','Sam fails and gets a Ferrari anyway.'], ans:[1], multi:true,
+  why:'Only the second. A promise of the form P ⇒ F is broken in exactly one way: P happens and F does not. The professor never said what happens to students who fail, so a failing student who still gets a Ferrari has met a generous professor, not a lying one. This one story is the whole truth table of ⇒, and it is the key to every "vacuous" truth below: if nobody passes, the promise is kept without buying a single car. (A million dollars works the same way and is easier to park.)'},
+ {title:'The drinker', body:'In a non-empty bar, consider: <em>there is someone such that, if they are drinking, then everyone is drinking.</em> In symbols: '+fm('(∃x)[ D(x) ⇒ (∀y) D(y) ]')+'.',
+  opts:['Always true.','Always false.','True in some bars, false in others.'], ans:[0],
+  why:'Either everyone is drinking, in which case any person works, or someone is not, in which case pick <em>them</em>: the hypothesis D(x) is false and the implication holds for free, exactly like the professor\'s promise to a student who failed. The sentence feels wrong because the English hides that x is chosen after you know who is drinking.'},
+ {title:'No top', body:'Let '+fm('S')+' be a set and consider '+fm('(∀x∈S)(∃y∈S)[ y > x ]')+'. Remember what the bounded quantifiers abbreviate: '+fm('(∀x∈S) P(x)')+' is short for '+fm('(∀x)[ x ∈ S ⇒ P(x) ]')+', and '+fm('(∃y∈S) Q(y)')+' for '+fm('(∃y)[ y ∈ S ∧ Q(y) ]')+'. For which '+fm('S')+' is the sentence true? Select all that apply.',
+  opts:[fm('S = ℕ'), fm('S = {1, 2, 3}'), fm('S = ∅'), fm('S = [0, 1]')], ans:[0,2], multi:true,
+  why:'In {1, 2, 3} and [0, 1] the largest element has nothing above it, so the ∀ fails there. ℕ has no largest element: y = x + 1 always works. For S = ∅, unfold the abbreviation: '+fm('(∀x)[ x ∈ ∅ ⇒ (∃y∈∅)[ y > x ] ]')+'. The hypothesis x ∈ ∅ is false for every x, so every instance of the implication is true, for the same reason the professor keeps his promise when nobody passes; the conclusion was never checked. Had the sentence started with ∃ instead, it would unfold to '+fm('(∃x)[ x ∈ ∅ ∧ … ]')+', which no x can satisfy. The empty set makes every ∀ true and every ∃ false.'},
+ {title:'My Ferraris', body:'I own no Ferraris. Which statements are true? Select all that apply.',
+  opts:['All my Ferraris are red.','All my Ferraris are not red.','Some Ferrari of mine is red.','I own a Ferrari that isn\'t red.'], ans:[0,1], multi:true,
+  why:'"All my Ferraris are red" unfolds to '+fm('(∀c)[ c is my Ferrari ⇒ c is red ]')+'. With no Ferrari the hypothesis never holds, so the implication never fails: both universals are vacuously true. The two existentials unfold with ∧ and need a witness, so both are false. Vacuous truth is why the base case of an induction over an empty range is free, and why "all x in ∅" never needs checking.'},
+ {title:'For every ε', body:'Suppose '+fm('x')+' and '+fm('y')+' are real numbers and '+fm('(∀ε>0)[ x ≤ y + ε ]')+'. What can you conclude?',
+  opts:[fm('x < y'), fm('x ≤ y'), fm('x = y'), 'Nothing, since ε is never 0.'], ans:[1],
+  why:'If x &gt; y, take ε = (x − y)/2 and the hypothesis fails. So x ≤ y, and equality is possible (x = y satisfies the hypothesis). This "ε-trick" is how most limit uniqueness and inequality proofs end.'},
+ {title:'Exactly one', body:'Which of these say "there is exactly one '+fm('x')+' with '+fm('P(x)')+'"? Select all that apply.',
+  opts:[fm('(∃x)(∀y)[ P(y) ⇔ y = x ]'), fm('(∃x) P(x)')+' ∧ '+fm('(∀x)(∀y)[ P(x) ∧ P(y) ⇒ x = y ]'), fm('(∀x)(∀y)[ P(x) ∧ P(y) ⇒ x = y ]'), fm('(∃x) P(x)')+' ∧ '+fm('(∀y)[ P(y) ⇒ y = x ]')], ans:[0,1], multi:true,
+  why:'A and B are both standard. C says "at most one" and is true when nothing has P. D is the trap: the x in the second half is outside the scope of ∃x, so it is a free variable and the formula is not even a sentence. Scope ends at the closing bracket.'},
+ {title:'Loved by everyone', body:'"Nobody is loved by everyone." Writing '+fm('L(y, x)')+' for "'+fm('y')+' loves '+fm('x')+'", which formula says it?',
+  opts:[fm('(∀x)(∃y) ¬L(y, x)'), fm('(∀x)(∀y) ¬L(y, x)'), fm('(∃x)(∀y) ¬L(y, x)'), fm('¬(∀x)(∃y) L(y, x)')], ans:[0],
+  why:'"Nobody is loved by everyone" is ¬(∃x)(∀y) L(y, x). Push the negation through: (∀x)(∃y) ¬L(y, x), i.e. everyone has someone who does not love them. B says nobody loves anybody; C and D both say someone is loved by no one.'},
+ {title:'Scope across an arrow', body:fm('x')+' does not occur in '+fm('Q')+'. Then '+fm('(∀x)[ P(x) ⇒ Q ]')+' is equivalent to…',
+  opts:[fm('[(∀x) P(x)] ⇒ Q'), fm('[(∃x) P(x)] ⇒ Q'), fm('Q'), fm('(∀x) P(x)')], ans:[1],
+  why:'Each witness of P triggers Q on its own, so one witness is enough: that is "(∃x) P(x) ⇒ Q". Moving a quantifier out of the hypothesis of an implication flips it. In the conclusion it does not: (∀x)[Q ⇒ P(x)] is Q ⇒ (∀x) P(x). This is why the Ramp-Up asks whether [(∀x)P(x) ⇒ (∀x)Q(x)] and (∀x)[P(x) ⇒ Q(x)] imply each other.'}
+];
+// A stacked list of multiple-choice items (single or multi answer). Progress is keyed by title, so items can be inserted or reordered later.
+function quizList(list,elId,store,hints){
+  const rsel=list.map(()=>[]);
+  const key=r=>r.title;
+  function render(){
+  $('#'+elId).innerHTML=list.map((r,i)=>{
+    const done=!!S[store][key(r)], sel=rsel[i];
+    const opts=r.opts.map((o,k)=>{
+      let cls='opt';
+      if(done){ if(r.ans.indexOf(k)>=0) cls+=' right'; }
+      else if(r.multi&&sel.indexOf(k)>=0) cls+=' sel';
+      else if(!r.multi&&sel.indexOf(k)>=0&&r.ans.indexOf(k)<0) cls+=' wrong';
+      return '<button type="button" class="'+cls+'" data-i="'+i+'" data-k="'+k+'"'+(done?' disabled':'')+'><span class="key">'+'ABCD'[k]+'</span><span>'+o+'</span></button>';
+    }).join('');
+    const fb=done?'<div class="why"><b>Right.</b> '+r.why+'</div>':(r.feedback?'<div class="why nudge">'+r.feedback+'</div>':'');
+    const check=(r.multi&&!done)?'<div class="row"><button type="button" class="btn" data-check="'+i+'">Check</button><span class="ctx">Select every correct option, then check.</span></div>':'';
+    return '<div class="panel riddle" id="'+elId+'-'+i+'"><div class="row" style="justify-content:space-between"><h3>'+(r.step?'<span class="tag">step '+r.step+'</span> ':'')+r.title+'</h3><span class="truth '+(done?'t':'n')+'">'+(done?'solved':(r.multi?'select all that apply':'one answer'))+'</span></div><p class="body">'+r.body+'</p><div class="opts">'+opts+'</div>'+check+fb+'</div>';
+  }).join('');
+  }
+  $('#'+elId).addEventListener('click',e=>{
+    const chk=e.target.closest('[data-check]');
+    if(chk){
+      const i=+chk.dataset.check, r=list[i], sel=rsel[i].slice().sort(), ans=r.ans.slice().sort();
+      if(sel.length===ans.length&&sel.every((v,k)=>v===ans[k])){ S[store][key(r)]=true; save(); progress(); r.feedback=null; }
+      else { r.feedback='<b>Not yet.</b> '+(sel.length===0?'Pick at least one option.':hints.multi); }
+      render(); return;
+    }
+    const b=e.target.closest('.opt'); if(!b) return;
+    const i=+b.dataset.i, k=+b.dataset.k, r=list[i];
+    if(S[store][key(r)]) return;
+    if(r.multi){ const p=rsel[i].indexOf(k); if(p>=0) rsel[i].splice(p,1); else rsel[i].push(k); r.feedback=null; }
+    else { rsel[i]=[k]; if(r.ans.indexOf(k)>=0){ S[store][key(r)]=true; save(); progress(); r.feedback=null; } else r.feedback='<b>Not that one.</b> '+hints.single; }
+    render();
+  });
+  return {render:render, reset:function(){ list.forEach(r=>r.feedback=null); rsel.forEach(a=>a.length=0); render(); }};
+}
+const riddles=quizList(RID,'riddles-list','rid',{multi:'Check each option on its own: can you find a witness, or is there none to find? Is a false hypothesis quietly keeping an implication true?', single:'Ask who gets to choose, and whether an empty domain or a false hypothesis is quietly doing the work.'});
+
+/* ───────── 07 anatomy ───────── */
+const EXO='(∀i, k)(∃x∈ℕ)(∃x∈ℤ)(∀j<m)[ Σ_{i=1}^{f(j)} i < 4 ∧ x + 1 = 0 ]';
+const SUM='Σ_{i=1}^{f(j)} i';
+const EM='E(m) := (∀j∈ℤ)[ j < m ⇒ '+SUM+' < 4 ]';
+const ANAT=[
+ {step:1, title:'Free letters of the bracket', body:'Look only at the bracket '+fm('[ '+SUM+' < 4 ∧ x + 1 = 0 ]')+'. Which letters are free variables in it? Select all that apply.',
+  opts:[fm('i'), fm('j'), fm('x'), fm('f')], ans:[1,2], multi:true,
+  why:'<i>i</i> is the summation index: Σ binds it exactly the way a quantifier would, so it is not free, and renaming it changes nothing. <i>j</i> decides where the sum stops, so it is free. <i>x</i> is free. <i>f</i> is not a variable at all: it is a fixed, named function, like sin. (<i>k</i> and <i>m</i> do not even occur inside the bracket.) The bracket is a predicate in two variables: P(<i>j</i>, <i>x</i>).'},
+ {step:2, title:'Who owns x?', body:fm('x')+' is quantified twice, first by '+fm('(∃x∈ℕ)')+' and then by '+fm('(∃x∈ℤ)')+'. Which quantifier does the '+fm('x')+' in '+fm('x + 1 = 0')+' belong to?',
+  opts:[fm('(∃x∈ℕ)')+', the outer one', fm('(∃x∈ℤ)')+', the inner one', 'Both, so '+fm('x')+' must lie in ℕ ∩ ℤ = ℕ', 'Neither; that '+fm('x')+' is free'], ans:[1],
+  why:'The nearest enclosing quantifier that names the letter wins, so the inner (∃<i>x</i>∈ℤ) owns it and the outer (∃<i>x</i>∈ℕ) is left owning nothing. This is called <b>shadowing</b>. It is legal, and it is terrible style; the Ramp-Up commits it only so that you recognise it in the wild. Had "both" been the answer, the sentence would be sunk on the spot: <i>x</i> + 1 = 0 has no solution in ℕ.'},
+ {step:3, title:'Dead weight', body:'Which quantifiers bind no letter at all, so that deleting them (and leaving the bracket as it is) changes nothing? Select all that apply.',
+  opts:[fm('(∀i, k)'), fm('(∃x∈ℕ)'), fm('(∃x∈ℤ)'), fm('(∀j<m)')], ans:[0,1], multi:true,
+  why:'<i>i</i> is already taken by Σ, <i>k</i> never appears, and the outer <i>x</i> is shadowed, so (∀<i>i</i>, <i>k</i>) and (∃<i>x</i>∈ℕ) are decoration. The other two are load-bearing: (∃<i>x</i>∈ℤ) owns the <i>x</i> in <i>x</i> + 1 = 0 and (∀<i>j</i>&lt;<i>m</i>) owns <i>j</i>. Delete either and a letter becomes free, which changes the meaning.'},
+ {step:4, title:'Splitting the bracket', body:fm('(∀j<m)')+' has no effect on '+fm('x + 1 = 0')+', and '+fm('(∃x∈ℤ)')+' has no effect on the sum. Which of these is equivalent to '+fm('(∃x∈ℤ)(∀j<m)[ '+SUM+' < 4 ∧ x + 1 = 0 ]')+'?',
+  opts:[fm('(∀j<m)[ '+SUM+' < 4 ] ∧ (∃x∈ℤ)[ x + 1 = 0 ]'), fm('(∀j<m)[ '+SUM+' < 4 ] ∨ (∃x∈ℤ)[ x + 1 = 0 ]'), fm('(∀j<m)[ '+SUM+' < 4 ⇒ (∃x∈ℤ)[ x + 1 = 0 ] ]'), 'None of these; quantifiers cannot be pushed through ∧.'], ans:[0],
+  why:'A quantifier slides past a conjunct that does not mention its letter: (∀<i>j</i>)[P(<i>j</i>) ∧ Q] is (∀<i>j</i>)P(<i>j</i>) ∧ Q as long as there is some <i>j</i> to check (over ℤ there is always one below <i>m</i>; over an empty range the left side would be vacuously true whatever Q says), and (∃<i>x</i>)[P ∧ Q(<i>x</i>)] is P ∧ (∃<i>x</i>)Q(<i>x</i>). Now (∃<i>x</i>∈ℤ)[<i>x</i> + 1 = 0] is simply true (<i>x</i> = −1), and a true conjunct can be dropped. Unbounding (∀<i>j</i>&lt;<i>m</i>) with ⇒, as in the riddle "No top", leaves '+fm(EM)+'.'},
+ {step:5, title:'What is left', body:'Dead weight gone, true conjunct gone, the whole sentence has collapsed to '+fm(EM)+'. Which letters are free in '+fm('E(m)')+'?',
+  opts:[fm('m')+' only', fm('j')+' and '+fm('m'), fm('i')+', '+fm('j')+' and '+fm('m'), 'None; it is a closed sentence'], ans:[0],
+  why:'<i>j</i> is owned by ∀ and <i>i</i> by Σ, so only <i>m</i> is free. A sentence with a free letter is not yet true or false: asking whether E(<i>m</i>) holds is ill-posed until <i>m</i> is given a value or a quantifier. For all its decoration, the original was never a statement; it was a predicate in <i>m</i>.'},
+ {step:6, title:'Now choose m', body:fm('Σ_{i=1}^{n} i = n(n + 1)/2')+', so '+fm(SUM+' < 4')+' exactly when '+fm('|j| ≤ 2')+'. With '+fm('j')+' ranging over ℤ (the domain of '+fm('f')+'), for which integers '+fm('m')+' is '+fm('E(m)')+' true?',
+  opts:['All '+fm('m ∈ ℤ'), 'Exactly the '+fm('m ≤ 3'), 'Exactly the '+fm('m ≤ 2'), 'No '+fm('m')+' at all'], ans:[3],
+  why:'Whatever <i>m</i> is, there are integers below it with |<i>j</i>| ≥ 3: take <i>j</i> = −3 if <i>m</i> &gt; −3, and <i>j</i> = <i>m</i> − 1 otherwise. For that <i>j</i> the sum is at least 6. So E(<i>m</i>) is false for every <i>m</i>, and the Ramp-Up\'s closing question, is (∀<i>m</i>∈ℤ) E(<i>m</i>) true, has the answer no; so does the weakest possible closing, (∃<i>m</i>∈ℤ) E(<i>m</i>). The checker below finds the breaking <i>j</i> for any <i>m</i> you pick.'},
+ {step:7, title:'The domain mattered', body:'The Ramp-Up notes that '+fm('(∀j<m)')+' does not say where '+fm('j')+' lives, and reads it as ℤ because '+fm('f')+' is defined on ℤ. Suppose instead '+fm('j')+' ranges over ℕ = {0, 1, 2, …}. For which '+fm('m')+' is '+fm('E(m)')+' true now?',
+  opts:['All '+fm('m'), 'Exactly the '+fm('m ≤ 3'), 'Exactly the '+fm('m ≤ 2'), 'No '+fm('m')+' at all'], ans:[1],
+  why:'Now <i>j</i> &lt; <i>m</i> with <i>j</i> ∈ ℕ means <i>j</i> ∈ {0, 1, …, <i>m</i> − 1}, and all of those have |<i>j</i>| ≤ 2 exactly when <i>m</i> ≤ 3. For <i>m</i> ≤ 0 there is no such <i>j</i> at all, and the ∀ is vacuously true, professor-style. An unstated domain is not a cosmetic omission: here it moves E(<i>m</i>) from "never true" to "true for infinitely many <i>m</i>". Flip the checker to ℕ and watch.'}
+];
+const anat=quizList(ANAT,'anat-list','anat',{multi:'Go letter by letter: does it occur inside the bracket, and which is the nearest quantifier (or Σ) that names it?', single:'Ask which quantifier is nearest, what its scope covers, and whether the letter even appears inside the bracket.'});
+
+const MUT=[
+ {title:'Rename the index', body:'The sum is now '+fm('Σ_{t=1}^{f(j)} t')+' instead of '+fm(SUM)+'. Effect on the sentence?',
+  opts:['None: a summation index is a bound letter and can be renamed freely', 'Now '+fm('t')+' is a free letter', 'Now '+fm('(∀i, k)')+' binds the sum', 'The value of the sum changes'], ans:[0],
+  why:'Renaming a bound letter consistently never changes meaning, whether the binder is ∀, ∃ or Σ. The Ramp-Up makes the same point about (∀<i>a</i>∈ℕ)(∃<i>y</i>∈ℕ)[<i>a</i> = 2<i>y</i>] versus the version with <i>x</i>. The one rule: the new name must not collide with a letter already in use.'},
+ {title:'Rename the outer x', body:'The outer quantifier is now '+fm('(∃y∈ℕ)')+' instead of '+fm('(∃x∈ℕ)')+'; the bracket is unchanged. Effect?',
+  opts:['None: that quantifier bound nothing before and binds nothing now', fm('y')+' is now a free letter', 'The '+fm('x')+' in '+fm('x + 1 = 0')+' is now free', 'The sentence becomes false'], ans:[0],
+  why:'The outer quantifier was shadowed, so no letter in the bracket ever belonged to it. Renaming it only makes the dead weight easier to see: (∃<i>y</i>∈ℕ) with no <i>y</i> anywhere is plainly decoration. Step 3 already allowed deleting it.'},
+ {title:'Swap the two x quantifiers', body:'The prefix now reads '+fm('(∃x∈ℤ)(∃x∈ℕ)')+' instead of '+fm('(∃x∈ℕ)(∃x∈ℤ)')+'. Effect?',
+  opts:['None: two ∃ quantifiers always commute', fm('x + 1 = 0')+' is now asked in ℕ, where it has no solution, so the sentence is false for every '+fm('m'), fm('x + 1 = 0')+' is now asked in ℤ ∩ ℕ', fm('x')+' is now free'], ans:[1],
+  why:'∃<i>x</i>∃<i>y</i> commutes when the letters differ. With the same letter the inner quantifier shadows the outer, and swapping them changes which domain the <i>x</i> in <i>x</i> + 1 = 0 lives in. In ℕ there is no solution; a false conjunct sinks the bracket for every <i>j</i>, and since every <i>m</i> has some <i>j</i> below it, the sentence is false for every <i>m</i>. The original was also false for every <i>m</i>, but for an unrelated reason: there the <i>x</i>-part was fine and the sum failed.'},
+ {title:'∧ becomes ∨', body:'The bracket is now '+fm('[ '+SUM+' < 4 ∨ x + 1 = 0 ]')+'. Effect?',
+  opts:['None', 'True for every '+fm('m')+': '+fm('x = −1')+' makes the second disjunct true, whatever '+fm('j')+' does', 'False for every '+fm('m'), 'True exactly for '+fm('m ≤ 3')], ans:[1],
+  why:'(∃<i>x</i>)(∀<i>j</i>)[P(<i>j</i>) ∨ Q(<i>x</i>)] splits into (∀<i>j</i>)P(<i>j</i>) ∨ (∃<i>x</i>)Q(<i>x</i>), and (∃<i>x</i>∈ℤ)[<i>x</i> + 1 = 0] is true. A true disjunct swallows everything else, so the sentence holds for every <i>m</i>, however badly the sum behaves. Compare step 4: a true conjunct can be dropped; a true disjunct takes over.'},
+ {title:'Swap ∃x and ∀j', body:'The prefix now ends '+fm('(∀j<m)(∃x∈ℤ)')+' instead of '+fm('(∃x∈ℤ)(∀j<m)')+'. Effect?',
+  opts:['None: the '+fm('x')+'-part never mentions '+fm('j')+' and the sum never mentions '+fm('x')+', so the order is irrelevant', fm('x')+' may now depend on '+fm('j')+', so the sentence becomes weaker', 'The sentence becomes true for every '+fm('m'), fm('x')+' is now free'], ans:[0],
+  why:'∀<i>j</i>∃<i>x</i> and ∃<i>x</i>∀<i>j</i> differ only when the witness <i>x</i> can make use of <i>j</i>. Here nothing links them: <i>x</i> + 1 = 0 does not mention <i>j</i>, and the sum does not mention <i>x</i>. Both orders split into (∀<i>j</i>&lt;<i>m</i>)[sum &lt; 4] ∧ (∃<i>x</i>∈ℤ)[<i>x</i> + 1 = 0]. Contrast the ice-cream grid in section 1, where the order was everything because the predicate mentioned both letters.'},
+ {title:'k enters the bracket', body:'The prefix starts '+fm('(∀i, k∈ℕ)')+' and the bracket now says '+fm(SUM+' < k')+' instead of '+fm('< 4')+'. Effect?',
+  opts:['None: '+fm('(∀i, k)')+' is dead weight either way', fm('k')+' is now bound and ranges over all of ℕ; with '+fm('k = 0')+' the sum would have to be negative, so the sentence is false for every '+fm('m'), fm('k')+' is now free', 'The sentence is true for every '+fm('m')], ans:[1],
+  why:'A quantifier is dead weight only while its letter is absent from the bracket. Once <i>k</i> appears, (∀<i>k</i>∈ℕ) demands the inequality for every <i>k</i>, including <i>k</i> = 0, and no sum of non-negative terms is below 0. Every <i>m</i> has some <i>j</i> below it, so the bracket is tested at least once and fails. Decoration becomes load-bearing with a one-character edit, which is why you check every quantifier against the bracket before dismissing it.'},
+ {title:'A quantifier for m, in the wrong place', body:'The prefix now ends '+fm('(∀j<m)(∃m∈ℤ)')+'. Effect?',
+  opts:[fm('m')+' is now bound, so the sentence is finally a statement', 'The '+fm('m')+' in '+fm('j < m')+' sits outside the scope of '+fm('(∃m∈ℤ)')+' and stays free; the new quantifier binds nothing', 'The sentence becomes true', fm('j')+' is now free'], ans:[1],
+  why:'Scope runs from a quantifier forward, over what follows it. (∃<i>m</i>∈ℤ) is written after <i>j</i> &lt; <i>m</i>, so that <i>m</i> is not inside its scope and stays free, and since the bracket never mentions <i>m</i>, the new quantifier is one more piece of dead weight. To close the sentence the quantifier must precede the first use: (∃<i>m</i>∈ℤ)(∀<i>j</i>&lt;<i>m</i>)[…], which by step 6 is false. Same trap as option D in the riddle "Exactly one".'},
+ {title:'Drop the f', body:'The sum is now '+fm('Σ_{i=1}^{j} i')+' instead of '+fm(SUM)+', with '+fm('j')+' still ranging over ℤ. Convention: a sum whose upper limit is below its lower limit is empty and equals 0. Effect?',
+  opts:['None: '+fm('f(j) = |j|')+' and '+fm('j')+' give the same sums', 'Negative '+fm('j')+' now give the empty sum 0, which passes; '+fm('E(m)')+' becomes true exactly for '+fm('m ≤ 3'), 'The sum is undefined for negative '+fm('j')+', so the sentence is meaningless', 'True for every '+fm('m')], ans:[1],
+  why:'<i>f</i>(<i>j</i>) = |<i>j</i>| was turning negative <i>j</i> into large sums. Without it, every <i>j</i> ≤ 0 gives the empty sum 0 &lt; 4 and passes, so the only way to fail is a <i>j</i> ≥ 3 below <i>m</i>: E(<i>m</i>) is true exactly when <i>m</i> ≤ 3, the same profile as the ℕ reading in step 7. The innocent-looking <i>f</i> was the entire reason the original is never true.'}
+];
+const mut=quizList(MUT,'mut-list','mut',{multi:'Trace the one change: which letter does it touch, who binds that letter now, and is the bracket still tested for some j?', single:'Trace the one change: which letter does it touch, who binds that letter now, and is the bracket still tested for some j?'});
+
+// E(m) checker
+const tri=n=>n*(n+1)/2;
+const em={m:5,dom:'Z'};
+function renderEm(){
+  const m=em.m, Z=em.dom==='Z', js=[];
+  if(Z){ for(let j=m-1;j>=m-6;j--) js.push(j); } else { for(let j=m-1;j>=0;j--) js.push(j); }
+  $('#em-dom').querySelectorAll('.seg-btn').forEach(b=>b.setAttribute('aria-pressed',b.dataset.dom===em.dom?'true':'false'));
+  $('#em-def').innerHTML=fm('E(m) := (∀j∈'+(Z?'ℤ':'ℕ')+')[ j < m ⇒ '+SUM+' < 4 ]')+' with '+fm('f(j) = |j|')+'. Pick '+fm('m')+' and the domain of '+fm('j')+'; the page lists the '+fm('j')+' it must check and points at one that breaks '+fm('E(m)')+', if any.';
+  let chips=js.map(j=>{ const s=tri(Math.abs(j)), ok=s<4; return '<div class="jchip '+(ok?'ok':'bad')+'"><b>j = '+j+'</b><span>f(j) = '+Math.abs(j)+'</span><span>Σ = '+s+(ok?' &lt; 4 ✓':' ≥ 4 ✗')+'</span></div>'; }).join('');
+  if(Z) chips+='<div class="jchip more">… and every integer below these</div>';
+  else if(js.length===0) chips='<div class="jchip more">no natural number is below '+m+'</div>';
+  $('#em-chips').innerHTML=chips;
+  const v=$('#em-verdict');
+  if(Z){ const w=Math.abs(m-1)>=3?m-1:-3; v.className='why lose'; v.innerHTML='<b>E('+m+') is false.</b> j = '+w+' is below '+m+' and its sum is '+tri(Math.abs(w))+' ≥ 4. Over ℤ this happens for every m: there is always an integer below m with |j| ≥ 3, because ℤ has no bottom.'; }
+  else if(m<=3){ v.className='why'; v.innerHTML='<b>E('+m+') is true.</b> '+(m<=0?'No natural number is below '+m+', so there is nothing to check: vacuous truth, exactly like the professor whose students all failed.':'Every j in {0, …, '+(m-1)+'} has |j| ≤ 2, so every sum is at most 3.'); }
+  else { v.className='why lose'; v.innerHTML='<b>E('+m+') is false.</b> j = 3 is below '+m+' and its sum is 6 ≥ 4. Over ℕ the first breaking j is always 3, so E(m) holds exactly for m ≤ 3.'; }
+}
+$('#em-range').addEventListener('input',e=>{ em.m=+e.target.value; $('#em-num').value=String(em.m); renderEm(); });
+$('#em-num').addEventListener('change',e=>{ const v=Math.round(parseFloat(e.target.value)); if(Number.isFinite(v)){ em.m=v; $('#em-range').value=String(Math.min(8,Math.max(-6,v))); } renderEm(); });
+$('#em-dom').addEventListener('click',e=>{ const b=e.target.closest('.seg-btn'); if(!b) return; em.dom=b.dataset.dom; renderEm(); });
+
+/* ───────── reset ───────── */
+$('#reset-all').addEventListener('click',()=>{ S={}; STORES.forEach(k=>S[k]={}); save(); progress(); renderGrid(); renderDeck(); renderNeg(); riddles.reset(); anat.reset(); mut.reset(); startGame(gs.sc); Object.keys(gapSel).forEach(k=>delete gapSel[k]); Object.keys(chainBad).forEach(k=>delete chainBad[k]); paSeq=[]; paBad=null; $('#pa-fb').hidden=true; $('#wr-fb').hidden=true; prSelect(prCur); renderParsons(); });
+
+/* ───────── boot ───────── */
+// The sticky menu can wrap to two rows; its real height positions the pinned sentence and the anchor jumps.
+function layoutVars(){ document.documentElement.style.setProperty('--tabs-h',$('.tabs').offsetHeight+'px'); document.documentElement.style.setProperty('--cbar-h',$('.cbar').offsetHeight+'px'); }
+layoutVars(); addEventListener('resize',layoutVars); if(document.fonts&&document.fonts.ready) document.fonts.ready.then(layoutVars);
+$('#anat-formula').innerHTML=fm(EXO);
+renderGrid(); renderDeck(); startGame(SCN[0]); prSelect(PRF[0]); renderParsons(); renderNeg(); riddles.render(); anat.render(); mut.render(); renderEm(); progress();
+})();
+</script>
+
+</body></html>

@@ -1,0 +1,351 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Interactive Lessons · Mohammad Mahmoud</title>
+<meta name="description" content="Four short interactive lessons in logic, machine learning, running time and Turing machines. Every exercise asks for your guess before it shows you anything.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@500;700;800&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@500&family=STIX+Two+Text:ital,wght@0,400;0,600;1,400&display=swap">
+<style>
+/* Collection base. The hub carries no accent of its own; each lesson card is tinted with its lesson's accent. */
+:root{
+  --bg:#FFFDF6; --surface:#FFFFFF; --surface-2:#F5F3EB; --ink:#1F2340; --muted:#646A86; --line:#E4E1D4;
+  --ok:#2E9E6B; --ok-soft:#DFF3E8; --bad:#D9534F; --bad-soft:#FBE3E2;
+  --sand:#F0A24B; --sea:#1FA7C4;
+  --logic:#3A86FF; --logic-soft:#DDE9FF; --turing:#B8700A; --turing-soft:#FBEBCF; --time:#D8367A; --time-soft:#FBDDEB; --ml:#6A5AE0; --ml-soft:#ECE9FB;
+  --forall:#FF7A1A; --exists:#00B894; --pink:#E8509A;
+  --display:'Rubik',system-ui,-apple-system,sans-serif; --body:'Source Serif 4',Georgia,'Times New Roman',serif; --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace; --math:'STIX Two Text','Cambria Math','Times New Roman',serif;
+  --shadow:0 1px 2px rgba(31,35,64,.06),0 8px 24px -12px rgba(31,35,64,.18);
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#15182B; --surface:#1D2138; --surface-2:#252A48; --ink:#F1F1F8; --muted:#A6AAC6; --line:#30355A;
+  --ok:#4CC38A; --ok-soft:#1E3A2E; --bad:#F07178; --bad-soft:#4A2630; --sand:#F5B261; --sea:#45C3DE;
+  --logic:#6AA3FF; --logic-soft:#1B2C55; --turing:#F2B544; --turing-soft:#4A3410; --time:#FF6FB5; --time-soft:#4A1A33; --ml:#9C8EFF; --ml-soft:#2B2A58;
+  --forall:#FF9450; --exists:#2BD9AC; --pink:#FF7AB8;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px -12px rgba(0,0,0,.5); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#15182B; --surface:#1D2138; --surface-2:#252A48; --ink:#F1F1F8; --muted:#A6AAC6; --line:#30355A;
+  --ok:#4CC38A; --ok-soft:#1E3A2E; --bad:#F07178; --bad-soft:#4A2630; --sand:#F5B261; --sea:#45C3DE;
+  --logic:#6AA3FF; --logic-soft:#1B2C55; --turing:#F2B544; --turing-soft:#4A3410; --time:#FF6FB5; --time-soft:#4A1A33; --ml:#9C8EFF; --ml-soft:#2B2A58;
+  --forall:#FF9450; --exists:#2BD9AC; --pink:#FF7AB8;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px -12px rgba(0,0,0,.5); color-scheme:dark}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{scroll-padding-top:72px}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.6;-webkit-font-smoothing:antialiased}
+a{color:inherit}
+h1,h2,h3{font-family:var(--display);line-height:1.12;margin:0;letter-spacing:-.01em;text-wrap:balance}
+p{margin:0}
+button{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--logic);outline-offset:3px;border-radius:6px}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.math{font-family:var(--math)}
+
+/* Collection bar — identical on every page */
+.cbar{position:sticky;top:0;z-index:20;background:var(--bg);border-bottom:1px solid var(--line)}
+.cbar .in{max-width:1120px;margin:0 auto;padding:10px max(16px,env(safe-area-inset-left,0px)) 10px max(16px,env(safe-area-inset-right,0px));display:flex;align-items:center;justify-content:space-between;gap:16px}
+.cbar .mark{display:flex;align-items:center;gap:10px;text-decoration:none;font-family:var(--display);font-weight:800;font-size:1rem;white-space:nowrap}
+.cbar .mark .dots{display:inline-grid;grid-template-columns:repeat(4,7px);gap:3px}
+.cbar .mark .dots i{width:7px;height:7px;border-radius:50%;display:block}
+.cbar .mark .dots i:nth-child(1){background:var(--logic)}.cbar .mark .dots i:nth-child(2){background:var(--ml)}.cbar .mark .dots i:nth-child(3){background:var(--time)}.cbar .mark .dots i:nth-child(4){background:var(--turing)}
+.cbar .mark small{font-weight:500;color:var(--muted);font-size:.9rem}
+.cbar nav{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;min-width:0}
+.cbar nav::-webkit-scrollbar{display:none}
+.cbar nav a{display:flex;align-items:center;gap:7px;padding:6px 11px;border-radius:999px;text-decoration:none;color:var(--muted);font-family:var(--display);font-weight:500;font-size:.88rem;white-space:nowrap}
+.cbar nav a i{width:8px;height:8px;border-radius:50%;flex:0 0 auto}
+.cbar nav a:hover{color:var(--ink);background:var(--surface-2)}
+@media (max-width:720px){.cbar .mark span.name{display:none}.cbar .mark small{display:none}}
+
+.shell{max-width:1120px;margin:0 auto;padding:0 max(16px,env(safe-area-inset-left,0px)) 72px max(16px,env(safe-area-inset-right,0px))}
+
+/* Hero: headline column beside a live exercise */
+.hero{display:grid;grid-template-columns:minmax(0,1fr);gap:28px;padding-top:40px;align-items:center}
+@media (min-width:900px){.hero{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:48px;padding-top:56px}}
+.hero h1{font-size:clamp(2.4rem,6.2vw,4rem);font-weight:800;max-width:12ch}
+.hero .note{margin-top:20px;padding:16px 18px;border-radius:16px;background:var(--surface-2);border-left:4px solid var(--logic);max-width:36em;display:grid;gap:8px}
+.hero .note b{font-family:var(--display);font-weight:700;font-size:.92rem;color:var(--logic);letter-spacing:.01em}
+.hero .note p{font-size:1.02rem;line-height:1.55}
+.hero .lede{font-size:1.12rem;max-width:34em;margin-top:18px}
+.hero .who{margin-top:18px;color:var(--muted);font-family:var(--display);font-weight:500;font-size:.95rem;max-width:40em;line-height:1.5}
+.hero .who a{color:var(--ink)}
+
+.try{background:var(--surface);border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow);padding:18px 18px 16px;display:grid;gap:12px;min-width:0}
+.try .ask{font-family:var(--display);font-weight:700;font-size:1.08rem;line-height:1.35}
+.try .ask q{quotes:"“" "”"}
+.try .ask small{display:block;font-weight:500;color:var(--muted);font-size:.9rem;margin-top:2px}
+.try .likes{display:grid;grid-template-columns:auto repeat(4,minmax(0,88px));justify-content:center;gap:6px;align-items:center;background:var(--surface-2);border-radius:14px;padding:12px}
+.try .hd{font-family:var(--display);font-weight:700;font-size:.74rem;text-align:center;line-height:1.1;display:grid;gap:4px;justify-items:center;color:var(--muted)}
+@media (max-width:460px){.try .hd{font-size:.62rem}.try .likes{gap:5px;padding:10px}}
+.try .hd i{width:10px;height:10px;border-radius:50%;display:block}
+.try .rh{font-family:var(--display);font-weight:700;font-size:.92rem;padding-right:8px}
+.try .cell{aspect-ratio:1;border-radius:10px;border:2px dashed var(--line);background:var(--surface);display:grid;place-items:center;font-size:1.3rem;line-height:1;color:var(--pink);transition:background .18s,border-color .18s,opacity .18s}
+.try .cell.on{border-style:solid;border-color:color-mix(in srgb,var(--pink) 40%,var(--line))}
+.try .cell.on::after{content:"♥"}
+.try .cell.win{background:var(--ok-soft);border-color:var(--ok)}
+.try .cell.gap{background:var(--bad-soft);border-color:var(--bad);color:var(--bad);font-size:1rem;font-family:var(--display);font-weight:800}
+.try .cell.gap::after{content:"✕"}
+.try .cell.dim{opacity:.4}
+.try .say{min-height:3.4em;border-radius:12px;padding:10px 14px;background:var(--surface-2);border-left:3px solid var(--line);font-size:.98rem;line-height:1.5}
+.try .say.ok{background:var(--ok-soft);border-left-color:var(--ok)}
+.try .say.no{background:var(--bad-soft);border-left-color:var(--bad)}
+.try .say b{font-family:var(--display)}
+.try .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:9px 14px;font-family:var(--display);font-weight:700;font-size:.92rem;cursor:pointer;display:inline-flex;align-items:center;gap:8px;text-decoration:none;color:var(--ink)}
+.btn:hover{background:var(--surface-2)}
+.btn.go{background:var(--logic);color:#fff;border-color:transparent}
+.btn.go:hover{filter:brightness(1.06);background:var(--logic)}
+.btn.tf{min-width:5.5em;justify-content:center}
+.btn[disabled]{opacity:.5;cursor:default}
+.btn[disabled]:hover{background:var(--surface)}
+.try .tally{margin-left:auto;font-family:var(--display);font-size:.85rem;color:var(--muted)}
+
+/* Lessons */
+.lessons{margin-top:56px}
+.lessons h2{font-size:1.5rem;font-weight:700}
+.lessons .sub{color:var(--muted);margin-top:6px;max-width:58ch}
+.grid{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;margin-top:22px}
+@media (min-width:760px){.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}}
+.lesson{--a:var(--logic);--a-soft:var(--logic-soft);display:grid;grid-template-rows:auto 1fr auto auto;gap:12px;text-decoration:none;color:var(--ink);background:var(--a-soft);border:1px solid color-mix(in srgb,var(--a) 28%,var(--line));border-radius:22px;padding:20px 20px 18px;min-width:0;position:relative}
+.lesson.turing{--a:var(--turing);--a-soft:var(--turing-soft)}
+.lesson.time{--a:var(--time);--a-soft:var(--time-soft)}
+.lesson.ml{--a:var(--ml);--a-soft:var(--ml-soft)}
+.lesson .top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.lesson .topic{font-family:var(--display);font-weight:700;font-size:.9rem;color:var(--a);display:flex;align-items:center;gap:8px}
+.lesson .topic b{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--a);color:#fff;font-size:.78rem;font-weight:800}
+.lesson h3{font-size:1.45rem;font-weight:800;margin-top:6px}
+.lesson .motif{flex:0 0 auto;width:132px;height:84px}
+.lesson .motif svg{width:100%;height:100%;display:block;overflow:visible}
+.lesson p{font-size:1rem;line-height:1.5;max-width:46ch}
+.lesson p.use{font-size:.95rem;color:var(--muted);padding-top:10px;border-top:1px dashed color-mix(in srgb,var(--a) 35%,var(--line))}
+.lesson p.use b{font-family:var(--display);font-weight:700;color:var(--a)}
+.lesson .meta{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;font-family:var(--display);font-weight:500;font-size:.86rem;color:var(--muted)}
+.lesson .meta b{font-weight:700;color:var(--ink)}
+.lesson .open{margin-left:auto;font-weight:700;color:var(--a);display:inline-flex;align-items:center;gap:6px}
+.lesson .open svg{width:16px;height:16px;transition:transform .18s}
+.lesson:hover .open svg{transform:translateX(3px)}
+.lesson:focus-visible{outline-color:var(--a)}
+@media (max-width:460px){.lesson .motif{width:104px;height:66px}}
+
+/* Five minutes */
+.tour{margin-top:56px;display:grid;gap:14px}
+.tour h2{font-size:1.5rem;font-weight:700}
+.tour .sub{color:var(--muted);margin-top:-6px;max-width:58ch}
+.tour ol{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+@media (min-width:640px){.tour ol{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (min-width:1000px){.tour ol{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.tour li a{display:grid;gap:6px;padding:14px 16px;border-radius:16px;background:var(--surface);border:1px solid var(--line);text-decoration:none;color:var(--ink);height:100%;align-content:start}
+.tour li a:hover{border-color:var(--ink)}
+.tour li b{font-family:var(--display);font-size:1.02rem;font-weight:700;display:flex;align-items:center;gap:8px}
+.tour li b i{width:9px;height:9px;border-radius:50%;flex:0 0 auto}
+.tour li span{font-size:.95rem;color:var(--muted);line-height:1.5}
+
+footer{margin-top:64px;padding-top:20px;border-top:1px solid var(--line);display:flex;flex-wrap:wrap;gap:8px 22px;align-items:center;font-family:var(--display);font-size:.9rem;color:var(--muted)}
+footer a{color:var(--ink);text-decoration:none}
+footer a:hover{text-decoration:underline}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<div class="cbar"><div class="in">
+  <a class="mark" href="index.html" aria-current="page"><span class="dots" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span class="name">Mohammad Mahmoud</span> <small>Interactive lessons</small></a>
+  <nav aria-label="Lessons">
+    <a href="logic.html"><i style="background:var(--logic)"></i>Logic</a>
+    <a href="ml.html"><i style="background:var(--ml)"></i>Machine learning</a>
+    <a href="running-time.html"><i style="background:var(--time)"></i>Running time</a>
+    <a href="turing.html"><i style="background:var(--turing)"></i>Turing machines</a>
+  </nav>
+</div></div>
+
+<div class="shell">
+
+<header class="hero">
+  <div>
+    <h1>Guess, then check.</h1>
+    <div class="note">
+      <b>Why guess first?</b>
+      <p>Your first guess is your intuition, and intuition is natural: it shows up whether you ask for it or not, and it is right more often than you would think. The trick is not to switch it off but to use it and then examine it. Say what you expect <em>before</em> you look, then see what actually happens. A right guess becomes something you can trust. A wrong guess shows you exactly where your picture of the problem bends — and that is worth more than being told the answer.</p>
+    </div>
+    <p class="lede">Four short lessons — logic, machine learning, running time and Turing machines — made entirely of exercises that work this way. You commit to an answer; then the page shows you what happens and why. Nothing is revealed before you have guessed.</p>
+    <p class="who">Built by <a href="../index.html">Mohammad Mahmoud</a>, a mathematician (PhD, computability and logic) who teaches theory of computation, algorithms and data structures at the University of Toronto. Plain HTML, no accounts; progress stays in your browser.</p>
+  </div>
+
+  <div class="try" id="try" aria-label="A ten-second exercise">
+    <p class="ask" id="tryAsk"></p>
+    <div class="likes" id="tryGrid" role="group" aria-label="Who likes which flavour"></div>
+    <div class="say" id="trySay" aria-live="polite">Nothing is revealed until you commit — that is the rule on every page here.</div>
+    <div class="row">
+      <button class="btn tf" type="button" id="tryTrue">True</button>
+      <button class="btn tf" type="button" id="tryFalse">False</button>
+      <button class="btn" type="button" id="tryAnother" hidden>Another sentence</button>
+      <a class="btn go" href="logic.html" id="tryGo" hidden>Start lesson 1</a>
+      <span class="tally" id="tryTally"></span>
+    </div>
+  </div>
+</header>
+
+<section class="lessons" aria-labelledby="lessonsH">
+  <h2 id="lessonsH">The four lessons</h2>
+  <p class="sub">Start anywhere: each lesson stands on its own. The numbers are a suggested order, not a requirement.</p>
+  <div class="grid">
+
+    <a class="lesson logic" href="logic.html">
+      <div class="top">
+        <div><div class="topic"><b>1</b>Logic</div><h3>Quantifier Gym</h3></div>
+        <div class="motif" aria-hidden="true"><svg viewBox="0 0 132 84">
+          <rect x="4" y="8" width="30" height="30" rx="8" fill="var(--forall)"/><text x="19" y="24" font-family="var(--math)" font-size="21" fill="#fff" text-anchor="middle" dominant-baseline="central">∀</text>
+          <text x="46" y="24" font-family="var(--math)" font-size="18" font-style="italic" fill="var(--ink)" dominant-baseline="central">x</text>
+          <rect x="60" y="8" width="30" height="30" rx="8" fill="var(--exists)"/><text x="75" y="24" font-family="var(--math)" font-size="21" fill="#fff" text-anchor="middle" dominant-baseline="central">∃</text>
+          <text x="102" y="24" font-family="var(--math)" font-size="18" font-style="italic" fill="var(--ink)" dominant-baseline="central">y</text>
+          <text x="118" y="43" font-family="var(--math)" font-size="22" fill="var(--ink)" text-anchor="middle" dominant-baseline="central">≠</text>
+          <rect x="4" y="48" width="30" height="30" rx="8" fill="var(--exists)"/><text x="19" y="64" font-family="var(--math)" font-size="21" fill="#fff" text-anchor="middle" dominant-baseline="central">∃</text>
+          <text x="46" y="64" font-family="var(--math)" font-size="18" font-style="italic" fill="var(--ink)" dominant-baseline="central">y</text>
+          <rect x="60" y="48" width="30" height="30" rx="8" fill="var(--forall)"/><text x="75" y="64" font-family="var(--math)" font-size="21" fill="#fff" text-anchor="middle" dominant-baseline="central">∀</text>
+          <text x="102" y="64" font-family="var(--math)" font-size="18" font-style="italic" fill="var(--ink)" dominant-baseline="central">x</text>
+        </svg></div>
+      </div>
+      <p>Sentences with “for all” and “there exists”. Learn why swapping their order changes the meaning, practise with small games and puzzles, then write a proof and let the page try to break it.</p>
+      <p class="use"><b>In real life:</b> it is the difference between “every user has a password” and “one password works for every user”. Same words, different order — and one of them is a security hole.</p>
+      <div class="meta"><span><b>7</b> modules</span><span><b>57</b> checks</span><span>about 30 min</span><span class="open">Open<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></span></div>
+    </a>
+
+    <a class="lesson ml" href="ml.html">
+      <div class="top">
+        <div><div class="topic"><b>2</b>Machine learning</div><h3>Nearest Neighbours</h3></div>
+        <div class="motif" aria-hidden="true"><svg viewBox="0 0 132 84">
+          <path d="M4 60 C 30 70, 48 30, 70 42 S 110 20, 130 30" stroke="var(--ink)" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+          <g fill="var(--sand)"><circle cx="18" cy="24" r="5"/><circle cx="36" cy="38" r="5"/><circle cx="52" cy="18" r="5"/><circle cx="70" cy="26" r="5"/><circle cx="90" cy="12" r="5"/><circle cx="112" cy="16" r="5"/></g>
+          <g fill="var(--sea)"><circle cx="16" cy="70" r="5"/><circle cx="40" cy="74" r="5"/><circle cx="60" cy="60" r="5"/><circle cx="84" cy="66" r="5"/><circle cx="104" cy="52" r="5"/><circle cx="122" cy="68" r="5"/></g>
+          <rect x="70" y="40" width="11" height="11" transform="rotate(45 75.5 45.5)" fill="var(--pink)" stroke="var(--ink)" stroke-width="1.5"/>
+        </svg></div>
+      </div>
+      <p>A computer that classifies a new point by looking at its nearest neighbours. Drag points around, change <span class="math"><i>k</i></span>, and watch how the decision changes.</p>
+      <p class="use"><b>In real life:</b> it is the idea behind “people who bought this also bought…” — find the shoppers most like you and copy what they chose — and behind reading handwritten digits on a cheque or a postcode.</p>
+      <div class="meta"><span><b>11</b> exercises</span><span>about 15 min</span><span class="open">Open<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></span></div>
+    </a>
+
+    <a class="lesson time" href="running-time.html">
+      <div class="top">
+        <div><div class="topic"><b>3</b>Running time</div><h3>Counting Steps</h3></div>
+        <div class="motif" aria-hidden="true"><svg viewBox="0 0 132 84">
+          <path d="M8 76H124" stroke="var(--line)" stroke-width="2"/><path d="M8 76V6" stroke="var(--line)" stroke-width="2"/>
+          <path d="M8 76 L124 40" stroke="var(--sea)" stroke-width="3" fill="none" stroke-linecap="round"/>
+          <path d="M8 76 C 50 72, 80 60, 124 22" stroke="var(--sand)" stroke-width="3" fill="none" stroke-linecap="round"/>
+          <path d="M8 76 C 60 76, 80 70, 92 8" stroke="var(--time)" stroke-width="3" fill="none" stroke-linecap="round"/>
+          <circle cx="92" cy="43" r="4" fill="var(--ink)"/>
+          <path d="M92 43V76" stroke="var(--ink)" stroke-width="1.5" stroke-dasharray="3 3"/>
+        </svg></div>
+      </div>
+      <p>The running time of one computation is a number. The running time of a program is a function: how long it takes depending on the size of the input. Learn to count steps and compare programs.</p>
+      <p class="use"><b>In real life:</b> it is why an app that feels instant with a hundred photos can crawl with a hundred thousand — and how engineers predict that before it happens.</p>
+      <div class="meta"><span><b>11</b> exercises</span><span>about 15 min</span><span class="open">Open<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></span></div>
+    </a>
+
+    <a class="lesson turing" href="turing.html">
+      <div class="top">
+        <div><div class="topic"><b>4</b>Turing machines</div><h3>Mechanical Moves</h3></div>
+        <div class="motif" aria-hidden="true"><svg viewBox="0 0 132 84">
+          <g stroke="var(--line)" stroke-width="2" fill="var(--surface)"><rect x="4" y="22" width="20" height="26" rx="5"/><rect x="28" y="22" width="20" height="26" rx="5"/><rect x="52" y="22" width="20" height="26" rx="5" stroke="var(--turing)" stroke-width="3"/><rect x="76" y="22" width="20" height="26" rx="5" stroke-dasharray="4 3"/><rect x="100" y="22" width="20" height="26" rx="5"/></g>
+          <g font-family="var(--mono)" font-size="16" font-weight="700" fill="var(--ink)" text-anchor="middle" dominant-baseline="central"><text x="14" y="36">1</text><text x="38" y="36">1</text><text x="62" y="36">1</text><text x="110" y="36">1</text></g>
+          <path d="M62 62 L55 72 H69 Z" fill="var(--turing)"/>
+          <rect x="4" y="60" width="34" height="18" rx="6" fill="var(--turing)"/><text x="21" y="69" font-family="var(--mono)" font-size="11" font-weight="700" fill="#fff" text-anchor="middle" dominant-baseline="central">q1</text>
+        </svg></div>
+      </div>
+      <p>The simplest possible computer: a tape, a head, and a short list of rules. Step through small programs one move at a time, then write one yourself.</p>
+      <p class="use"><b>In real life:</b> everything your phone or laptop does, this machine can do too. That is how we know some problems no computer will ever solve — like telling in advance whether a program will finish.</p>
+      <div class="meta"><span><b>6</b> exercises</span><span>about 10 min</span><span class="open">Open<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></span></div>
+    </a>
+
+  </div>
+</section>
+
+<section class="tour" aria-labelledby="tourH">
+  <h2 id="tourH">If you only have five minutes</h2>
+  <p class="sub">One exercise from each lesson, each a minute or two long.</p>
+  <ol>
+    <li><a href="logic.html#game"><b><i style="background:var(--logic)"></i>Play against a sceptic</b><span>You claim something is true; an opponent picks the numbers that try to break it. If you can always answer, your claim holds.</span></a></li>
+    <li><a href="ml.html#playground"><b><i style="background:var(--ml)"></i>Where does the new point go?</b><span>Drop a point among the coloured ones and guess which colour it gets. Then change <span class="math"><i>k</i></span> and watch the border move.</span></a></li>
+    <li><a href="running-time.html#ex-bigo"><b><i style="background:var(--time)"></i>Who wins, you or the input?</b><span>Claim that one running time stays under another, lock in your numbers, and let a challenger pick the input size. Then switch sides and break a claim yourself.</span></a></li>
+    <li><a href="turing.html#ex-compute"><b><i style="background:var(--turing)"></i>What does this machine compute?</b><span>Three rules and a tape. Guess the formula, then run the machine and count what is left.</span></a></li>
+  </ol>
+</section>
+
+<footer>
+  <span>Mohammad Mahmoud</span>
+  <a href="../index.html">mmsquared.ca</a>
+  <a href="https://github.com/moassem89">github.com/moassem89</a>
+  <a href="https://ca.linkedin.com/in/mohammad-mahmoud-phd-8002724b">LinkedIn</a>
+</footer>
+</div>
+
+<script>
+(function(){
+'use strict';
+/* The hero exercise: the ice-cream grid from lesson 1, in ten seconds.
+   A fixed grid of hearts and one sentence. The learner commits to true or false; then the grid
+   highlights the rows or columns that decide it, and the feedback names the sentence the learner
+   probably checked instead (the same words in the other order). */
+const PEOPLE=['Ada','Bo','Cleo','Dev'];
+const FLAV=[['Strawberry','#FF6B9A'],['Pistachio','#4FC07E'],['Mango','#FFB341'],['Blueberry','#6C8DFF']];
+const G1=[[1,0,1,0],[0,1,0,0],[1,0,1,1],[0,0,0,1]];   // every row has a heart; no column is full
+const G2=[[1,0,0,0],[1,1,1,1],[0,0,1,0],[0,1,0,0]];   // Bo's row is full
+const ROUNDS=[
+  {g:G1, s:'Everyone likes at least one flavour.', ans:true,
+   win:[[0,0],[1,1],[2,0],[3,3]], gap:[], dim:false,
+   intro:'Nothing is revealed until you commit — that is the rule on every page here.',
+   yes:'<b>True.</b> Read across the rows: every person has at least one heart. That is all the sentence asks — it says nothing about <em>which</em> flavour.',
+   no:'<b>It is true.</b> Read across the rows, not down the columns: Ada, Bo, Cleo and Dev each have a heart somewhere, and that is all the sentence asks. If you were looking for one flavour that everyone likes, that is a different sentence — and it is next.'},
+  {g:G1, s:'One flavour is liked by everyone.', ans:false,
+   win:[[0,0],[2,0]], gap:[[1,0],[3,0]], dim:true,
+   intro:'Same grid, different sentence.',
+   yes:'<b>False.</b> A flavour liked by everyone would be a column with four hearts, and no column has them: the best any flavour manages is two. Strawberry, for one, is skipped by Bo and Dev. Same grid and same two ideas as before — only the order changed.',
+   no:'<b>It is false.</b> For this one you read down the columns: a flavour liked by everyone is a column with four hearts, and there is none. Strawberry is missing Bo and Dev. What <em>is</em> true here is that everyone likes some flavour — the previous sentence. Swapping “everyone” and “one flavour” changed the meaning.'},
+  {g:G2, s:'Someone likes every flavour.', ans:true,
+   win:[[1,0],[1,1],[1,2],[1,3]], gap:[], dim:true,
+   intro:'New grid, new sentence.',
+   yes:'<b>True.</b> Bo’s row is full. One such person is all the sentence needs; it says nothing about the other three.',
+   no:'<b>It is true.</b> Look across Bo’s row: four hearts. “Someone” needs only one person, so the other rows don’t matter, however thin they are.'}
+];
+const grid=document.getElementById('tryGrid'), ask=document.getElementById('tryAsk'), say=document.getElementById('trySay'), tally=document.getElementById('tryTally');
+const bTrue=document.getElementById('tryTrue'), bFalse=document.getElementById('tryFalse'), bAnother=document.getElementById('tryAnother'), go=document.getElementById('tryGo');
+let cur=0, answered=0, right=0, done=false;
+function draw(){
+  const r=ROUNDS[cur]; let h='<div></div>';
+  FLAV.forEach(f=>{ h+='<div class="hd"><i style="background:'+f[1]+'"></i>'+f[0]+'</div>'; });
+  PEOPLE.forEach((p,i)=>{
+    h+='<div class="rh">'+p+'</div>';
+    FLAV.forEach((f,j)=>{ const on=r.g[i][j]; h+='<span class="cell'+(on?' on':'')+'" data-i="'+i+'" data-j="'+j+'" role="img" aria-label="'+p+(on?' likes ':' does not like ')+f[0]+'"></span>'; });
+  });
+  grid.innerHTML=h;
+  ask.innerHTML='<q>'+r.s+'</q> <small>True or false for this grid? Decide first, then check.</small>';
+  done=false; bTrue.disabled=false; bFalse.disabled=false; bAnother.hidden=true; go.hidden=true;
+  say.className='say'; say.textContent=r.intro;
+}
+function cell(i,j){ return grid.querySelector('.cell[data-i="'+i+'"][data-j="'+j+'"]'); }
+function commit(choice){
+  if(done) return;
+  done=true; answered++;
+  const r=ROUNDS[cur], ok=(choice===r.ans);
+  if(ok) right++;
+  bTrue.disabled=true; bFalse.disabled=true;
+  if(r.dim){ grid.querySelectorAll('.cell').forEach(c=>c.classList.add('dim')); }
+  r.win.forEach(([i,j])=>{ const c=cell(i,j); c.classList.remove('dim'); c.classList.add('win'); });
+  r.gap.forEach(([i,j])=>{ const c=cell(i,j); c.classList.remove('dim'); c.classList.add('gap'); });
+  say.className='say '+(ok?'ok':'no'); say.innerHTML=ok?r.yes:r.no;
+  bAnother.hidden=false; go.hidden=false;
+  tally.textContent=right+' of '+answered+' right';
+}
+bTrue.addEventListener('click',()=>commit(true));
+bFalse.addEventListener('click',()=>commit(false));
+bAnother.addEventListener('click',()=>{ cur=(cur+1)%ROUNDS.length; draw(); });
+draw();
+})();
+</script>
+</body>
+</html>
+
+</body></html>
