@@ -379,7 +379,7 @@ a.btn{text-decoration:none}
   <div class="mod-head">
     <p class="num"><b>2</b> · the main set</p>
     <h2>ε–δ look-alikes</h2>
-    <p class="intro">Each card shows a sentence that resembles the definition of <span class="fm">lim<sub><i>x</i>→<i>a</i></sub> <i>f</i>(<i>x</i>) = ℓ</span>. Some are the real thing in disguise, some are trivially true, some are impossible, and some say something else entirely. Throughout, <span class="fm"><i>f</i> : ℝ → ℝ</span> and <span class="fm"><i>a</i>, ℓ ∈ ℝ</span> are fixed. Several items are lifted from the Ramp-Up's own "valid definition?" problem; the rest are new.</p>
+    <p class="intro">Each card shows a sentence that resembles the definition of <span class="fm">lim<sub><i>x</i>→<i>a</i></sub> <i>f</i>(<i>x</i>) = ℓ</span>. Some are the real thing in disguise, some are trivially true, some are impossible, and some say something else entirely. Throughout, <span class="fm"><i>f</i> : ℝ → ℝ</span> and <span class="fm"><i>a</i>, ℓ ∈ ℝ</span> are fixed. Several items are adapted from the Ramp-Up's "valid definition?" problem; the rest are new. One difference from the Ramp-Up: it reads every <span class="fm">|<i>x</i> − <i>a</i>| &lt; <i>γ</i></span> as <span class="fm">0 &lt; |<i>x</i> − <i>a</i>| &lt; <i>γ</i></span>, while this deck reads each sentence exactly as written, so <span class="fm"><i>x</i> = <i>a</i></span> is left out only where a <span class="fm">0 &lt;</span> says so.</p>
   </div>
   <div class="panel">
     <div class="deck-top">
@@ -568,9 +568,11 @@ const $=(s,r)=>(r||document).querySelector(s);
 const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 // Formula renderer: single Latin letters and ε/δ go italic, a_n becomes a subscript, ∀ ∃ ¬ become colored chips.
 function mathify(s){
-  return esc(s).replace(/([A-Za-z])_([A-Za-z0-9])|(?<![A-Za-z&#])([A-Za-z])(?![A-Za-z;])|[∀∃¬]|[εδ]/g,function(m,b,sub,single){
+  // No lookbehind here: Safari before 16.4 cannot parse one, and a parse error would stop the whole page.
+  // A lone letter right after a letter, & or # (a word, or an entity like &lt;) is left as it is.
+  return esc(s).replace(/([A-Za-z])_([A-Za-z0-9])|([A-Za-z])(?![A-Za-z;])|[∀∃¬]|[εδ]/g,function(m,b,sub,single,off,str){
     if(b) return '<i>'+b+'</i><sub>'+sub+'</sub>';
-    if(single) return '<i>'+single+'</i>';
+    if(single) return /[A-Za-z&#]/.test(str.charAt(off-1))?m:'<i>'+single+'</i>';
     if(m==='∀') return '<b class="q fa" title="for all">∀</b>';
     if(m==='∃') return '<b class="q ex" title="there exists">∃</b>';
     if(m==='¬') return '<b class="q ng" title="not">¬</b>';
@@ -678,12 +680,12 @@ const CARDS=[
   opts:['weaker: it allows three times the error.', 'equivalent.', 'stronger.', 'always true.'], ans:1,
   why:'Feed it <i>ε</i>/4: you get |<i>f</i>(<i>x</i>) − ℓ| ≤ 3<i>ε</i>/4 &lt; <i>ε</i>. Any fixed positive multiple of <i>ε</i>, and ≤ in place of &lt;, leave the definition unchanged. What matters is the quantifier order and who is allowed to depend on whom.',
   nudge:'Try running the sentence with a smaller ε than the one you were handed.'},
- {tag:'Ramp-Up problem, item (g)', f:'(∀ε≥0)(∃δ≥0)(∀x∈[a−δ, a+δ])[ |f(x)−ℓ|≤ε ]', q:'Only two symbols changed: ≥ for &gt;, and a closed interval. What does it say?',
+ {tag:'Ramp-Up item (g), read as written', f:'(∀ε≥0)(∃δ≥0)(∀x∈[a−δ, a+δ])[ |f(x)−ℓ|≤ε ]', q:'Against card 1: ≥ in both quantifiers, ≤ <i>ε</i>, and the closed interval [<i>a</i> − <i>δ</i>, <i>a</i> + <i>δ</i>] where the punctured ball was. What does it say?',
   opts:['Same as the limit.', fm('f(a) = ℓ')+', and nothing about nearby points.', 'Always true.', fm('f')+' is constant near '+fm('a')+'.'], ans:1,
-  why:'<i>δ</i> = 0 is now allowed, and [<i>a</i>, <i>a</i>] is just {<i>a</i>}. ∃loïse answers <i>δ</i> = 0 to every <i>ε</i>, and the sentence shrinks to |<i>f</i>(<i>a</i>) − ℓ| ≤ <i>ε</i> for all <i>ε</i> ≥ 0, i.e. <i>f</i>(<i>a</i>) = ℓ. Conversely, if <i>f</i>(<i>a</i>) = ℓ then <i>δ</i> = 0 always works. Two tiny ≥ signs deleted the limit entirely.'},
- {tag:'Ramp-Up problem, item (i)', f:'(∀ε>0)(∃δ>0)(∀x∈ℝ)[ x−a<δ ⇒ |f(x)−ℓ|<ε ]', q:'The absolute value around x − a is gone. What does it say?',
+  why:'<i>δ</i> = 0 is now allowed, and [<i>a</i>, <i>a</i>] is just {<i>a</i>}. ∃loïse answers <i>δ</i> = 0 to every <i>ε</i>, and the sentence shrinks to |<i>f</i>(<i>a</i>) − ℓ| ≤ <i>ε</i> for all <i>ε</i> ≥ 0, i.e. <i>f</i>(<i>a</i>) = ℓ. Conversely, if <i>f</i>(<i>a</i>) = ℓ then <i>δ</i> = 0 always works. Two tiny ≥ signs deleted the limit entirely. (The Ramp-Up asks this item under its convention that <i>x</i> = <i>a</i> is never examined. Read that way, <i>δ</i> = 0 leaves no <i>x</i> at all, and the sentence is vacuously true for every <i>f</i>: that is the Ramp-Up\'s answer. This deck reads the sentence as written, so <i>x</i> = <i>a</i> counts.)'},
+ {tag:'Ramp-Up item (i), read as written', f:'(∀ε>0)(∃δ>0)(∀x∈ℝ)[ x−a<δ ⇒ |f(x)−ℓ|<ε ]', q:'The bars around <i>x</i> − <i>a</i> are gone, and so is the 0 &lt;. What does it say?',
   opts:['Same as the limit.', 'The left-hand limit at '+fm('a')+' is ℓ.', fm('f = ℓ')+' on all of (−∞, '+fm('a')+'] and '+fm('f(x)')+' → ℓ as '+fm('x → a⁺')+'.', 'Always false.'], ans:2,
-  why:'<i>x</i> − <i>a</i> &lt; <i>δ</i> holds for every <i>x</i> to the left of <i>a</i>, however far away, and for <i>x</i> = <i>a</i> itself. So the bracket demands |<i>f</i>(<i>x</i>) − ℓ| &lt; <i>ε</i> on (−∞, <i>a</i> + <i>δ</i>) for every <i>ε</i>, which forces <i>f</i> = ℓ on (−∞, <i>a</i>], plus the ordinary right-hand limit. A missing pair of bars turned a local statement into a global one.'},
+  why:'<i>x</i> − <i>a</i> &lt; <i>δ</i> holds for every <i>x</i> to the left of <i>a</i>, however far away, and for <i>x</i> = <i>a</i> itself. So the bracket demands |<i>f</i>(<i>x</i>) − ℓ| &lt; <i>ε</i> on (−∞, <i>a</i> + <i>δ</i>) for every <i>ε</i>, which forces <i>f</i> = ℓ on (−∞, <i>a</i>], plus the ordinary right-hand limit. A missing pair of bars turned a local statement into a global one. (Under the Ramp-Up\'s convention that <i>x</i> = <i>a</i> is never examined, the same sentence leaves <i>f</i>(<i>a</i>) free: <i>f</i> = ℓ on (−∞, <i>a</i>), plus the right-hand limit. Either way, it is not the limit.)'},
  {tag:'sequences', f:'(∀ε>0)(∀c∈ℕ)(∃n∈ℕ)[ n>c ∧ |f_n−ℓ|<ε ]', q:fm('(f_n)')+' is a real sequence. What does this say about ℓ?',
   opts:[fm('f_n')+' → ℓ.', 'ℓ is the limit of some subsequence of '+fm('(f_n)')+'.', fm('f_n = ℓ')+' for infinitely many '+fm('n')+'.', 'Always true.'], ans:1,
   why:'(∀<i>c</i>)(∃<i>n</i> &gt; <i>c</i>) means "for infinitely many <i>n</i>". So for every <i>ε</i>, infinitely many terms are <i>ε</i>-close to ℓ: ℓ is a cluster point, the limit of some subsequence. <i>f<sub>n</sub></i> = (−1)<sup><i>n</i></sup> with ℓ = 1 passes, yet the sequence does not converge. Compare the Ramp-Up definition, where <i>c</i> is existential and <i>n</i> universal.'},
@@ -744,8 +746,8 @@ const SCN=[
   lose:'Both sides sit at distance 0.4 from 1, so every round with ε &gt; 0.4 was easy. Once ε ≤ 0.4 no δ can help: every punctured ball around 1 contains points at distance exactly 0.4. This is the negation, lived: (∃ε&gt;0)(∀δ&gt;0)(∃x) with 0 &lt; |x − 1| &lt; δ and |f(x) − 1| ≥ ε.'},
  {id:'osc', label:'sin(1/(x−1))', title:'Claim: lim 1 + 0.8·sin(1/(x−1)) = 1 as x → 1.  (false)', f:x=>Math.abs(x-1)<1e-12?NaN:1+0.8*Math.sin(1/(x-1)), dev:x=>Math.abs(x-1)<1e-12?NaN:0.8*Math.abs(Math.sin(1/(x-1))), a:1, L:1, dom:[0,2], yr:[-0.1,2.1], mode:'normal', truth:false, thr:0.8,
   worst:d=>{ const k=Math.ceil((1/d-Math.PI/2)/(2*Math.PI))+1; return 1+1/(Math.PI/2+2*Math.PI*k); },
-  hintFa:'She cannot win once ε ≤ 0.8. The peaks sit at x = 1 + 1/(π/2 + 2πk): pick k large enough that a peak lands inside her band, or slide x slowly and watch the marker climb. (At ε = 0.8 exactly only a peak itself escapes, which takes typing x to many digits; any ε a little below 0.8 gives you room.)',
-  lose:'Every punctured ball around 1, however tiny, contains a peak where sin(1/(x − 1)) = 1: take x = 1 + 1/(π/2 + 2πk) with k large. So no δ works for any ε ≤ 0.8, and the same argument kills every other candidate ℓ. The function is bounded (card 8 of the deck is satisfied) but has no limit.'},
+  hintFa:'She cannot win once ε ≤ 0.8. The peaks sit at x = 1 + 1/(π/2 + 2πk): pick k large enough that a peak lands inside her band, or slide x slowly and watch the marker climb. (At ε = 0.8 exactly only a peak or a trough itself escapes, which takes typing x to many digits; any ε a little below 0.8 gives you room.)',
+  lose:'Every punctured ball around 1, however tiny, contains a peak where sin(1/(x − 1)) = 1: take x = 1 + 1/(π/2 + 2πk) with k large. So no δ works for any ε ≤ 0.8. Every such ball also holds troughs, where f = 0.2, so peaks and troughs together rule out every other candidate ℓ. The function is bounded (card 8 of the deck is satisfied) but has no limit.'},
  {id:'swap', label:'∃δ ∀ε, swapped', title:'Same x² at 1, same ℓ = 1, but the sentence is (∃δ>0)(∀ε>0)(∀x)[…].  (false)', f:x=>x*x, dev:x=>Math.abs((x-1)*(x+1)), a:1, L:1, dom:[0,2], yr:[-0.2,4.2], mode:'swap', truth:false}
 ];
 const gs={sc:SCN[0], role:'ex', state:'pick', round:0, seq:[1], eps:1, del:0.3, x:1.15, mark:null, hist:[], losses:0};
@@ -980,7 +982,8 @@ const nx=v=>Number.isFinite(v)?String(+v.toPrecision(10)):'–', nd=v=>Number.is
 
 /* A small evaluator for δ as an expression in ε. The input is tokenised and parsed by hand; nothing is passed to eval. */
 function parseRule(src){
-  const s=String(src).replace(/[−–]/g,'-').replace(/[×·]/g,'*').replace(/÷/g,'/').replace(/\s+/g,'');
+  // Also accepted: min{1, ε/5} and [ ] (written maths uses braces), ε² and ε³, and a leading "δ =".
+  const s=String(src).replace(/[−–]/g,'-').replace(/[×·]/g,'*').replace(/÷/g,'/').replace(/²/g,'^2').replace(/³/g,'^3').replace(/[{\[]/g,'(').replace(/[}\]]/g,')').replace(/\s+/g,'').replace(/^(δ|delta|d)=/i,'');
   if(!s) return {err:'Write a rule first: δ in terms of ε.'};
   const toks=[]; let i=0, m;
   while(i<s.length){
@@ -1029,9 +1032,13 @@ function evalRule(n,e){
   return NaN;
 }
 
-/* ∀bélard's attack on a rule: a list of ε (ten shown, 121 more from 10⁻⁶ to 10⁶), and for each the worst x in the δ-band. */
+/* ∀bélard's attack on a rule: a list of ε (ten shown, 12,001 more from 10⁻⁶ to 10⁶), and for each the worst x in the δ-band. */
 const EPS_SHOW=[1000,100,10,5,2,1,0.5,0.1,0.01,0.001];
-function epsList(){ const out=EPS_SHOW.slice(); for(let k=-60;k<=60;k++) out.push(+Math.pow(10,k/10).toPrecision(6)); return out; }
+// The hidden list is dense (about 0.23% apart): a wrong rule can fail only on a narrow band of ε, e.g. min(1, ε/4.9) for x² at 2
+// fails only for 4.41 < ε < 5, and a coarse list would step right over it. Each round is one comparison with sc.safe(ε),
+// and the expensive scan for ∀bélard's x runs only on rounds that fail.
+const EPS_ALL=(()=>{ const out=EPS_SHOW.slice(); for(let k=-6000;k<=6000;k++) out.push(+Math.pow(10,k/1000).toPrecision(6)); return out; })();
+function epsList(){ return EPS_ALL; }
 function worstIn(sc,del){
   let best=null, bd=-1; const N=1200, a=sc.a;
   const probe=x=>{ if(x===a) return; const y=sc.f(x); if(!Number.isFinite(y)) return; const d=Math.abs(y-sc.L); if(d>bd){ bd=d; best=x; } };
@@ -1049,7 +1056,7 @@ function attack(sc,ast){
     // the x that ∀bélard names; if it misses by a hair, any x between the safe radius and δ escapes, and a round is only lost
     // when such an x can actually be shown.
     const s=sc.safe(e);
-    let bad=d>s*(1+1e-8), w=worstIn(sc,d);
+    let bad=d>s*(1+1e-8), w=bad?worstIn(sc,d):{x:null,spread:NaN};
     if(bad&&!(w.x!=null&&w.spread>=e)){ const t=(s+Math.min(d,2*s+1))/2; w={x:sc.a+t,spread:Math.abs(sc.f(sc.a+t)-sc.L)}; if(!(w.spread>=e)) bad=false; }
     rounds.push({eps:e,del:d,x:w.x,spread:w.spread,bad:bad});
   });
@@ -1086,7 +1093,7 @@ const PRF=[
   reason:'with δ = min(1, ε/5), every x in the band has 1 &lt; x &lt; 3, so |x² − 4| = |x − 2|·|x + 2| &lt; δ · 5 ≤ ε',
   hint(r){
     if(r.constant) return 'Your δ does not look at ε at all. A δ chosen before ε is the swapped sentence of deck card 2, and only a function that is constantly 4 near 2 could survive it.';
-    if(r.onlyLarge) return 'Your rule is fine while ε is small, but δ grows with ε, and then x can wander: at x = '+nx(r.x)+', |x + 2| = '+nx(Math.abs(r.x+2))+', so 5 is no longer a bound on the second factor. Cap the radius: min(1, …) keeps every x inside (1, 3), where |x + 2| &lt; 5.';
+    if(r.onlyLarge&&Math.abs(r.x+2)>=5) return 'Your rule is fine while ε is small, but δ grows with ε, and then x can wander: at x = '+nx(r.x)+', |x + 2| = '+nx(Math.abs(r.x+2))+', so 5 is no longer a bound on the second factor. Cap the radius: min(1, …) keeps every x inside (1, 3), where |x + 2| &lt; 5.';
     const [sd,ss]=cmpPair(r.del,r.eps/(2+Math.sqrt(4+r.eps)));
     return 'Near 2, |x² − 4| = |x − 2|·|x + 2|, and |x + 2| is a little more than 4 just to the right of 2, so ε/4 is not enough. With δ ≤ 1 you have |x + 2| &lt; 5, and ε/5 then works. The largest safe δ at ε = '+nf(r.eps)+' is √(4 + ε) − 2 = '+ss+'; yours is '+sd+'.';
   },
@@ -1101,7 +1108,7 @@ const PRF=[
    ' «≤» ', {opts:['ε','ε/5','5ε','1'], ans:0, why:['','5δ ≤ 5 · (ε/5) = ε, not ε/5.','5δ ≤ ε, since δ ≤ ε/5; 5ε would be weaker than what the claim needs.','5δ = min(5, ε), which is more than 1 as soon as ε &gt; 1; and the target was ε anyway.']},
    ', because «δ ≤ ε/5». ∎'
   ],
-  chainWin:'The cap δ ≤ 1 is used exactly once, to earn |x + 2| &lt; 5, and that bound is used exactly once, to turn the product into 5δ. Every proof of a limit of a polynomial has this shape: one factor is small because of δ, the others are bounded because of the cap.'}
+  chainWin:'The cap δ ≤ 1 is used exactly once, to earn |x + 2| &lt; 5, and that bound is used exactly once, to turn the product into 5δ. The standard proof for a polynomial of degree two or more has this shape: one factor is small because of δ, the others are bounded because of the cap.'}
 ];
 let prCur=PRF[0], prAst=null, prRounds=null;
 const gapSel={}, chainBad={};
@@ -1128,7 +1135,7 @@ function prCheck(){
   const ast=parsed.ast, rounds=attack(sc,ast);
   const shown=rounds.slice(0,EPS_SHOW.length), hidden=rounds.length-shown.length;
   rd.hidden=false;
-  rd.innerHTML=shown.map(r=>'<span class="'+(r.bad?'bad':'ok')+'">ε = '+nf(r.eps)+(r.bad?' ✗':' ✓')+'</span>').join('')+'<span class="more">and '+hidden+' more between 10<sup>−6</sup> and 10<sup>6</sup>'+(rounds.slice(EPS_SHOW.length).some(r=>r.bad)?', not all survived':', all survived')+'</span>';
+  rd.innerHTML=shown.map(r=>'<span class="'+(r.bad?'bad':'ok')+'">ε = '+nf(r.eps)+(r.bad?' ✗':' ✓')+'</span>').join('')+'<span class="more">and '+hidden.toLocaleString('en-US')+' more between 10<sup>−6</sup> and 10<sup>6</sup>'+(rounds.slice(EPS_SHOW.length).some(r=>r.bad)?', not all survived':', all survived')+'</span>';
   const bads=rounds.filter(r=>r.bad);
   if(bads.length===0){
     S.proof['rule-'+sc.id]=true; save(); progress(); prPills();
@@ -1258,7 +1265,7 @@ const WR=[
  {btn:'wr-s1', text:'Claim: \\lim_{x \\to 2} x^2 = 4.\n\nProof. Let \\varepsilon > 0 and set \\delta = \\min(1, \\varepsilon/5).\nSuppose 0 < |x - 2| < \\delta.\nSince |x - 2| < 1, we have 1 < x < 3, so |x + 2| < 5.\nThen |x^2 - 4| = |x - 2| \\, |x + 2| < 5\\delta \\le \\varepsilon. \\qed',
   cls:'why', fb:'<p><b>Correct, and complete.</b> δ is chosen before x and depends only on ε; each line follows from the one before; and the bound |x + 2| &lt; 5 is justified before it is used, which is the step most proofs of this limit skip.</p><p>Two small things, neither a mistake. The last inequality, 5δ ≤ ε, deserves its reason in writing ("because δ ≤ ε/5"), since a reader checking the proof has to reconstruct it. And notice that the puncture 0 &lt; |x − 2| was never used: the argument also shows that x² is continuous at 2, which is worth knowing.</p><p>A question back: where exactly would the argument break if δ were ε/5 alone?</p>'},
  {btn:'wr-s2', text:'Claim: \\lim_{x \\to 2} x^2 = 4.\n\nProof. Let \\varepsilon > 0. Near 2 we have |x + 2| < 5, so take \\delta = \\varepsilon/5.\nIf 0 < |x - 2| < \\delta then |x^2 - 4| = |x - 2| |x + 2| < \\delta \\cdot 5 = \\varepsilon. \\qed',
-  cls:'why nudge', fb:'<p><b>One gap, and it is the usual one.</b> "Near 2 we have |x + 2| &lt; 5" is true for x within 1 of 2, but δ = ε/5 is larger than 1 as soon as ε &gt; 5, and then x need not be near 2 at all: for ε = 10 the rule allows x = 3.9, where |x + 2| = 5.9 and |x² − 4| = 11.21 ≥ 10.</p><p>The fix is one word, δ = min(1, ε/5), and then state the bound on |x + 2| <em>after</em> δ, where it is earned. Everything else, the order of the choices, the factoring, the chain of inequalities, is right. (Step 1 above finds the same break if you hand it ε/5.)</p>'}
+  cls:'why nudge', fb:'<p><b>One gap, and it is the usual one.</b> "Near 2 we have |x + 2| &lt; 5" is true for x within 1 of 2, but δ = ε/5 is larger than 1 as soon as ε &gt; 5, and then x need not be near 2 at all: for ε = 10 the rule allows x = 3.9, where |x + 2| = 5.9 and |x² − 4| = 11.21 ≥ 10.</p><p>The fix is one word, δ = min(1, ε/5), and then state the bound on |x + 2| <em>after</em> δ, where it is earned. Everything else, the order of the choices, the factoring, the chain of inequalities, is right. (Step 1 above, with x² at 2 selected, finds the same break if you hand it ε/5.)</p>'}
 ];
 const wrNorm=s=>s.replace(/\s+/g,' ').trim();
 WR.forEach(w=>$('#'+w.btn).addEventListener('click',()=>{ $('#wr-text').value=w.text; $('#wr-fb').hidden=true; }));
@@ -1280,7 +1287,7 @@ const NEG=[
   hint:'Bounds on quantifiers and the hypothesis of the implication never flip. Walk the negation through the quantifiers one at a time, then negate the bracket: ¬(P ⇒ Q) is P ∧ ¬Q.'},
  {name:'Sequence', says:'Sentence: f_n → ℓ (the Ramp-Up form). Build "f_n does not converge to ℓ".',
   toks:[{t:'(∀ε>0)',k:'q',alt:'(∃ε>0)',flip:true},{t:'(∃c∈ℕ)',k:'q',alt:'(∀c∈ℕ)',flip:true},{t:'(∀n∈ℕ)',k:'q',alt:'(∃n∈ℕ)',flip:true},{t:'[ n',k:'s'},{t:'>',k:'r',alt:'≤',flip:false},{t:'c',k:'s'},{t:'⇒',k:'c',alt:'∧',flip:true},{t:'|f_n−ℓ|',k:'s'},{t:'<',k:'r',alt:'≥',flip:true},{t:'ε ]',k:'s'}],
-  read:'There is a bad ε: past every index c there is still some n with |f_n − ℓ| ≥ ε. This is exactly the shape the Ramp-Up proves for f_n = n² − 5: "for any arbitrary c we found an n &gt; c that breaks the inequality".',
+  read:'There is a bad ε: past every index c there is still some n with |<i>f<sub>n</sub></i> − ℓ| ≥ ε. This is exactly the shape of what the Ramp-Up proves for <i>f<sub>n</sub></i> = <i>n</i>²: for any arbitrary c, it finds an n &gt; c that breaks the inequality.',
   hint:'n &gt; c is the hypothesis, so it stays. Only the conclusion |f_n − ℓ| &lt; ε is denied.'},
  {name:'Uniform continuity', says:'Sentence: f is uniformly continuous on ℝ. Build its negation.',
   toks:[{t:'(∀ε>0)',k:'q',alt:'(∃ε>0)',flip:true},{t:'(∃δ>0)',k:'q',alt:'(∀δ>0)',flip:true},{t:'(∀x∈ℝ)',k:'q',alt:'(∃x∈ℝ)',flip:true},{t:'(∀y∈ℝ)',k:'q',alt:'(∃y∈ℝ)',flip:true},{t:'[ |x−y|',k:'s'},{t:'<',k:'r',alt:'≥',flip:false},{t:'δ',k:'s'},{t:'⇒',k:'c',alt:'∧',flip:true},{t:'|f(x)−f(y)|',k:'s'},{t:'<',k:'r',alt:'≥',flip:true},{t:'ε ]',k:'s'}],
@@ -1329,7 +1336,7 @@ const RID=[
   opts:[fm('S = ℕ'), fm('S = {1, 2, 3}'), fm('S = ∅'), fm('S = [0, 1]')], ans:[0,2], multi:true,
   why:'In {1, 2, 3} and [0, 1] the largest element has nothing above it, so the ∀ fails there. ℕ has no largest element: y = x + 1 always works. For S = ∅, unfold the abbreviation: '+fm('(∀x)[ x ∈ ∅ ⇒ (∃y∈∅)[ y > x ] ]')+'. The hypothesis x ∈ ∅ is false for every x, so every instance of the implication is true, for the same reason the professor keeps his promise when nobody passes; the conclusion was never checked. Had the sentence started with ∃ instead, it would unfold to '+fm('(∃x)[ x ∈ ∅ ∧ … ]')+', which no x can satisfy. The empty set makes every ∀ true and every ∃ false.'},
  {title:'My Ferraris', body:'I own no Ferraris. Which statements are true? Select all that apply.',
-  opts:['All my Ferraris are red.','All my Ferraris are not red.','Some Ferrari of mine is red.','I own a Ferrari that isn\'t red.'], ans:[0,1], multi:true,
+  opts:['All my Ferraris are red.','None of my Ferraris is red.','Some Ferrari of mine is red.','I own a Ferrari that isn\'t red.'], ans:[0,1], multi:true,
   why:'"All my Ferraris are red" unfolds to '+fm('(∀c)[ c is my Ferrari ⇒ c is red ]')+'. With no Ferrari the hypothesis never holds, so the implication never fails: both universals are vacuously true. The two existentials unfold with ∧ and need a witness, so both are false. Vacuous truth is why the base case of an induction over an empty range is free, and why "all x in ∅" never needs checking.'},
  {title:'For every ε', body:'Suppose '+fm('x')+' and '+fm('y')+' are real numbers and '+fm('(∀ε>0)[ x ≤ y + ε ]')+'. What can you conclude?',
   opts:[fm('x < y'), fm('x ≤ y'), fm('x = y'), 'Nothing, since ε is never 0.'], ans:[1],
@@ -1395,7 +1402,7 @@ const ANAT=[
   why:'The nearest enclosing quantifier that names the letter wins, so the inner (∃<i>x</i>∈ℤ) owns it and the outer (∃<i>x</i>∈ℕ) is left owning nothing. This is called <b>shadowing</b>. It is legal, and it is terrible style; the Ramp-Up commits it only so that you recognise it in the wild. Had "both" been the answer, the sentence would be sunk on the spot: <i>x</i> + 1 = 0 has no solution in ℕ.'},
  {step:3, title:'Dead weight', body:'Which quantifiers bind no letter at all, so that deleting them (and leaving the bracket as it is) changes nothing? Select all that apply.',
   opts:[fm('(∀i, k)'), fm('(∃x∈ℕ)'), fm('(∃x∈ℤ)'), fm('(∀j<m)')], ans:[0,1], multi:true,
-  why:'<i>i</i> is already taken by Σ, <i>k</i> never appears, and the outer <i>x</i> is shadowed, so (∀<i>i</i>, <i>k</i>) and (∃<i>x</i>∈ℕ) are decoration. The other two are load-bearing: (∃<i>x</i>∈ℤ) owns the <i>x</i> in <i>x</i> + 1 = 0 and (∀<i>j</i>&lt;<i>m</i>) owns <i>j</i>. Delete either and a letter becomes free, which changes the meaning.'},
+  why:'<i>i</i> is already taken by Σ, <i>k</i> never appears, and the outer <i>x</i> is shadowed, so (∀<i>i</i>, <i>k</i>) and (∃<i>x</i>∈ℕ) are decoration. The other two are load-bearing: (∃<i>x</i>∈ℤ) owns the <i>x</i> in <i>x</i> + 1 = 0 and (∀<i>j</i>&lt;<i>m</i>) owns <i>j</i>. Delete (∀<i>j</i>&lt;<i>m</i>) and <i>j</i> becomes free; delete (∃<i>x</i>∈ℤ) and the shadowed (∃<i>x</i>∈ℕ) takes over <i>x</i>, where <i>x</i> + 1 = 0 has no solution. Either way the meaning changes.'},
  {step:4, title:'Splitting the bracket', body:fm('(∀j<m)')+' has no effect on '+fm('x + 1 = 0')+', and '+fm('(∃x∈ℤ)')+' has no effect on the sum. Which of these is equivalent to '+fm('(∃x∈ℤ)(∀j<m)[ '+SUM+' < 4 ∧ x + 1 = 0 ]')+'?',
   opts:[fm('(∀j<m)[ '+SUM+' < 4 ] ∧ (∃x∈ℤ)[ x + 1 = 0 ]'), fm('(∀j<m)[ '+SUM+' < 4 ] ∨ (∃x∈ℤ)[ x + 1 = 0 ]'), fm('(∀j<m)[ '+SUM+' < 4 ⇒ (∃x∈ℤ)[ x + 1 = 0 ] ]'), 'None of these; quantifiers cannot be pushed through ∧.'], ans:[0],
   why:'A quantifier slides past a conjunct that does not mention its letter: (∀<i>j</i>)[P(<i>j</i>) ∧ Q] is (∀<i>j</i>)P(<i>j</i>) ∧ Q as long as there is some <i>j</i> to check (over ℤ there is always one below <i>m</i>; over an empty range the left side would be vacuously true whatever Q says), and (∃<i>x</i>)[P ∧ Q(<i>x</i>)] is P ∧ (∃<i>x</i>)Q(<i>x</i>). Now (∃<i>x</i>∈ℤ)[<i>x</i> + 1 = 0] is simply true (<i>x</i> = −1), and a true conjunct can be dropped. Unbounding (∀<i>j</i>&lt;<i>m</i>) with ⇒, as in the riddle "No top", leaves '+fm(EM)+'.'},
@@ -1429,7 +1436,7 @@ const MUT=[
   why:'∀<i>j</i>∃<i>x</i> and ∃<i>x</i>∀<i>j</i> differ only when the witness <i>x</i> can make use of <i>j</i>. Here nothing links them: <i>x</i> + 1 = 0 does not mention <i>j</i>, and the sum does not mention <i>x</i>. Both orders split into (∀<i>j</i>&lt;<i>m</i>)[sum &lt; 4] ∧ (∃<i>x</i>∈ℤ)[<i>x</i> + 1 = 0]. Contrast the ice-cream grid in section 1, where the order was everything because the predicate mentioned both letters.'},
  {title:'k enters the bracket', body:'The prefix starts '+fm('(∀i, k∈ℕ)')+' and the bracket now says '+fm(SUM+' < k')+' instead of '+fm('< 4')+'. Effect?',
   opts:['None: '+fm('(∀i, k)')+' is dead weight either way', fm('k')+' is now bound and ranges over all of ℕ; with '+fm('k = 0')+' the sum would have to be negative, so the sentence is false for every '+fm('m'), fm('k')+' is now free', 'The sentence is true for every '+fm('m')], ans:[1],
-  why:'A quantifier is dead weight only while its letter is absent from the bracket. Once <i>k</i> appears, (∀<i>k</i>∈ℕ) demands the inequality for every <i>k</i>, including <i>k</i> = 0, and no sum of non-negative terms is below 0. Every <i>m</i> has some <i>j</i> below it, so the bracket is tested at least once and fails. Decoration becomes load-bearing with a one-character edit, which is why you check every quantifier against the bracket before dismissing it.'},
+  why:'A quantifier is dead weight only while no letter in the bracket belongs to it. Once <i>k</i> appears, (∀<i>k</i>∈ℕ) demands the inequality for every <i>k</i>, including <i>k</i> = 0, and no sum of non-negative terms is below 0. Every <i>m</i> has some <i>j</i> below it, so the bracket is tested at least once and fails. Decoration becomes load-bearing with a one-character edit, which is why you check every quantifier against the bracket before dismissing it.'},
  {title:'A quantifier for m, in the wrong place', body:'The prefix now ends '+fm('(∀j<m)(∃m∈ℤ)')+'. Effect?',
   opts:[fm('m')+' is now bound, so the sentence is finally a statement', 'The '+fm('m')+' in '+fm('j < m')+' sits outside the scope of '+fm('(∃m∈ℤ)')+' and stays free; the new quantifier binds nothing', 'The sentence becomes true', fm('j')+' is now free'], ans:[1],
   why:'Scope runs from a quantifier forward, over what follows it. (∃<i>m</i>∈ℤ) is written after <i>j</i> &lt; <i>m</i>, so that <i>m</i> is not inside its scope and stays free, and since the bracket never mentions <i>m</i>, the new quantifier is one more piece of dead weight. To close the sentence the quantifier must precede the first use: (∃<i>m</i>∈ℤ)(∀<i>j</i>&lt;<i>m</i>)[…], which by step 6 is false. Same trap as option D in the riddle "Exactly one".'},
@@ -1444,20 +1451,22 @@ const tri=n=>n*(n+1)/2;
 const em={m:5,dom:'Z'};
 function renderEm(){
   const m=em.m, Z=em.dom==='Z', js=[];
-  if(Z){ for(let j=m-1;j>=m-6;j--) js.push(j); } else { for(let j=m-1;j>=0;j--) js.push(j); }
+  if(Z){ for(let j=m-1;j>=m-6;j--) js.push(j); } else { for(let j=m-1;j>=Math.max(0,m-6);j--) js.push(j); }
   $('#em-dom').querySelectorAll('.seg-btn').forEach(b=>b.setAttribute('aria-pressed',b.dataset.dom===em.dom?'true':'false'));
   $('#em-def').innerHTML=fm('E(m) := (∀j∈'+(Z?'ℤ':'ℕ')+')[ j < m ⇒ '+SUM+' < 4 ]')+' with '+fm('f(j) = |j|')+'. Pick '+fm('m')+' and the domain of '+fm('j')+'; the page lists the '+fm('j')+' it must check and points at one that breaks '+fm('E(m)')+', if any.';
   let chips=js.map(j=>{ const s=tri(Math.abs(j)), ok=s<4; return '<div class="jchip '+(ok?'ok':'bad')+'"><b>j = '+j+'</b><span>f(j) = '+Math.abs(j)+'</span><span>Σ = '+s+(ok?' &lt; 4 ✓':' ≥ 4 ✗')+'</span></div>'; }).join('');
   if(Z) chips+='<div class="jchip more">… and every integer below these</div>';
   else if(js.length===0) chips='<div class="jchip more">no natural number is below '+m+'</div>';
+  else if(m>6) chips+='<div class="jchip more">… and every natural number below these, down to 0</div>';
   $('#em-chips').innerHTML=chips;
   const v=$('#em-verdict');
   if(Z){ const w=Math.abs(m-1)>=3?m-1:-3; v.className='why lose'; v.innerHTML='<b>E('+m+') is false.</b> j = '+w+' is below '+m+' and its sum is '+tri(Math.abs(w))+' ≥ 4. Over ℤ this happens for every m: there is always an integer below m with |j| ≥ 3, because ℤ has no bottom.'; }
-  else if(m<=3){ v.className='why'; v.innerHTML='<b>E('+m+') is true.</b> '+(m<=0?'No natural number is below '+m+', so there is nothing to check: vacuous truth, exactly like the professor whose students all failed.':'Every j in {0, …, '+(m-1)+'} has |j| ≤ 2, so every sum is at most 3.'); }
+  else if(m<=3){ v.className='why'; v.innerHTML='<b>E('+m+') is true.</b> '+(m<=0?'No natural number is below '+m+', so there is nothing to check: vacuous truth, exactly like the professor whose students all failed.':'Every j in {'+js.slice().reverse().join(', ')+'} has |j| ≤ 2, so every sum is at most 3.'); }
   else { v.className='why lose'; v.innerHTML='<b>E('+m+') is false.</b> j = 3 is below '+m+' and its sum is 6 ≥ 4. Over ℕ the first breaking j is always 3, so E(m) holds exactly for m ≤ 3.'; }
 }
 $('#em-range').addEventListener('input',e=>{ em.m=+e.target.value; $('#em-num').value=String(em.m); renderEm(); });
-$('#em-num').addEventListener('change',e=>{ const v=Math.round(parseFloat(e.target.value)); if(Number.isFinite(v)){ em.m=v; $('#em-range').value=String(Math.min(8,Math.max(-6,v))); } renderEm(); });
+// The box takes any whole number; it is clamped to ±1 000 000 so the page never has to list or count an absurd range.
+$('#em-num').addEventListener('change',e=>{ const v=Math.round(parseFloat(e.target.value)); if(Number.isFinite(v)){ em.m=Math.max(-1000000,Math.min(1000000,v)); $('#em-range').value=String(Math.min(8,Math.max(-6,em.m))); } e.target.value=String(em.m); renderEm(); });
 $('#em-dom').addEventListener('click',e=>{ const b=e.target.closest('.seg-btn'); if(!b) return; em.dom=b.dataset.dom; renderEm(); });
 
 /* ───────── reset ───────── */

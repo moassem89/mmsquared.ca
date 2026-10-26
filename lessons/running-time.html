@@ -415,7 +415,8 @@ function actions(body, ...btns){ const row=document.createElement('div'); row.cl
 function button(label, cls){ const b=document.createElement('button'); b.type='button'; b.className='btn'+(cls?' '+cls:''); b.textContent=label; return b; }
 function options(body, opts, onPick, two){ const w=document.createElement('div'); w.className='opts'+(two?' two':''); opts.forEach((o,i)=>{ const b=document.createElement('button'); b.type='button'; b.className='opt'; b.innerHTML='<span class="key">'+'ABCD'[i]+'</span><span>'+o+'</span>'; b.addEventListener('click',()=>onPick(i,b,w)); w.appendChild(b); }); body.appendChild(w); return w; }
 function settle(w, right, picked){ w.querySelectorAll('.opt').forEach((b,i)=>{ b.disabled=true; if(i===right) b.classList.add('correct'); else if(i===picked) b.classList.add('wrong'); }); }
-function readInt(inp){ const v=parseInt(inp.value,10); return Number.isFinite(v)?v:null; }
+// Whole numbers only: 15.9 must not be read as 15.
+function readInt(inp){ const t=String(inp.value).trim(); return /^[+-]?\d+$/.test(t)?parseInt(t,10):null; }
 function onEnter(inp, fn){ inp.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); fn(); } }); }
 function codeBlock(body, lines){ const pre=document.createElement('pre'); pre.className='code'; pre.innerHTML=lines.map((l,i)=>'<span class="l"><span class="ln">'+(i+1)+'</span>'+esc(l)+'</span>').join('\n'); body.appendChild(pre); return pre; }
 function miniTrace(body, prog){ const wrap=document.createElement('div'); wrap.className='trace'; wrap.innerHTML='<div class="what">—</div><div class="stack" hidden></div><table class="counts"></table>'; body.appendChild(wrap); return tracePlayer({what:$('.what',wrap),counts:$('.counts',wrap),stack:$('.stack',wrap),code:null},prog); }
@@ -443,13 +444,13 @@ const EX=[];
 
 // 1 — count one run (two rounds)
 EX.push({id:'ex-run', kind:'predict', title:'Count one run', list:'A',
- prompt:'<span class="k">A = [5, 2, 8, 6]</span>, <span class="k">t = 8</span>. Count the elementary steps of this one run — every assignment, comparison, addition and return — before the bench does it for you.',
+ prompt:'<span class="k">A = [5, 2, 8, 6]</span>, <span class="k">t = 8</span>. Count the steps of this one run, one for each statement or test that runs (so <span class="k">i = i + 1</span> is one step), before the bench does it for you.',
  build(body, api){
   codeBlock(body, PROGS.search.code);
   const prompt=ask(body,'<b>Round 1.</b> <span class="mono">search([5, 2, 8, 6], 8)</span> — how many steps?');
   const inp=numin(body,'T(search, x) ='); const chk=button('Check','primary'); actions(body,chk);
   let round=1, mini=null;
-  const go=()=>{ const v=readInt(inp); if(v==null) return api.info('Enter a number.');
+  const go=()=>{ const v=readInt(inp); if(v==null) return api.info('Enter a whole number.');
     if(round===1){
       if(v===10){ round=2; mini=miniTrace(body,PROGS.search); mini.load(PROGS.search.trace([5,2,8,6],8)); mini.run(260); api.info('<b>10.</b> One assignment; then for each of the three visited cells a loop check and an == check; two increments; one return. 1 + 3·2 + 2 + 1 = 10 — in general 3<i>k</i> + 4 with the target at index <i>k</i>, here <i>k</i> = 2. <b>Round 2:</b> same list, <span class="mono">t = 9</span>, which is not there.'); prompt.innerHTML='<b>Round 2.</b> <span class="mono">search([5, 2, 8, 6], 9)</span> — how many steps now?'; inp.value=''; }
       else if(v===3) api.no('<b>3 is the number of loop iterations.</b> Each one costs a loop check, an == check, and either a return or an increment — and the <span class="mono">i = 0</span> before the loop is a step too.');
@@ -486,7 +487,7 @@ EX.push({id:'ex-skyline', kind:'play', title:'The skyline', list:'B',
   const prompt=ask(body,'<b>Round 1.</b> <i class="fm">T</i><sub>search</sub>(4) = ? <small>The running time of the <em>program</em> at size 4.</small>');
   const inp=numin(body,'T(4) ='); const chk=button('Check','primary'); actions(body,chk);
   let round=1;
-  const go=()=>{ const v=readInt(inp); if(v==null) return api.info('Enter a number.');
+  const go=()=>{ const v=readInt(inp); if(v==null) return api.info('Enter a whole number.');
     if(round===1){ if(v===15){ round=2; solvedTop=true; probe(); api.info('<b>15 — the top of the column.</b> The program\'s running time at size 4 is the worst input of size 4, and the worst input is the one that is not there. <b>Round 2:</b> and the best case at <i>n</i> = 4?'); prompt.innerHTML='<b>Round 2.</b> The best case at <i>n</i> = 4 — the <em>bottom</em> of the column. <small>Which input is it?</small>'; inp.value=''; }
       else if(v===4) api.no('<b>4 is the bottom of the column</b> — the target at index 0. The running time of the program is a maximum: the top.');
       else if(v===13||v===10||v===7) api.no('<b>'+v+' is one of the dots, but not the highest.</b> <i>T</i><sub><i>P</i></sub>(<i>n</i>) is the max over all inputs of size <i>n</i>. Slide to <i>n</i> = 4 and read the top.');
@@ -526,7 +527,7 @@ EX.push({id:'ex-size', kind:'predict', title:'Size, by convention', list:'C',
  build(body, api){
   const inp=numin(body,'size ='); const chk=button('Check','primary'); actions(body,chk);
   let done=false;
-  const go=()=>{ const v=readInt(inp); if(v==null) return api.info('Enter a number.');
+  const go=()=>{ const v=readInt(inp); if(v==null) return api.info('Enter a whole number.');
     if(v===10){ if(done) return; done=true; api.info('<b>10 bits:</b> ⌊log<sub>2</sub> 1000⌋ + 1 = 9 + 1, since 2<sup>9</sup> = 512 ≤ 1000 &lt; 1024 = 2<sup>10</sup>. The value is a hundred times its size, and the gap only widens: a number with <i>n</i> bits can be as large as 2<sup><i>n</i></sup> − 1. <b>Round 2:</b> the lists.'); round2(); }
     else if(v===1000) api.no('<b>1000 is the value.</b> Size is how many memory locations it occupies: for a number, its bits.');
     else if(v===4) api.no('<b>Four is the number of decimal digits.</b> The machine stores binary; the convention counts bits: ⌊log<sub>2</sub> <i>v</i>⌋ + 1.');
@@ -543,13 +544,13 @@ EX.push({id:'ex-size', kind:'predict', title:'Size, by convention', list:'C',
 
 // 6 — the quick test (three rounds)
 EX.push({id:'ex-quicktest', kind:'predict', title:'A program with ten inputs', list:'C',
- prompt:'Program <span class="fm"><i>P</i></span> has exactly these inputs, and returns INVALID in one step on anything else. Read the table, then answer three questions.',
+ prompt:'Program <span class="fm"><i>P</i></span> is built for exactly these inputs, and returns INVALID in one step on anything else. Read the table, then answer three questions.',
  build(body, api){
   const tbl=document.createElement('table'); tbl.className='tbl'; tbl.innerHTML='<tr><th>size</th><th>inputs</th><th class="r">steps</th></tr><tr><td>5</td><td>a, b, c</td><td class="r">1 000 · 2 000 · 3 000</td></tr><tr><td>10</td><td>d, e, f, g</td><td class="r">10 000 each</td></tr><tr><td>15</td><td>h, i, j</td><td class="r">30 000 · 40 000 · 50 000</td></tr><tr><td>other</td><td>anything</td><td class="r">1 (INVALID)</td></tr>'; body.appendChild(tbl);
   const prompt=ask(body,'<b>Round 1.</b> <i class="fm">T</i>(<i>P</i>, <i>b</i>) = ?');
   const inp=numin(body,'answer ='); const chk=button('Check','primary'); actions(body,chk);
   let round=1;
-  const go=()=>{ const v=readInt(inp); if(v==null) return api.info('Enter a number.');
+  const go=()=>{ const v=readInt(inp); if(v==null) return api.info('Enter a whole number.');
     if(round===1){ if(v===2000){ round=2; api.info('<b>2 000 — one run, one number.</b> <b>Round 2:</b> <i>T</i><sub><i>P</i></sub>(15) = ?'); prompt.innerHTML='<b>Round 2.</b> <i class="fm">T</i><sub><i>P</i></sub>(15) = ? <small>The running time of the program at size 15.</small>'; inp.value=''; }
       else if(v===3000) api.no('<b>3 000 is the worst input of size 5,</b> which would be <i>T</i><sub><i>P</i></sub>(5). The question asks about one specific run, <i>b</i>.');
       else api.no('<b><i>T</i>(<i>P</i>, <i>b</i>) is the cost of one run on the input <i>b</i>.</b> Read it off the table.'); }
@@ -565,16 +566,16 @@ EX.push({id:'ex-quicktest', kind:'predict', title:'A program with ten inputs', l
 
 // 7 — O(1) with 50,000-step runs
 EX.push({id:'ex-witness', kind:'play', title:'Big-O with witnesses', list:'C',
- prompt:'Same program. Claim: <span class="fm"><i>T</i><sub><i>P</i></sub> ∈ <i>O</i>(1)</span>, with <span class="fm"><i>q</i>(<i>n</i>) = 1</span>. You are ∃loïse: give witnesses <span class="fm"><i>c</i></span> and <span class="fm"><i>n</i><sub>0</sub></span> such that <span class="fm"><i>T</i><sub><i>P</i></sub>(<i>n</i>) ≤ <i>c</i> · 1</span> for all <span class="fm"><i>n</i> ≥ <i>n</i><sub>0</sub></span>. ∀bélard will look for an <span class="fm"><i>n</i></span> that breaks it.',
+ prompt:'Same program. Claim: <span class="fm"><i>T</i><sub><i>P</i></sub> ∈ <i>O</i>(1)</span>, with <span class="fm"><i>g</i>(<i>n</i>) = 1</span>. You are ∃loïse: give witnesses <span class="fm"><i>c</i></span> and <span class="fm"><i>n</i><sub>0</sub></span> such that <span class="fm"><i>T</i><sub><i>P</i></sub>(<i>n</i>) ≤ <i>c</i> · 1</span> for all <span class="fm"><i>n</i> ≥ <i>n</i><sub>0</sub></span>. ∀bélard will look for an <span class="fm"><i>n</i></span> that breaks it.',
  build(body, api){
   const TP=n=>n===5?3000:n===10?10000:n===15?50000:1;
   const row=document.createElement('div'); row.className='numin'; row.innerHTML='<label><i class="fm">c</i> = <input type="number" inputmode="numeric" step="1" placeholder="?"></label><label><i class="fm">n</i><sub>0</sub> = <input type="number" inputmode="numeric" step="1" placeholder="?"></label>'; body.appendChild(row);
   const [cIn,nIn]=row.querySelectorAll('input'); const lock=button('Lock in','primary'); actions(body,lock);
   let won=false;
-  lock.addEventListener('click',()=>{ const c=readInt(cIn), n0=readInt(nIn); if(c==null||n0==null) return api.info('Enter both numbers.'); if(c<1||n0<0) return api.no('<b>Witnesses are natural numbers,</b> and <i>c</i> has to be positive.');
+  lock.addEventListener('click',()=>{ const c=readInt(cIn), n0=readInt(nIn); if(c==null||n0==null) return api.info('Enter two whole numbers.'); if(c<0||n0<0) return api.no('<b>Witnesses are natural numbers.</b>'); if(c===0) return api.no('<b><i>c</i> = 0 cannot work:</b> it demands <i>T</i><sub><i>P</i></sub>(<i>n</i>) ≤ 0, and every run takes at least one step.');
     const breaker=[5,10,15].filter(n=>n>=n0).find(n=>TP(n)>c);
     if(breaker!=null){ api.no('<b>∀bélard plays <i>n</i> = '+breaker+':</b> <i>T</i><sub><i>P</i></sub>('+breaker+') = '+fmt(TP(breaker))+' &gt; '+fmt(c)+' · 1. Either raise <i>c</i> past every cost the sizes ≥ <i>n</i><sub>0</sub> can produce, or move <i>n</i><sub>0</sub> past 15 so those sizes no longer count.'); return; }
-    if(!won){ won=true; api.info('<b>Locked. ∀bélard has no move.</b> '+(n0>15?'With <i>n</i><sub>0</sub> = '+n0+' every size that counts costs 1, so even <i>c</i> = 1 works.':'With <i>c</i> = '+fmt(c)+' nothing beyond <i>n</i><sub>0</sub> = '+n0+' exceeds it.')+' A program with 50 000-step runs is <i>O</i>(1), because only finitely many sizes cost anything and the definition only cares about large <i>n</i>. The best description is <i>q</i>(<i>n</i>) = 1; there is no better one. <b>One more:</b>'); round2(); } });
+    if(!won){ won=true; api.info('<b>Locked. ∀bélard has no move.</b> '+(n0>15?'With <i>n</i><sub>0</sub> = '+n0+' every size that counts costs 1, so even <i>c</i> = 1 works.':'With <i>c</i> = '+fmt(c)+' nothing beyond <i>n</i><sub>0</sub> = '+n0+' exceeds it.')+' A program with 50 000-step runs is <i>O</i>(1), because only finitely many sizes cost anything and the definition only cares about large <i>n</i>. The best description is <i>g</i>(<i>n</i>) = 1; there is no better one. <b>One more:</b>'); round2(); } });
   function round2(){ ask(body,'<b>Round 2.</b> Suppose <i>P</i> also accepts every input of every size <i>n</i> ≥ 16, taking <i>n</i><sup>3</sup> steps on each. How would you describe <i>T</i><sub><i>P</i></sub> asymptotically?'); options(body,['<i>T</i><sub><i>P</i></sub> ∈ Θ(<i>n</i><sup>3</sup>)','Still <i>O</i>(1): the three expensive sizes are finite','Θ(<i>n</i><sup>3</sup>) only from 16 on, so no single description','<i>O</i>(<i>n</i><sup>2</sup>), since 50 000 &gt; 15<sup>3</sup>'],(i,b,w)=>{ settle(w,0,i);
       if(i===0) api.ok('<b>Θ(<i>n</i><sup>3</sup>).</b> From <i>n</i> = 16 on, <i>T</i><sub><i>P</i></sub>(<i>n</i>) = <i>n</i><sup>3</sup> exactly; the sizes 5, 10 and 15 are absorbed by choosing <i>n</i><sub>0</sub> = 16. “From some point on” is written into the definition precisely so that finitely many exceptions never matter.');
       else if(i===1) api.no('<b>Not any more:</b> for <i>n</i> ≥ 16 the cost is <i>n</i><sup>3</sup>, which no constant bounds. ∀bélard plays <i>n</i> = max(<i>n</i><sub>0</sub>, <i>c</i> + 16).');
@@ -600,7 +601,7 @@ EX.push({id:'ex-bigo', kind:'play', title:'Big-O is a game', list:'D',
   cMinus.addEventListener('click',()=>setC(c-1)); cPlus.addEventListener('click',()=>setC(c+1)); nMinus.addEventListener('click',()=>setN0(n0-1)); nPlus.addEventListener('click',()=>setN0(n0+1)); cIn.addEventListener('change',()=>setC(+cIn.value)); nIn.addEventListener('change',()=>setN0(+nIn.value));
   const lock=button('Lock in c and n₀','primary'); const again=button('Change my pick'); again.hidden=true; actions(body,lock,again);
   const round2=document.createElement('div'); round2.className='ex-body'; round2.hidden=true; body.appendChild(round2);
-  function finish(){ if(r1&&r2) api.ok('<b>Both rounds won.</b> As ∃loïse you showed 3<i>n</i><sup>2</sup> + 10<i>n</i> ∈ <i>O</i>(<i>n</i><sup>2</sup>) by producing a (<i>c</i>, <i>n</i><sub>0</sub>) that ∀bélard could not answer; as ∀bélard you showed <i>n</i><sup>2</sup> ∉ <i>O</i>(<i>n</i>) by answering every (<i>c</i>, <i>n</i><sub>0</sub>) with <i>n</i> = max(<i>n</i><sub>0</sub>, <i>c</i> + 1). Same game as the Quantifier Gym; different board.'); }
+  function finish(){ if(r1&&r2) api.ok('<b>Both rounds won.</b> As ∃loïse you showed 3<i>n</i><sup>2</sup> + 10<i>n</i> ∈ <i>O</i>(<i>n</i><sup>2</sup>) by producing a (<i>c</i>, <i>n</i><sub>0</sub>) that ∀bélard could not answer; as ∀bélard you broke her promise at (<i>c</i>, <i>n</i><sub>0</sub>) = (100, 50), and the same move, <i>n</i> = max(<i>n</i><sub>0</sub>, <i>c</i> + 1), breaks every promise she could make: that is why <i>n</i><sup>2</sup> ∉ <i>O</i>(<i>n</i>). Same game as the Quantifier Gym; different board.'); }
   lock.addEventListener('click',()=>{
     lock.disabled=true; again.hidden=false; cMinus.disabled=cPlus.disabled=nMinus.disabled=nPlus.disabled=cIn.disabled=nIn.disabled=true;
     pEx.classList.remove('turn'); pFa.classList.add('turn');
@@ -623,7 +624,7 @@ EX.push({id:'ex-bigo', kind:'play', title:'Big-O is a game', list:'D',
   const P2=plot(round2,{xmax:160,ymax:20000}); P2.curve(n=>n*n,'f'); P2.curve(n=>100*n,'g'); svgEl('rect',{class:'zone',x:P2.X(50),y:P2.T,width:P2.X(160)-P2.X(50),height:P2.Y(0)-P2.T},P2.layer); svgEl('line',{class:'n0',x1:P2.X(50),x2:P2.X(50),y1:P2.T,y2:P2.Y(0)},P2.layer);
   const leg2=document.createElement('div'); leg2.className='legend'; leg2.innerHTML='<b><i class="sw f"></i><span><i>n</i><sup>2</sup></span></b><b><i class="sw g"></i><span>100 · <i>n</i></span></b>'; round2.appendChild(leg2);
   const inp=numin(round2,'∀bélard plays <i class="fm">n</i> ='); const chk=button('Play it','primary'); actions(round2,chk);
-  const go=()=>{ const v=readInt(inp); if(v==null) return api.info('Enter a number.');
+  const go=()=>{ const v=readInt(inp); if(v==null) return api.info('Enter a whole number.');
     if(v<50) api.no('<b><i>n</i> must be at least her <i>n</i><sub>0</sub> = 50.</b> Below the threshold she has promised nothing, so nothing there counts against her.');
     else if(v<=100) api.no('<b>At <i>n</i> = '+fmt(v)+': <i>n</i><sup>2</sup> = '+fmt(v*v)+' and 100<i>n</i> = '+fmt(100*v)+'.</b> Her <i>c</i> = 100 still covers you. The square only overtakes 100<i>n</i> once <i>n</i> itself passes 100.');
     else { r2=true; svgEl('circle',{class:'cap',cx:P2.X(Math.min(v,160)),cy:P2.Y(Math.min(v*v,20000)),r:6},P2.layer); if(r1) finish(); else api.info('<b>Round 2 won: <i>n</i> = '+fmt(v)+' gives '+fmt(v*v)+' &gt; '+fmt(100*v)+'.</b> She loses — and she would lose with any <i>c</i>: <i>n</i> = max(<i>n</i><sub>0</sub>, <i>c</i> + 1) always breaks it. That is the proof that <i>n</i><sup>2</sup> ∉ <i>O</i>(<i>n</i>). Now win round 1 above to finish the card.'); } };
@@ -638,7 +639,7 @@ EX.push({id:'ex-unwind', kind:'predict', title:'Unwind it', list:'E',
   const inp=numin(body,'T(5) ='); const chk=button('Check, then unwind','primary'); actions(body,chk);
   const un=document.createElement('div'); un.className='unwind'; body.appendChild(un); un.hidden=true;
   let done=false;
-  const go=async()=>{ const v=readInt(inp); if(v==null) return api.info('Enter a number.');
+  const go=async()=>{ const v=readInt(inp); if(v==null) return api.info('Enter a whole number.');
     if(v===12){ if(done) return; done=true; chk.disabled=true; un.hidden=false; const lines=[]; for(let k=1;k<=5;k++) lines.push('<i>T</i>(5) = '+(2*k)+' + <i>T</i>('+(5-k)+')'); lines.push('<i>T</i>(5) = 10 + 2 = <span class="last">12</span>'); un.innerHTML=lines.map(l=>'<div>'+l+'</div>').join(''); const ds=un.querySelectorAll('div'); for(const d of ds){ d.classList.add('show'); await wait(420); } api.info('<b>12.</b> Each unwinding peels off a 2: <i>T</i>(5) = 2<i>k</i> + <i>T</i>(5 − <i>k</i>), and at <i>k</i> = 5 the base case pays its own 2. In general <i>T</i>(<i>n</i>) = 2<i>n</i> + <i>T</i>(0). <b>Closed form?</b>'); round2(); }
     else if(v===10) api.no('<b>10 is 2 × 5 — the five unwindings — without the base case.</b> <i>T</i>(0) is 2, not 0: the check and the return both cost.');
     else if(v===11) api.no('<b>Close:</b> five unwindings give 10, and then <i>T</i>(0) = 2 — the check <span class="mono">n == 0</span> and <span class="mono">return 1</span> — not 1.');
@@ -648,7 +649,7 @@ EX.push({id:'ex-unwind', kind:'predict', title:'Unwind it', list:'E',
   function round2(){ options(body,['<i>T</i>(<i>n</i>) = 2<i>n</i> + 2','<i>T</i>(<i>n</i>) = 2<i>n</i>','<i>T</i>(<i>n</i>) = <i>n</i> + 2','<i>T</i>(<i>n</i>) = 2<sup><i>n</i></sup>'],(i,b,w)=>{ settle(w,0,i);
       if(i===0) api.ok('<b>2<i>n</i> + 2, so Θ(<i>n</i>) — in <i>n</i>.</b> Proved by induction once guessed: the recurrence is the induction step and <i>T</i>(0) = 2 the base case. Now the uncomfortable question the next card asks: <i>n</i> is the <em>value</em> of the input. What is its size?');
       else if(i===1) api.no('<b>2<i>n</i> forgets the base case.</b> <i>T</i>(0) = 2, so the constant term is 2.');
-      else if(i===2) api.no('<b>Each level costs 2, not 1:</b> the check and the multiplication.');
+      else if(i===2) api.no('<b>Each level costs 2, not 1:</b> the check, and the line that multiplies and returns.');
       else api.no('<b>The recurrence adds; it never multiplies.</b> 2<sup><i>n</i></sup> would need <i>T</i>(<i>n</i>) = 2 · <i>T</i>(<i>n</i> − 1).'); }); }
  }});
 
@@ -665,7 +666,7 @@ EX.push({id:'ex-valuesize', kind:'break', title:'Value is not size', list:'E',
   options(body,['Θ(<i>n</i>) — it is linear, we just proved it','Θ(2<sup><i>n</i></sup>)','Θ(<i>n</i> log <i>n</i>)','Θ(<i>n</i><sup>2</sup>)'],(i,b,w)=>{ settle(w,1,i);
     if(i===1) api.ok('<b>Θ(2<sup><i>n</i></sup>).</b> A value saved in <i>n</i> bits satisfies 2<sup><i>n</i>−1</sup> ≤ <i>v</i> &lt; 2<sup><i>n</i></sup>, so the worst value is <i>v</i> = 2<sup><i>n</i></sup> − 1 and <i>T</i><sub>fact</sub>(<i>n</i>) = 2(2<sup><i>n</i></sup> − 1) + 2 = 2<sup><i>n</i>+1</sup>. One more bit, twice the work: exponential in the size, linear in the value. Most textbooks quietly write <i>n</i> for both and never say which. Watch for it.');
     else if(i===0) api.no('<b>Linear in the value, not in the size.</b> Add one bit to <i>v</i> and the worst value doubles — slide <i>n</i> from 9 to 10 and read the bar. A function that doubles per unit of input is exponential.');
-    else if(i===2) api.no('<b><i>n</i> log <i>n</i> is the number of bits in <i>n</i>!,</b> which is a different question (the next card). The step count itself doubles with every extra bit of input.');
+    else if(i===2) api.no('<b>Θ(<i>n</i> log <i>n</i>) is how the bit length of <i>n</i>! grows,</b> which is a different question (the next card). The step count itself doubles with every extra bit of input.');
     else api.no('<b>Not polynomial.</b> Each extra bit doubles the worst value and therefore doubles 2<i>v</i> + 2; no power of <i>n</i> keeps up with doubling.'); });
  }});
 
@@ -674,10 +675,10 @@ EX.push({id:'ex-mult', kind:'quiz', title:'Is multiplication a step?', list:'E',
  prompt:'The analysis charged one step for <span class="k">n * fact(n - 1)</span>. The word-size convenience allows that only while the numbers fit in a word. At which <span class="fm"><i>n</i></span> does <span class="fm"><i>n</i>!</span> stop fitting in 64 bits?',
  build(body, api){
   const tbl=document.createElement('table'); tbl.className='tbl'; tbl.innerHTML='<tr><th>n</th><th class="r">n!</th><th class="r">bits</th></tr>'+[10,13,20,21,25].map(n=>{ let f=1n; for(let k=2n;k<=BigInt(n);k++) f*=k; const bits=f.toString(2).length; return '<tr'+(bits>64?' class="hi"':'')+'><td>'+n+'</td><td class="r">'+f.toLocaleString('en-US')+'</td><td class="r">'+bits+'</td></tr>'; }).join('');
-  options(body,['13','21','64','Never — it is one multiplication, so one step'],(i,b,w)=>{ settle(w,1,i); body.appendChild(tbl);
+  options(body,['13','21','64','Never — it is one multiplication, so one step'],(i,b,w)=>{ settle(w,1,i); const tw=document.createElement('div'); tw.style.overflowX='auto'; tw.appendChild(tbl); body.appendChild(tw);
     if(i===1) api.ok('<b>21.</b> 20! has 62 bits and still fits; 21! needs 66. (13! is already past 32 bits.) From there on each multiplication is itself a loop over words, and <i>n</i>! has Θ(<i>n</i> log <i>n</i>) bits, so the “one step” was a convenience that quietly expired. Two lessons from one tiny program: measure the <em>size</em> of the input, and check that your elementary steps really are elementary.');
     else if(i===0) api.no('<b>13 is where <i>n</i>! passes 32 bits</b> — 13! ≈ 6.2 billion. A 64-bit word holds on until 20!.');
-    else if(i===2) api.no('<b>64 is the word size in bits, not a value of <i>n</i>.</b> <i>n</i>! grows far faster than <i>n</i>: it needs about <i>n</i> log<sub>2</sub> <i>n</i> bits, and that passes 64 long before <i>n</i> does.');
+    else if(i===2) api.no('<b>64 is the word size in bits, not a value of <i>n</i>.</b> <i>n</i>! grows far faster than <i>n</i>: its bit length grows like <i>n</i> log <i>n</i>, and passes 64 long before <i>n</i> does.');
     else api.no('<b>One multiplication of two words is one step.</b> Once an operand is many words long, multiplying it is a loop over those words — the table shows exactly when that starts.'); });
  }});
 

@@ -380,7 +380,8 @@ function button(label, cls){ const b=document.createElement('button'); b.type='b
 function numin(body, label){ const w=document.createElement('div'); w.className='numin'; w.innerHTML='<label>'+label+' <input type="number" inputmode="numeric" step="1" placeholder="?"></label>'; body.appendChild(w); return $('input',w); }
 function options(body, opts, onPick){ const w=document.createElement('div'); w.className='opts'; opts.forEach((o,i)=>{ const b=document.createElement('button'); b.type='button'; b.className='opt'; b.innerHTML='<span class="key">'+'ABCD'[i]+'</span><span>'+o+'</span>'; b.addEventListener('click',()=>onPick(i,b,w)); w.appendChild(b); }); body.appendChild(w); return w; }
 function settle(w, right, picked){ w.querySelectorAll('.opt').forEach((b,i)=>{ b.disabled=true; if(i===right) b.classList.add('correct'); else if(i===picked) b.classList.add('wrong'); }); }
-function readInt(inp){ const v=parseInt(inp.value,10); return Number.isFinite(v)?v:null; }
+// Whole numbers only: 7.5 must not be read as 7.
+function readInt(inp){ const t=String(inp.value).trim(); return /^[+-]?\d+$/.test(t)?parseInt(t,10):null; }
 function onEnter(inp, fn){ inp.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); fn(); } }); }
 function codeBlock(body, text, hl){ const pre=document.createElement('pre'); pre.className='code'; pre.innerHTML=text.split('\n').map((l,i)=>'<span class="ln">'+(i+1)+'</span>'+(hl===i+1?'<span class="hl">':'')+esc(l)+(hl===i+1?'</span>':'')).join('\n'); body.appendChild(pre); return pre; }
 function editor(body, text){ const ta=document.createElement('textarea'); ta.className='prog'; ta.spellcheck=false; ta.value=text; body.appendChild(ta); const e=document.createElement('div'); e.className='perr'; body.appendChild(e); return {ta, err:e}; }
@@ -414,7 +415,7 @@ EX.push({id:'ex-moves', kind:'predict', title:'Count the moves', list:'A',
   codeBlock(body, PROGRAMS.plus3);
   const inp=numin(body,'moves ='); const chk=button('Check','primary'); actions(body,chk);
   const p=parse(PROGRAMS.plus3); let r1=false;
-  const go=()=>{ const v=readInt(inp); if(v==null) return api.info('Enter a number.');
+  const go=()=>{ const v=readInt(inp); if(v==null) return api.info('Enter a whole number.');
     if(v===7){ r1=true; const mv=view(body,{log:false}); mv.load(p.rules,[4]); mv.run(100,180); api.info('<b>7: five moves over the five ones, then two writes.</b> In general <i>n</i> + 1 + 2 = <i>n</i> + 3 moves — and that count, <i>the number of mechanical moves the machine needs</i>, is exactly what the running-time lesson calls <i>T</i>(<i>P</i>, <i>x</i>), the running time of one run. Now the general formula:'); round2(); }
     else if(v===4) api.no('<b>4 is the input, not the work.</b> The head has to pass over every 1 of the input — and there are <i>n</i> + 1 = 5 of them — before it writes anything.');
     else if(v===5) api.no('<b>Five moves gets the head past the input.</b> Then line 2 fires once and line 3 fires once, and each is a move.');
@@ -450,7 +451,7 @@ EX.push({id:'ex-shortest', kind:'break', title:'The shortest program', list:'A',
     if(bad.m.status==='jam') api.no('<b>On <i>n</i> = '+bad.n+' the machine jams:</b> no command for '+bad.m.state+' reading '+bad.m.read()+'. Every state-and-symbol pair the machine can reach needs a command — or needs to be q0.');
     else if(bad.m.status!=='halt') api.no('<b>On <i>n</i> = '+bad.n+' the machine ran 500 moves without halting.</b> Something keeps it moving without reaching q0.');
     else if(bad.out===bad.want+1) api.no('<b>On <i>n</i> = '+bad.n+' it leaves '+bad.out+' ones; the target is '+bad.want+'.</b> One too many: '+(round===1?'the input already carries the extra 1, so writing one more overshoots.':'the input has <i>n</i> + 1 ones and the identity needs <i>n</i> — one has to go.'));
-    else if(bad.out===bad.want+2) api.no('<b>On <i>n</i> = '+bad.n+' it leaves '+bad.out+' ones; the target is '+bad.want+'.</b> Two too many — this is still the <i>n</i> + 3 machine. Which of its writes does the target actually need?');
+    else if(bad.out===bad.want+2) api.no('<b>On <i>n</i> = '+bad.n+' it leaves '+bad.out+' ones; the target is '+bad.want+'.</b> Two too many'+(round===1?' — this is still the <i>n</i> + 3 machine. Which of its writes does the target actually need?':'. The input already carries one 1 more than <i>n</i>; the identity has to erase it and write nothing.')+'');
     else if(bad.out===bad.want-1) api.no('<b>On <i>n</i> = '+bad.n+' it leaves '+bad.out+' ones; the target is '+bad.want+'.</b> One too few — you erased one more than the convention asks.');
     else api.no('<b>On <i>n</i> = '+bad.n+' it leaves '+bad.out+' ones; the target is '+bad.want+'.</b> Count what each command writes and erases.');
   }
@@ -466,7 +467,7 @@ EX.push({id:'ex-add', kind:'play', title:'Addition, by hand', list:'A',
   const prompt=ask(body,'<b>Round 1.</b> The tape holds seven 1s and the answer is five. <small>By how many must the count of 1s drop?</small>');
   const inp=numin(body,'drop by'); const chk=button('Check, then run','primary'); actions(body,chk);
   let round=1;
-  const go=async()=>{ const v=readInt(inp); if(v==null) return api.info('Enter a number.');
+  const go=async()=>{ const v=readInt(inp); if(v==null) return api.info('Enter a whole number.');
     if(round===1){
       if(v===2){ round=2; chk.disabled=true; mv.load(p.rules,[3,2]); await mv.run(100,260); chk.disabled=false; api.info('<b>By two.</b> Watch what the program actually did: erased the first 1, filled the separator blank with a 1, then erased two at the far end — three erased, one written, net −2. The inputs were <i>a</i> + 1 and <i>b</i> + 1 ones; the answer needs <i>a</i> + <i>b</i>. <b>Round 2:</b> how many moves did that take?'); prompt.innerHTML='<b>Round 2.</b> How many mechanical moves on (3, 2)? <small>The counter above knows; work it out from the commands first.</small>'; inp.value=''; chk.textContent='Check'; }
       else if(v===3) api.no('<b>Three 1s are erased, but one is also written</b> (the separator). The question is the net drop in the count.');
@@ -475,7 +476,7 @@ EX.push({id:'ex-add', kind:'play', title:'Addition, by hand', list:'A',
     } else {
       if(v===11){ const w=options(body,['<i>a</i> + <i>b</i> + 6','2(<i>a</i> + <i>b</i>)','<i>a</i> · <i>b</i> + 1','7 — one per command'],(i,b,wrap)=>{ settle(wrap,0,i);
           if(i===0) api.ok('<b><i>a</i> + <i>b</i> + 6.</b> One move to erase the first 1, <i>a</i> to cross the rest of the first block, one to fill the separator, <i>b</i> + 1 to cross the second block, one to turn around, two to erase. Linear in the sizes of the inputs, and every constant visible. This is the shape the running-time lesson calls <i>T</i>(<i>P</i>, <i>x</i>) and then simplifies.');
-          else if(i===1) api.no('<b>Nothing is crossed twice.</b> The head goes right once and comes back exactly two cells. 2(<i>a</i> + <i>b</i>) would be a full second pass.');
+          else if(i===1) api.no('<b>Nothing is crossed twice.</b> The head sweeps right once and comes back only three cells: one turn, then two erases. 2(<i>a</i> + <i>b</i>) would be a full second pass.');
           else if(i===2) api.no('<b>Multiplying the inputs?</b> The head visits each input cell once; the cost adds, it does not multiply. Check against (3, 2): 3 · 2 + 1 = 7, but you counted 11.');
           else api.no('<b>A command can fire many times.</b> Line 2 fires once per 1 in the first block, line 4 once per 1 in the second. The count depends on the input.'); });
         api.info('<b>11.</b> Now the general formula for inputs (<i>a</i>, <i>b</i>):'); }
