@@ -53,6 +53,27 @@
 </div>
 <p class="tape-cap">Every primitive recursive function is built from these three by composition and recursion. I still read them as a small creation story. Off the clock, I am a latte dad.</p>
 
+<section class="play" aria-labelledby="playH">
+  <div class="play-text">
+    <p class="label">Most exciting lately</p>
+    <h2 id="playH">Guess, then check</h2>
+    <p>I have been building interactive lessons: four so far, in logic, machine learning, running time and Turing machines. Each exercise asks for your answer before it shows you anything. Here is one; it takes about ten seconds.</p>
+    <p class="play-more"><a href="lessons/index.html">All four lessons</a></p>
+  </div>
+  <div class="try" id="try" aria-label="A ten-second exercise" hidden>
+    <p class="ask" id="tryAsk"></p>
+    <div class="likes" id="tryGrid" role="group" aria-label="Who likes which flavour"></div>
+    <div class="say" id="trySay" aria-live="polite"></div>
+    <div class="row">
+      <button class="btn" type="button" id="tryTrue">True</button>
+      <button class="btn" type="button" id="tryFalse">False</button>
+      <button class="btn ghost" type="button" id="tryAnother" hidden>Another sentence</button>
+      <a class="go" href="lessons/logic.html" id="tryGo" hidden>The full lesson</a>
+      <span class="tally" id="tryTally"></span>
+    </div>
+  </div>
+</section>
+
 <section class="section" aria-labelledby="nowH">
   <h2 id="nowH">Now</h2>
   <ul class="now">
@@ -85,6 +106,68 @@
 <script>
 /* The address is assembled here so it never sits whole in the page source; without scripts it reads "mo.mahmoud [at] utoronto.ca". */
 document.querySelectorAll('.email[data-u]').forEach(function(el){var a=el.dataset.u+'@'+el.dataset.d,l=document.createElement('a');l.href='mailto:'+a;l.textContent=a;l.className=el.className;el.replaceWith(l);});
+</script>
+<script>
+/* One exercise from Lesson 1, in about ten seconds: the same grid and sentences as the lessons hub.
+   Commit to true or false; then the grid lights up the hearts that decide it. Without scripts the card stays hidden and the link above remains. */
+(function(){
+'use strict';
+var box=document.getElementById('try'); if(!box) return;
+var PEOPLE=['Ada','Bo','Cleo','Dev'];
+var FLAV=[['Strawberry','#FF6B9A'],['Pistachio','#4FC07E'],['Mango','#FFB341'],['Blueberry','#6C8DFF']];
+var G1=[[1,0,1,0],[0,1,0,0],[1,0,1,1],[0,0,0,1]];   // every row has a heart; no column is full
+var G2=[[1,0,0,0],[1,1,1,1],[0,0,1,0],[0,1,0,0]];   // Bo's row is full
+var ROUNDS=[
+  {g:G1, s:'Everyone likes at least one flavour.', ans:true,
+   win:[[0,0],[1,1],[2,0],[3,3]], gap:[], dim:false,
+   intro:'Nothing is revealed until you commit. That is the rule in every lesson.',
+   yes:'<b>True.</b> Read across the rows: every person has at least one heart. That is all the sentence asks — it says nothing about <em>which</em> flavour.',
+   no:'<b>It is true.</b> Read across the rows, not down the columns: Ada, Bo, Cleo and Dev each have a heart somewhere, and that is all the sentence asks. If you were looking for one flavour that everyone likes, that is a different sentence — and it is next.'},
+  {g:G1, s:'One flavour is liked by everyone.', ans:false,
+   win:[[0,0],[2,0]], gap:[[1,0],[3,0]], dim:true,
+   intro:'Same grid, different sentence.',
+   yes:'<b>False.</b> A flavour liked by everyone would be a column with four hearts, and no column has them: the best any flavour manages is two. Strawberry, for one, is skipped by Bo and Dev. Same grid and same two ideas as before — only the order changed.',
+   no:'<b>It is false.</b> For this one you read down the columns: a flavour liked by everyone is a column with four hearts, and there is none. Strawberry is missing Bo and Dev. What <em>is</em> true here is that everyone likes some flavour — the previous sentence. Swapping “everyone” and “one flavour” changed the meaning.'},
+  {g:G2, s:'Someone likes every flavour.', ans:true,
+   win:[[1,0],[1,1],[1,2],[1,3]], gap:[], dim:true,
+   intro:'New grid, new sentence.',
+   yes:'<b>True.</b> Bo’s row is full. One such person is all the sentence needs; it says nothing about the other three.',
+   no:'<b>It is true.</b> Look across Bo’s row: four hearts. “Someone” needs only one person, so the other rows don’t matter, however thin they are.'}
+];
+var grid=document.getElementById('tryGrid'), ask=document.getElementById('tryAsk'), say=document.getElementById('trySay'), tally=document.getElementById('tryTally');
+var bTrue=document.getElementById('tryTrue'), bFalse=document.getElementById('tryFalse'), bAnother=document.getElementById('tryAnother'), go=document.getElementById('tryGo');
+var cur=0, answered=0, right=0, done=false;
+function draw(){
+  var r=ROUNDS[cur], h='<div></div>';
+  FLAV.forEach(function(f){ h+='<div class="hd"><i style="background:'+f[1]+'"></i>'+f[0]+'</div>'; });
+  PEOPLE.forEach(function(p,i){
+    h+='<div class="rh">'+p+'</div>';
+    FLAV.forEach(function(f,j){ var on=r.g[i][j]; h+='<span class="cell'+(on?' on':'')+'" data-i="'+i+'" data-j="'+j+'" role="img" aria-label="'+p+(on?' likes ':' does not like ')+f[0]+'"></span>'; });
+  });
+  grid.innerHTML=h;
+  ask.innerHTML='<q>'+r.s+'</q> <small>True or false for this grid? Decide first, then check.</small>';
+  done=false; bTrue.disabled=false; bFalse.disabled=false; bAnother.hidden=true; go.hidden=true;
+  say.className='say'; say.textContent=r.intro;
+}
+function cell(i,j){ return grid.querySelector('.cell[data-i="'+i+'"][data-j="'+j+'"]'); }
+function commit(choice){
+  if(done) return;
+  done=true; answered++;
+  var r=ROUNDS[cur], ok=(choice===r.ans);
+  if(ok) right++;
+  bTrue.disabled=true; bFalse.disabled=true;
+  if(r.dim) grid.querySelectorAll('.cell').forEach(function(c){ c.classList.add('dim'); });
+  r.win.forEach(function(p){ var c=cell(p[0],p[1]); c.classList.remove('dim'); c.classList.add('win'); });
+  r.gap.forEach(function(p){ var c=cell(p[0],p[1]); c.classList.remove('dim'); c.classList.add('gap'); });
+  say.className='say '+(ok?'ok':'no'); say.innerHTML=ok?r.yes:r.no;
+  bAnother.hidden=false; go.hidden=false;
+  tally.textContent=right+' of '+answered+' right';
+}
+bTrue.addEventListener('click',function(){ commit(true); });
+bFalse.addEventListener('click',function(){ commit(false); });
+bAnother.addEventListener('click',function(){ cur=(cur+1)%ROUNDS.length; draw(); });
+draw(); box.hidden=false;
+})();
 </script>
 </body>
 </html>

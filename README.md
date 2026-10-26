@@ -3,7 +3,7 @@
 Plain HTML and one stylesheet. No build step, no framework. Every link is relative, so the folder works on any static host.
 
 ```
-index.html        Home: intro, the Z/S/P strip, Now, links onward
+index.html        Home: intro, the Z/S/P strip, one exercise from the lessons, Now, links onward
 teaching.html     Philosophy, practices, courses, materials
 research.html     Areas, publications, background
 projects.html     Interactive lessons + student-team projects
